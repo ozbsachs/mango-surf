@@ -384,6 +384,70 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
   .tools{display:none}
 }
 </style>
+<style>
+#lineov polyline{transition:opacity .25s}
+#lineov polyline.ww-off{opacity:.12}
+.grid.ww-focus .c.hit:not(.ww-on){box-shadow:none}
+.grid.ww-focus .c:not(.ww-on) > svg{opacity:.35;transition:opacity .25s}
+.ww-pill{position:absolute;z-index:9;transform:translate(-50%,-100%);display:flex;align-items:center;gap:7px;white-space:nowrap;pointer-events:none;
+  font-family:VT323,Consolas,monospace;font-size:clamp(17px,2.4vw,24px);line-height:1;color:#fff;background:#111;border:3px solid var(--lc);
+  box-shadow:3px 3px 0 #000;border-radius:8px;padding:4px 10px 5px 5px;animation:wwin .25s steps(3) both}
+.ww-pill .ww-ln{font-family:'Press Start 2P',Consolas,monospace;font-size:.42em;color:#111;background:var(--lc);border-radius:4px;padding:4px 5px}
+.ww-pill .ww-m i{font-style:normal;color:#9aa}
+.ww-pill .ww-m b{font-weight:400;color:#FFE600}
+@keyframes wwin{from{transform:translate(-50%,-70%);opacity:0}to{transform:translate(-50%,-100%);opacity:1}}
+@media (prefers-reduced-motion:reduce){.ww-pill{animation:none}}
+</style>
+<script>
+// Sk8WinWalk: after the game draws its win lines, every win gets its own turn with its exact math.
+// The game draws all winning lines at once (a black shadow polyline + a colour polyline per win, in win order) and
+// up to 5 amount labels stacked on the middle reel, which overlap when several lines win. Here those labels go, all
+// lines flash together, then each win in turn (biggest first) keeps only its line and symbols lit, with a label at the
+// end of its run: LINE 4 · 4x Sneaker · $0.30 x 3 = $0.90. Then all lines again, and round, until the next spin.
+// One win: its label just stays. The game passes its bet, money formatter and symbol names (they are private to it).
+(function(){
+  let gen = 0, timer = 0, BET = 1, FMT = null, NAMES = [];
+  const money = v => { try { if (FMT) return FMT(v); } catch(e){} return '$' + v.toFixed(2); };
+  const num = x => (Math.round(x*100)/100).toLocaleString('en-US', {maximumFractionDigits: 2});
+  const cellAt = (r, row) => { const reel = document.querySelectorAll('.grid .reel')[r]; return reel ? reel.querySelectorAll('.c')[row] : null; };
+  function clear(){ document.querySelectorAll('.ww-pill').forEach(e => e.remove()); document.querySelectorAll('.grid .c.ww-on').forEach(c => c.classList.remove('ww-on')); }
+  function stop(){ gen++; clearTimeout(timer); clear(); const g = document.querySelector('.grid'); if (g) g.classList.remove('ww-focus');
+    document.querySelectorAll('#lineov .ww-off').forEach(p => p.classList.remove('ww-off')); }
+  function label(w, color){
+    const stage = document.querySelector('.grid').parentElement, sb = stage.getBoundingClientRect(), ln = TT.LINES[w.li], end = cellAt(w.k-1, ln[w.k-1]);
+    if (!end) return; const b = end.getBoundingClientRect();
+    const math = w.mult > 1 ? `${money(w.pay*BET)} <i>x</i> ${num(w.mult)} <i>=</i> <b>${money(w.win*BET)}</b>` : `<b>${money(w.win*BET)}</b>`;
+    const el = document.createElement('div'); el.className = 'ww-pill'; el.style.setProperty('--lc', color || '#FFE600');
+    el.innerHTML = `<span class="ww-ln">LINE ${w.li+1}</span><span>${w.k}x ${NAMES[w.s] || ''}</span><span class="ww-m">${math}</span>`;
+    stage.appendChild(el);
+    const x = b.left - sb.left + b.width/2, y = b.top - sb.top + b.height*0.1, half = el.offsetWidth/2;   // above the run's last symbol, inside the machine
+    el.style.left = Math.max(half + 4, Math.min(sb.width - half - 4, x)) + 'px'; el.style.top = Math.max(el.offsetHeight + 2, y) + 'px';
+  }
+  function show(wins, i, colors){
+    clear(); document.querySelectorAll('#lineov polyline').forEach(p => p.classList.toggle('ww-off', i >= 0 && +p.dataset.ww !== i));
+    document.querySelector('.grid').classList.toggle('ww-focus', i >= 0); if (i < 0) return;
+    const w = wins[i], ln = TT.LINES[w.li]; for (let r = 0; r < w.k; r++){ const c = cellAt(r, ln[r]); if (c) c.classList.add('ww-on'); }
+    label(w, colors[i]);
+  }
+  function after(wins, bet, fmt, names){
+    stop(); if (bet) BET = bet; if (fmt) FMT = fmt; if (names) NAMES = names;
+    const svg = document.getElementById('lineov'); if (!svg || !wins || !wins.length) return;
+    const lines = svg.querySelectorAll(':scope > polyline'), colors = [];
+    lines.forEach((p, n) => { p.dataset.ww = Math.floor(n/2); if (n % 2) colors[Math.floor(n/2)] = p.getAttribute('stroke'); });
+    svg.querySelectorAll(':scope > text').forEach(t => t.remove());   // the stacked middle-reel labels (ramp labels sit inside their own <g>)
+    const my = gen, alive = () => my === gen && svg.querySelector('polyline');
+    if (wins.length === 1){ timer = setTimeout(() => { if (alive()) label(wins[0], colors[0]); }, 350); return; }
+    const seq = wins.map((w, i) => i).sort((a, b) => wins[b].win - wins[a].win).concat([-1]); let n = 0;
+    const step = () => { if (!alive()) return; const i = seq[n++ % seq.length]; show(wins, i, colors); timer = setTimeout(step, i < 0 ? 900 : 1500); };
+    timer = setTimeout(step, 1000);
+  }
+  // a new spin empties the line overlay: stop at once
+  document.addEventListener('DOMContentLoaded', () => { const svg = document.getElementById('lineov'); if (!svg) return;
+    new MutationObserver(() => { if (!svg.querySelector('polyline')) stop(); }).observe(svg, {childList: true}); });
+  window.Sk8WinWalk = {after, stop};
+})();
+
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
 <style>
@@ -3692,7 +3756,8 @@ function ttCanWin(cfg, g, r){
 // if that reel can take part in a win (forced reels always expand). Returns merged info for the animation.
 function ttExpand(cfg, g, mults, forced, stacks){
   const merged = [];
-  for (let r=1;r<=3;r++){
+  for (let r=0;r<TT.REELS;r++){
+    if ((r === 0 || r === TT.REELS - 1) && !(forced && forced.includes(r))) continue;   // outer reels expand only for a guaranteed wild
     if (stacks && stacks[r]) continue;
     const wc = []; for (let row=0;row<TT.ROWS;row++){ const c = TT.cell(r,row); if (g[c] === TT.W) wc.push(c); }
     if (!wc.length) continue;
@@ -3859,20 +3924,33 @@ function ttPlaySpecial(cfg, P, n, rand){
     for (tries = 1; tries <= TT_FLOOR_TRIES; tries++){ r = ttSpecialSpin(cfg, P, n, rand, table); if (!best || r.lineWin > best.lineWin) best = r; if (r.lineWin >= floor) break; }
     if (r.lineWin < floor){ r = best; floorMiss = true; } }
   else { r = ttSpecialSpin(cfg, P, n, rand, table); tries = 1; if (r.lineWin < floor) topUp = floor - r.lineWin; }
-  return {kind:'special', n, table: cfg.specialTables[n-1][useB ? 1 : 0], stops: r.sp.stops, g: r.sp.g, mults: r.sp.mults, merged: r.merged, ramps: r.ramps, wins: r.lw.wins, lineWin: r.lineWin, topUp, tries, floorMiss, capped: r.lw.win >= cfg.maxWin, tier: -1, bonus: null, total: r.lineWin + topUp};
+  return {kind:'special', n, table: cfg.specialTables[n-1][useB ? 1 : 0], stops: r.sp.stops, g: r.sp.g, mults: r.sp.mults, merged: r.merged, ramps: r.ramps, wins: r.lw.wins, lineWin: r.lineWin, topUp, tries, floorMiss, full: !!r.full, capped: r.lw.win >= ttTrickCap(cfg, n), tier: -1, bonus: null, total: r.lineWin + topUp};
 }
+// Trick Spin max win: KICKFLIP can have its own (cfg.maxWinTrick), the others use cfg.maxWin
+const ttTrickCap = (cfg, n) => n === 3 && cfg.maxWinTrick ? cfg.maxWinTrick : cfg.maxWin;
 // one Trick Spin board on the chosen version
 function ttSpecialSpin(cfg, P, n, rand, table){
   const sp = ttSpinGrid(cfg, P.special[n-1], rand, table, null);
-  // two guaranteed wilds on one reel merge into one tower
-  const pool = []; for (let r=1;r<=3;r++) for (let row=0;row<TT.ROWS;row++) pool.push(TT.cell(r,row));
+  // KICKFLIP with cfg.trickFull: one draw decides a super rare full board, every reel a wild reel with a cfg.trickFullTable multiplier
+  if (n === 3 && cfg.trickFull && rand(1000000000) < Math.round(cfg.trickFull*1e9)){
+    const merged = [], mt = cfg.tables[cfg.trickFullTable || 'B'];
+    for (let r=0;r<TT.REELS;r++){
+      const row = rand(TT.ROWS), c0 = TT.cell(r, row), M = ttDraw(mt, rand), raw = [0,1,2,3].map(k=>sp.g[TT.cell(r,k)]);
+      merged.push({r, from: [{c: c0, m: M}], M, raw});
+      for (let k=0;k<TT.ROWS;k++){ const c = TT.cell(r,k); sp.g[c] = TT.W; sp.mults[c] = M; }
+    }
+    const lw = ttLines(cfg, sp.g, sp.mults);
+    return {sp, merged, ramps: [], lw, lineWin: Math.min(lw.win, ttTrickCap(cfg, n)), full: true};
+  }
+  // two guaranteed wilds on one reel merge into one tower; KICKFLIP's (n 3) can land on any reel, the others on reels 2-4
+  const pool = []; for (let r = n === 3 && cfg.trickFull ? 0 : 1; r <= (n === 3 && cfg.trickFull ? TT.REELS - 1 : 3); r++) for (let row=0;row<TT.ROWS;row++) pool.push(TT.cell(r,row));
   const forced = [];
   for (let i=0;i<n;i++){ const c = pool.splice(rand(pool.length), 1)[0], r = Math.floor(c/TT.ROWS); if (!forced.includes(r)) forced.push(r);
     if (sp.g[c] !== TT.W){ sp.g[c] = TT.W; sp.mults[c] = ttDraw(table, rand); sp.fresh.push(c); } }
   const merged = ttExpand(cfg, sp.g, sp.mults, forced, null);
   // cfg.ramp.trick === 0 switches the Trick Spin ramps off (a config without it keeps n ramps, as before)
   const ramps = ttRamps(rand, ttRampCfg(cfg).trick === 0 ? 0 : n), lw = ttLines(cfg, sp.g, sp.mults, ramps, {n: 0});
-  return {sp, merged, ramps, lw, lineWin: cap(cfg, lw.win)};
+  return {sp, merged, ramps, lw, lineWin: Math.min(lw.win, ttTrickCap(cfg, n))};
 }
 
 
@@ -4018,7 +4096,7 @@ function ttFromBook(events){
 
 
 
-const GAME = {"pays":[[0.1,0.3,1.5],[0.1,0.3,1.5],[0.2,0.6,2],[0.2,0.6,2],[0.2,0.8,3],[0.5,2.5,10],[1,3,12],[2,6,15],[3,10,20],[0,0,10]],"maxWin":1000,"maxWinLegend":22500,"maxWinSesh":5000,"multipliers":[2,3,4,5,10,15,20,25,50],"modes":[{"name":"BASE","label":"Normal","cost":1,"rtp":0.9601,"maxWin":21334,"bonusOneIn":413},{"name":"ANTE","label":"Bonus Boost","cost":2.5,"rtp":0.9601,"maxWin":22500,"bonusOneIn":104},{"name":"SPECIAL1","label":"Trick Spin: Ollie","cost":25,"rtp":0.9601,"maxWin":1000,"bonusOneIn":null},{"name":"SPECIAL2","label":"Trick Spin: Grind","cost":50,"rtp":0.9601,"maxWin":1000,"bonusOneIn":null},{"name":"SPECIAL3","label":"Trick Spin: Kickflip","cost":100,"rtp":0.9601,"maxWin":1000,"bonusOneIn":null},{"name":"BONUS1","label":"Crew (bonus buy)","cost":125,"rtp":0.9601,"maxWin":719.6,"bonusOneIn":null},{"name":"BONUS2","label":"Sesh (bonus buy)","cost":250,"rtp":0.9601,"maxWin":5000,"bonusOneIn":null},{"name":"BONUS3","label":"Legend (bonus buy)","cost":500,"rtp":0.9601,"maxWin":22500,"bonusOneIn":null}]};
+const GAME = {"pays":[[0.1,0.3,1.5],[0.1,0.3,1.5],[0.2,0.6,2],[0.2,0.6,2],[0.2,0.8,3],[0.5,2.5,10],[1,3,12],[2,6,15],[3,10,20],[0,0,10]],"maxWin":1000,"maxWinLegend":22500,"maxWinSesh":5000,"multipliers":[2,3,4,5,10,15,20,25,50],"modes":[{"name":"BASE","label":"Normal","cost":1,"rtp":0.9601,"maxWin":17353,"bonusOneIn":413},{"name":"ANTE","label":"Bonus Boost","cost":2.5,"rtp":0.9601,"maxWin":22500,"bonusOneIn":105},{"name":"SPECIAL1","label":"Trick Spin: Ollie","cost":25,"rtp":0.9601,"maxWin":1000,"bonusOneIn":null},{"name":"SPECIAL2","label":"Trick Spin: Grind","cost":50,"rtp":0.9601,"maxWin":1000,"bonusOneIn":null},{"name":"SPECIAL3","label":"Trick Spin: Kickflip","cost":100,"rtp":0.9601,"maxWin":16800,"bonusOneIn":null},{"name":"BONUS1","label":"Crew (bonus buy)","cost":125,"rtp":0.9601,"maxWin":789.2,"bonusOneIn":null},{"name":"BONUS2","label":"Sesh (bonus buy)","cost":250,"rtp":0.9601,"maxWin":5000,"bonusOneIn":null},{"name":"BONUS3","label":"Legend (bonus buy)","cost":500,"rtp":0.9601,"maxWin":21938.6,"bonusOneIn":null}]};
 (() => {
 const $ = id => document.getElementById(id);
 const Art = window.MangoArt || null, Snd = window.MangoAudio || window.Sk8Audio || null;
@@ -4120,7 +4198,8 @@ const comboSteps = wins => wins.filter(w=>w.combo).map(w=>w.combo).sort((a,b)=>a
 // +1x +2x +3x, or a range once the list gets long
 const stepText = (st, sep) => st.length > 3 ? `+${st[0]}x${sep || " TO "}+${st[st.length-1]}x` : st.map(n=>"+"+n+"x").join(" ");
 function drawLines(wins, ramps){ drawLines_sk8(wins, ramps); MangoSkin.afterLines(wins, roundBet, fmt$); }
-function drawLines_sk8(wins, ramps){
+function drawLines_sk8(wins, ramps){ drawLines_base(wins, ramps); }
+function drawLines_base(wins, ramps){
   const svg = $('lineov'); svg.innerHTML = ''; cells.forEach(c=>c.classList.remove('hit'));
   const gb = gridEl.getBoundingClientRect(); svg.setAttribute('viewBox', `0 0 ${Math.max(1,gb.width)} ${Math.max(1,gb.height)}`);
   const ctr = (r,row) => { const b = cells[TT.cell(r,row)].getBoundingClientRect(); return [b.left-gb.left+b.width/2, b.top-gb.top+b.height/2]; };
@@ -4511,7 +4590,7 @@ let cfState = null;
 const MODE_INFO = {ANTE: () => `Bonus Boost: every spin costs ${costOf('ANTE')}x your bet and starts a bonus about ${(MODE('BASE').bonusOneIn/MODE('ANTE').bonusOneIn).toFixed(1)} times as often.`,
   SPECIAL1: () => `OLLIE: costs ${costOf('SPECIAL1')}x your bet. 1 guaranteed wild on reels 2-4 that fills its reel. No bonuses.`,
   SPECIAL2: () => `GRIND: costs ${costOf('SPECIAL2')}x your bet. 2 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.`,
-  SPECIAL3: () => `KICKFLIP: costs ${costOf('SPECIAL3')}x your bet. 3 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.`};
+  SPECIAL3: () => `KICKFLIP: costs ${costOf('SPECIAL3')}x your bet. 3 guaranteed wilds that can land on any reel and fill it. Super rare: all 5 reels go wild for up to 20,000x. No bonuses.`};
 const pctOf = n => (100/n < 1 ? (100/n).toFixed(2) : (100/n).toFixed(1)) + '%';
 function cfRender(){
   const s = cfState; if (!s) return;
@@ -4625,7 +4704,7 @@ function slotChrome(){
 function renderRules(){
   const ico = (s, mult) => `<span class="ico">${symHTML(s, s === W ? {mult: mult || 5} : {})}</span>`;
   const modeRows = GAME.modes.map(m => { const what = {BASE: 'Normal spin.', ANTE: `Bonus Boost: each spin has a 1 in ${MODE('ANTE').bonusOneIn.toLocaleString('en-US')} chance to start a bonus, instead of 1 in ${MODE('BASE').bonusOneIn.toLocaleString('en-US')}. Every spin is independent.`, SPECIAL1: 'Trick Spin: 1 guaranteed wild on reels 2-4 that fills its reel. No bonuses.',
-      SPECIAL2: 'Trick Spin: 2 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.', SPECIAL3: 'Trick Spin: 3 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.',
+      SPECIAL2: 'Trick Spin: 2 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.', SPECIAL3: 'Trick Spin: 3 guaranteed wilds that can land on any reel and fill it. About 1 in 50,000: all 5 reels go wild, up to 20,000x. No bonuses.',
       BONUS1: 'Buys the Crew bonus.', BONUS2: 'Buys the Sesh bonus.', BONUS3: 'Buys the Legend bonus.'}[m.name];
     return `<tr><td>${m.label}</td><td>${m.cost}x bet</td><td>${what}</td><td>${pct(m.rtp)}</td><td>${fx(m.maxWin)}x bet</td></tr>`; }).join('');
   const pays = [0,1,2,3,4,5,6,7,8].map(s => `<tr><td>${ico(s)}${NAMES[s]}</td>${[0,1,2].map(k => `<td>${fx(GAME.pays[s][k])}x</td>`).join('')}</tr>`).join('');
