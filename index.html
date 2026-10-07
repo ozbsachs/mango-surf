@@ -4583,7 +4583,8 @@ async function animateRound(res, cost){
 async function mangoMaxPreview(){
   if (busy || mode !== 'SPECIAL3') return false;
   busy = true; meta();
-  const keep = {last: $('lastwin').textContent, list: $('winlist').innerHTML, sub: $('spinsub').textContent, msg: $('msg').innerHTML, bet: roundBet};
+  const keep = {last: $('lastwin').textContent, list: $('winlist').innerHTML, sub: $('spinsub').textContent, msg: $('msg').innerHTML, bet: roundBet, speed};
+  speed = 0;   // always the full show: Super Turbo skips the reel spin and Turbo rushes it; the player's setting comes back after
   try {
     roundBet = levels[betIdx]/API; $('msg').textContent = ''; clearStacks(); resetWinBoxes();
     banner(`${TRICK[2]} · TRICK SPIN`);
@@ -4596,7 +4597,7 @@ async function mangoMaxPreview(){
     const total = Math.min(cap, wins.reduce((a, w) => a + w.win, 0));
     await animateRound({kind: 'special', n: 3, g, mults, merged, ramps: [], wins, lineWin: total, topUp: 0, total, full: true, capped: true, tier: -1, bonus: null}, roundBet*costOf('SPECIAL3'));
   } finally {
-    roundBet = keep.bet; $('lastwin').textContent = keep.last; $('winlist').innerHTML = keep.list; $('spinsub').textContent = keep.sub; $('msg').innerHTML = keep.msg;
+    roundBet = keep.bet; speed = keep.speed; $('lastwin').textContent = keep.last; $('winlist').innerHTML = keep.list; $('spinsub').textContent = keep.sub; $('msg').innerHTML = keep.msg;
     busy = false; meta();
   }
   return true;
