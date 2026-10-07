@@ -603,10 +603,12 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     const v = node.nodeValue; if (!v || !TEST.test(v)) return;
     let s = v; for (const [re, to] of WORDS) s = s.replace(re, to); if (s !== v) node.nodeValue = s;
   }
+  // text inside SCRIPT/STYLE or anything marked data-keep (the link back to Sk8 Sesh) is left alone
+  const keep = n => !n || /^(SCRIPT|STYLE)$/.test(n.nodeName) || (n.closest && n.closest('[data-keep]'));
   function walk(root){
-    if (root.nodeType === 3){ const p = root.parentNode; if (p && !/^(SCRIPT|STYLE)$/.test(p.nodeName)) swap(root); return; }
-    if (root.nodeType !== 1 || /^(SCRIPT|STYLE)$/.test(root.nodeName)) return;
-    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode: n => /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName) ? 2 : 1});
+    if (root.nodeType === 3){ if (!keep(root.parentNode)) swap(root); return; }
+    if (root.nodeType !== 1 || keep(root)) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode: n => keep(n.parentNode) ? 2 : 1});
     let n; while ((n = w.nextNode())) swap(n);
   }
   function words(){
@@ -691,7 +693,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
         <input type="range" id="sfxvol" min="0" max="100" value="70" style="width:100%;accent-color:var(--accent)">
         <h3 class="dh">MORE</h3>
         <div class="moregames" style="display:flex;flex-wrap:wrap;gap:6px"><a class="pill hot" href="https://admin.pred2upredictions.top/admin" target="_blank" rel="noopener" style="text-decoration:none">BACKEND &#8599;</a>
-          <a class="pill" href="https://ozbsachs.github.io/sk8-sesh/" style="text-decoration:none">PLAY SK8 SESH</a></div>
+          <a class="pill" href="https://ozbsachs.github.io/sk8-sesh/" data-keep style="text-decoration:none">PLAY SK8 SESH</a></div>
         <h3 class="dh">WALLET</h3>
         <p class="sub" style="margin:0 0 6px">Play money only. Load as much as you like.</p>
         <p class="sub" style="margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span id="nameline"></span><button class="pill" id="namebtn" type="button">CHANGE NAME</button></p>
