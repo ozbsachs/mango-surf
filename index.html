@@ -516,6 +516,23 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .reel:has(.c.hit) .stackov .mstack img{animation:ride 2.2s ease-in-out infinite,wildwin .5s cubic-bezier(.2,1.7,.4,1)}
 @keyframes wildwin{0%{scale:1}50%{scale:1.15}100%{scale:1}}
 
+/* win walkthrough: one win at a time, its line and symbols lit, its math in a label at the end of the run */
+#lineov .wl{transition:opacity .25s}
+#lineov .wl.off{opacity:.1}
+.grid.focusing .c.hit:not(.focus) .ms{opacity:.4;filter:saturate(.5) brightness(.85);animation:none}
+.grid.focusing .c.hit:not(.focus) .ms::after{animation:none;opacity:0}
+.grid.focusing .c.focus .ms{opacity:1;filter:none;animation:mpop .45s cubic-bezier(.2,1.7,.4,1) both,mjelly 1.3s .45s ease-in-out infinite}
+.winpill{position:absolute;z-index:9;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;white-space:nowrap;pointer-events:none;
+  font:400 clamp(12px,1.9vw,18px)/1 "Lilita One",system-ui,sans-serif;color:var(--outline);background:linear-gradient(#fffaf0,#ffe8b0);
+  border:3px solid var(--outline);box-shadow:0 0 0 3px var(--lc),0 4px 0 3px var(--outline);border-radius:999px;padding:5px 12px 5px 6px;animation:pillin .3s cubic-bezier(.2,1.6,.4,1) both}
+.winpill .mp-ln{font-size:.72em;color:#fff;background:var(--outline);border-radius:999px;padding:3px 7px}
+.winpill .mp-cnt{font-size:1.05em}
+.winpill img{width:1.7em;height:1.7em;object-fit:contain;margin:-4px -2px}
+.winpill .mp-mth i{font-style:normal;opacity:.6;margin:0 1px}
+.winpill .mp-mth b{font-weight:400;color:#c4301c;font-size:1.12em}
+@keyframes pillin{from{transform:translate(-50%,-80%) scale(.4);opacity:0}to{transform:translate(-50%,-100%) scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.winpill{animation:none}}
+
 </style>
 <script>window.MANGO_IMG_V = {"H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -1792,22 +1809,71 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     out.push(pts[pts.length-1]);
     return 'M' + out.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
   }
-  function afterLines(){
+  // ---------- win lines ----------
+  // The game draws every winning line at once (one shadow + one colour polyline per win, in win order) and up to 5
+  // amount labels stacked on the middle reel. Here: wavy lines, splashes, and then a walkthrough. All lines flash
+  // together, then each win gets its own turn: only its line and symbols lit, and a label at the end of its run with
+  // the exact math (count, symbol, base pay, multiplier, result). One win: its label just stays.
+  // the game's own variables are private: it passes the bet and its money formatter in, and cells are found in the page
+  let walkGen = 0, walkTimer = 0, BET = 1, FMT = null;
+  const money = v => { try { if (FMT) return FMT(v); } catch(e){} return '$' + v.toFixed(2); };
+  const cellAt = (r, row) => { const reel = document.querySelectorAll('.grid .reel')[r]; return reel ? reel.querySelectorAll('.c')[row] : null; };
+  const num = x => (Math.round(x*100)/100).toLocaleString('en-US', {maximumFractionDigits: 2});
+  const SYM = ['L1','L2','L3','L4','L5','H1','H2','H3','H4','W','S1','S1'];
+  function stopWalk(){ walkGen++; clearTimeout(walkTimer);
+    document.querySelectorAll('.winpill').forEach(e => e.remove());
+    document.querySelectorAll('.grid .c.focus').forEach(c => c.classList.remove('focus'));
+    const g = document.querySelector('.grid'); if (g) g.classList.remove('focusing');
+    document.querySelectorAll('#lineov .wl.off').forEach(p => p.classList.remove('off')); }
+  function pill(w, color){
+    const stage = document.querySelector('.grid').parentElement, sb = stage.getBoundingClientRect();
+    const ln = TT.LINES[w.li], b = cellAt(w.k-1, ln[w.k-1]).getBoundingClientRect(), bet = BET;
+    const sym = w.s != null ? `<img src="${src(SYM[w.s] || 'W')}" alt="">` : '';
+    const math = w.mult > 1 ? `${money(w.pay*bet)} <i>×</i> ${num(w.mult)} <i>=</i> <b>${money(w.win*bet)}</b>` : `<b>${money(w.win*bet)}</b>`;
+    const el = document.createElement('div'); el.className = 'winpill'; el.style.setProperty('--lc', color || '#ffd23f');
+    el.innerHTML = `<span class="mp-ln">LINE ${w.li+1}</span><span class="mp-cnt">${w.k}×</span>${sym}<span class="mp-mth">${math}</span>`;
+    stage.appendChild(el);
+    // above the last symbol of the run, kept inside the machine
+    const x = b.left - sb.left + b.width/2, y = b.top - sb.top + b.height*0.12, half = el.offsetWidth/2;
+    el.style.left = Math.max(half + 4, Math.min(sb.width - half - 4, x)) + 'px'; el.style.top = Math.max(el.offsetHeight + 2, y) + 'px';
+  }
+  function show(wins, i, colors){
+    const svg = document.getElementById('lineov'), grid = document.querySelector('.grid');
+    document.querySelectorAll('.winpill').forEach(e => e.remove());
+    document.querySelectorAll('.grid .c.focus').forEach(c => c.classList.remove('focus'));
+    svg.querySelectorAll('.wl').forEach(p => p.classList.toggle('off', i >= 0 && +p.dataset.w !== i));
+    grid.classList.toggle('focusing', i >= 0);
+    if (i < 0) return;
+    const w = wins[i], ln = TT.LINES[w.li]; for (let r = 0; r < w.k; r++){ const c = cellAt(r, ln[r]); if (c) c.classList.add('focus'); }
+    pill(w, colors[i]);
+  }
+  function walkWins(wins, colors){
+    stopWalk(); if (!wins || !wins.length) return;
+    const my = walkGen, alive = () => my === walkGen && document.querySelector('#lineov .wl');
+    if (wins.length === 1){ walkTimer = setTimeout(() => { if (alive()) pill(wins[0], colors[0]); }, 450); return; }
+    const order = wins.map((w, i) => i).sort((a, b) => wins[b].win - wins[a].win);   // biggest first
+    const seq = order.concat([-1]); let n = 0;   // each win, biggest first, then all lines together, and round again
+    const step = () => { if (!alive()) return; const i = seq[n++ % seq.length]; show(wins, i, colors); walkTimer = setTimeout(step, i < 0 ? 900 : 1500); };
+    walkTimer = setTimeout(step, 1100);   // after every line has drawn together
+  }
+  function afterLines(wins, bet, fmt){
+    if (bet) BET = bet; if (fmt) FMT = fmt;
     const svg = document.getElementById('lineov'); if (!svg) return;
-    const lines = Array.from(svg.querySelectorAll('polyline'));
+    const lines = Array.from(svg.querySelectorAll('polyline')), colors = [];
     for (let i = 0; i < lines.length; i += 2){   // the game adds a black shadow line, then the colour line
       const sh = lines[i], pl = lines[i+1]; if (!pl) break;
       const pts = (pl.getAttribute('points') || '').trim().split(/\s+/).map(s => s.split(',').map(Number)).filter(p => p.length === 2 && !isNaN(p[0]));
       if (pts.length < 2) continue;
-      const d = wavy(pts), color = pl.getAttribute('stroke'), delay = (i/2) * 0.12;
+      const d = wavy(pts), color = pl.getAttribute('stroke'), delay = (i/2) * 0.12; colors[i/2] = color;
       const mk = (cls, stroke, w) => { const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         p.setAttribute('d', d); p.setAttribute('fill', 'none'); p.setAttribute('stroke', stroke); p.setAttribute('stroke-width', w);
         p.setAttribute('stroke-linecap', 'round'); p.setAttribute('stroke-linejoin', 'round'); p.setAttribute('pathLength', '100');
-        p.setAttribute('class', 'wl ' + cls); p.style.animationDelay = delay + 's'; return p; };
+        p.setAttribute('class', 'wl ' + cls); p.dataset.w = i/2; p.style.animationDelay = delay + 's'; return p; };
       svg.insertBefore(mk("edge", "#2a0e12", 13), sh); svg.insertBefore(mk("body", color, 8), sh); svg.insertBefore(mk('foam', '#ffffff', 2.2), sh);
       sh.remove(); pl.remove();
     }
-    svg.querySelectorAll('text').forEach(t => { t.setAttribute('font-family', "'Lilita One', system-ui, sans-serif"); t.setAttribute('fill', '#fff7d6'); t.setAttribute('stroke', '#2a0e12'); t.classList.add('wlab'); });
+    svg.querySelectorAll('text').forEach(t => t.remove());   // the stacked middle-reel labels; the walkthrough labels every win instead
+    try { walkWins(wins, colors); } catch(e){}
     const hits = document.querySelectorAll('.grid .c.hit'); if (!hits.length) return;
     const stage = document.querySelector('.grid').parentElement, sb = stage.getBoundingClientRect();
     const nd = hits.length > 8 ? 4 : 7;
@@ -1818,6 +1884,9 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
         dp.style.setProperty('--s', (0.6 + Math.random()*0.8).toFixed(2)); box.appendChild(dp); }
       stage.appendChild(box); setTimeout(() => box.remove(), 1100); });
   }
+  // a new spin clears the lines: stop the walkthrough at once
+  function watchLines(){ const svg = document.getElementById('lineov'); if (!svg) return;
+    new MutationObserver(() => { if (!svg.querySelector('.wl')) stopWalk(); }).observe(svg, {childList: true}); }
 
   // ---------- words: every skate name on screen becomes its surf name (text only, the game code is untouched) ----------
   const WORDS = [
@@ -1864,7 +1933,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
@@ -4050,7 +4119,7 @@ function rampSVG(svg, b, gb, steps){
 const comboSteps = wins => wins.filter(w=>w.combo).map(w=>w.combo).sort((a,b)=>a-b);
 // +1x +2x +3x, or a range once the list gets long
 const stepText = (st, sep) => st.length > 3 ? `+${st[0]}x${sep || " TO "}+${st[st.length-1]}x` : st.map(n=>"+"+n+"x").join(" ");
-function drawLines(wins, ramps){ drawLines_sk8(wins, ramps); MangoSkin.afterLines(); }
+function drawLines(wins, ramps){ drawLines_sk8(wins, ramps); MangoSkin.afterLines(wins, roundBet, fmt$); }
 function drawLines_sk8(wins, ramps){
   const svg = $('lineov'); svg.innerHTML = ''; cells.forEach(c=>c.classList.remove('hit'));
   const gb = gridEl.getBoundingClientRect(); svg.setAttribute('viewBox', `0 0 ${Math.max(1,gb.width)} ${Math.max(1,gb.height)}`);
