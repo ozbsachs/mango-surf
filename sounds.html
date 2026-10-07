@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mango Audio Preview</title>
+<style>
+:root{--bg:#fff6e6;--fg:#1d1d1d;--btn:#fff;--line:#1d1d1d;--muted:#666}
+@media (prefers-color-scheme: dark){:root{--bg:#171717;--fg:#eee;--btn:#262626;--line:#888;--muted:#aaa}}
+body{background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-serif;margin:0;padding:16px}
+h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:16px 0 6px}p{color:var(--muted);margin:0 0 12px}
+.grid{display:flex;flex-wrap:wrap;gap:8px}
+button{background:var(--btn);color:var(--fg);border:2px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit;cursor:pointer}
+button:active{transform:translateY(1px)}
+label{display:inline-flex;gap:6px;align-items:center;margin:12px 16px 0 0}
+pre{background:var(--btn);border:1px solid var(--line);padding:8px;border-radius:6px;white-space:pre-wrap;margin-top:12px}
+</style></head><body>
+<h1>Mango Surf audio preview</h1>
+<p>Every button calls MangoAudio.init() first (user gesture), then the API call shown. Key G major; base 104 BPM, bonus 160 BPM.</p>
+<div id="groups"></div>
+<label>Music <input type="range" min="0" max="1" step="0.01" value="0.8" oninput="A.init();A.setMusicVolume(this.value)"></label>
+<label>SFX <input type="range" min="0" max="1" step="0.01" value="1" oninput="A.init();A.setSfxVolume(this.value)"></label>
+<pre id="stats">not initialized</pre>
+<script src="mango-audio.js"></script>
+<script>
+var A = window.MangoAudio;
+var GROUPS = [
+ ["Music", [["Start music","A.startMusic()"],["Stop music","A.stopMusic()"],["Base music","A.setMode('base'); A.startMusic()"],["Bonus music","A.setMode('bonus'); A.startMusic()"]]],
+ ["Spin", [["spinStart","A.spinStart()"],["reelStop 0-4","for (let i=0;i<5;i++) setTimeout(()=>A.reelStop(i), i*180)"],["full spin","A.spinStart(); for (let i=0;i<5;i++) setTimeout(()=>A.reelStop(i), 500+i*220)"]]],
+ ["Wins", [["win(0.5)","A.win(0.5)"],["win(3)","A.win(3)"],["win(12)","A.win(12)"],["win(80)","A.win(80)"],["win(500)","A.win(500)"],["countUp(4000, 80)","window.stopCount = A.countUp(4000, 80)"],["countUp(3000, 2)","window.stopCount = A.countUp(3000, 2)"],["stop countUp","window.stopCount && window.stopCount()"]]],
+ ["SURF badges", [["scatterLand 1 (silent)","A.scatterLand(1)"],["scatterLand 2","A.scatterLand(2)"],["scatterLand 3","A.scatterLand(3)"],["scatterLand 4","A.scatterLand(4)"],["scatterLand 5","A.scatterLand(5)"],["badges 1..5 run","for (let i=1;i<=5;i++) setTimeout(()=>A.scatterLand(i), (i-1)*350)"],["anticipation on","A.anticipation(true)"],["anticipation off","A.anticipation(false)"]]],
+ ["Wilds", [["wildLand(2)","A.wildLand(2)"],["wildLand(10)","A.wildLand(10)"],["wildLand(100)","A.wildLand(100)"]]],
+ ["Bonus", [["bonusTrigger","A.bonusTrigger()"],["bonusSpinWin(0.5)","A.bonusSpinWin(0.5)"],["bonusSpinWin(4)","A.bonusSpinWin(4)"],["bonusSpinWin(40)","A.bonusSpinWin(40)"],["bonusEnd(0.5)","A.bonusEnd(0.5)"],["bonusEnd(5)","A.bonusEnd(5)"],["bonusEnd(150)","A.bonusEnd(150)"],["bail","A.bail()"]]],
+ ["System", [["Mute","A.setMuted(true)"],["Unmute","A.setMuted(false)"],["Stress: 60 fast spins","stress()"]]]
+];
+function stress(){ for (let s=0;s<60;s++){ setTimeout(()=>{ A.spinStart(); for(let i=0;i<5;i++) setTimeout(()=>A.reelStop(i), 20+i*15); A.win(Math.random()*3); }, s*60); } }
+var host = document.getElementById('groups');
+GROUPS.forEach(function(gr){
+  var h = document.createElement('h2'); h.textContent = gr[0]; host.appendChild(h);
+  var grid = document.createElement('div'); grid.className = 'grid'; host.appendChild(grid);
+  gr[1].forEach(function(b){
+    var el = document.createElement('button'); el.textContent = b[0];
+    var fn = new Function(b[1]);
+    el.addEventListener('click', function(){ A.init(); fn(); });
+    grid.appendChild(el);
+  });
+});
+setInterval(function(){ document.getElementById('stats').textContent = JSON.stringify(A._debug(), null, 1); }, 300);
+</script>
+</body></html>
