@@ -517,6 +517,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes wildwin{0%{scale:1}50%{scale:1.15}100%{scale:1}}
 
 </style>
+<script>window.MANGO_IMG_V = {"H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -1751,7 +1752,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 // The game, math and server are Sk8 Sesh's, unchanged. This file only changes what things look like and what they are called.
 (function(){
   const IMG = {cassette:'L1', sneaker:'L2', spray:'L3', lighter:'L4', cap:'L5', wheels:'H1', trucks:'H2', face:'H3', board:'H4', wild:'W', scatter:'S1'};
-  const src = k => 'img/' + k + '.webp';
+  // build.js fills MANGO_IMG_V with a hash per image, so new art gets a new address and no browser keeps an old copy
+  const V = window.MANGO_IMG_V || {}, src = k => 'img/' + k + '.webp' + (V[k] ? '?v=' + V[k] : '');
   const fmtM = m => (Math.round(m*100)/100).toString();
 
   // ---------- symbols ----------
