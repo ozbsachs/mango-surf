@@ -597,6 +597,19 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes pillin{from{transform:translate(-50%,-80%) scale(.4);opacity:0}to{transform:translate(-50%,-100%) scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.winpill{animation:none}}
 
+/* coconuts on the palms: asleep except in Barrel mode with no round running, then they glow, wobble and click */
+.nuts{position:fixed;inset:0;pointer-events:none;z-index:30}
+.nuts .nut,.nuts .nutfrond{position:fixed;display:none;padding:0;border:0;background:none;cursor:pointer;pointer-events:auto}
+.nuts.live .nut:not([hidden]),.nuts.live .nutfrond:not([hidden]){display:block}
+.nuts .nut{border-radius:50%;background:radial-gradient(circle at 35% 30%,#b0652a,#7a3b12 55%,#4a2109);border:3px solid var(--outline);
+  box-shadow:0 0 0 0 rgba(255,210,63,.9);animation:nutglow 1.1s ease-in-out infinite,nutwob 1.6s ease-in-out infinite;transform-origin:50% 0}
+.nuts .nut::after{content:"";position:absolute;left:28%;top:24%;width:14%;height:14%;border-radius:50%;background:#2a0e12;box-shadow:.45em .1em 0 #2a0e12,.2em .45em 0 #2a0e12;font-size:inherit}
+.nuts .nutfrond{right:0;top:64px;width:110px;height:100px;filter:drop-shadow(0 0 8px rgba(255,210,63,.9));animation:nutwob 1.6s ease-in-out infinite;transform-origin:100% 20%}
+.nuts .nutfrond svg{width:100%;height:100%;display:block}
+@keyframes nutglow{50%{box-shadow:0 0 0 7px rgba(255,210,63,0),0 0 18px 6px rgba(255,210,63,.75)}}
+@keyframes nutwob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@media (prefers-reduced-motion:reduce){.nuts .nut,.nuts .nutfrond{animation:none;box-shadow:0 0 14px 4px rgba(255,210,63,.8)}}
+
 </style>
 <script>window.MANGO_IMG_V = {"H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -1993,11 +2006,40 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
       .observe(cel, {attributes: true, attributeFilter: ['hidden']});
   }
 
+  // ---------- coconuts: in Barrel mode, a click plays the max-win preview (MangoPreview, injected into the game) ----------
+  // The palms are drawn in img/beach-day.svg (1600x900, background-size cover, anchored centre bottom). These are its
+  // coconut centres and radii in that box; clickable copies sit exactly on top. If both palms are off screen or under
+  // the machine (narrow screens), a small frond with coconuts hangs at the right edge instead.
+  const NUTS = [[186.6, 475.8, 14.7], [209.7, 480, 13.7], [1432.6, 516.2, 13.3], [1411.7, 520, 12.4]];
+  function coconuts(){
+    const box = document.createElement('div'); box.className = 'nuts'; document.body.appendChild(box);
+    const els = NUTS.map(() => { const b = document.createElement('button'); b.type = 'button'; b.className = 'nut'; b.setAttribute('aria-label', 'Coconut'); box.appendChild(b); return b; });
+    const frond = document.createElement('button'); frond.type = 'button'; frond.className = 'nutfrond'; frond.setAttribute('aria-label', 'Coconuts');
+    frond.innerHTML = `<svg viewBox="0 0 120 110" aria-hidden="true"><g stroke="#2a0e12" stroke-width="5" stroke-linejoin="round">
+      <path d="M120 18 Q70 0 22 30 Q60 22 120 40Z" fill="#3fbf4a"/><path d="M120 34 Q80 40 40 86 Q90 60 120 56Z" fill="#35a843"/>
+      <circle class="n1" cx="88" cy="62" r="17" fill="#7a3b12"/><circle class="n2" cx="108" cy="72" r="15" fill="#7a3b12"/></g></svg>`;
+    box.appendChild(frond);
+    const play = () => { if (window.MangoPreview && MangoPreview.ready()){ box.classList.remove('live'); MangoPreview.play(); } };
+    els.forEach(b => b.onclick = play); frond.onclick = play;
+    function place(){
+      const sc = document.querySelector('.scene'), st = document.querySelector('.machine .stage'); if (!sc) return;
+      const R = sc.getBoundingClientRect(), k = Math.max(R.width/1600, R.height/900), x0 = R.left + (R.width - 1600*k)/2, y0 = R.top + R.height - 900*k;
+      const S = st ? st.getBoundingClientRect() : null; let shown = 0;
+      NUTS.forEach(([x, y, r], i) => { const cx = x0 + x*k, cy = y0 + y*k, rr = r*k, el = els[i];
+        const off = cx < rr || cx > innerWidth - rr || cy < 60 || cy > innerHeight - 70 || (S && cx > S.left - rr && cx < S.right + rr && cy > S.top - rr && cy < S.bottom + rr);
+        el.hidden = off; if (off) return; shown++;
+        el.style.left = (cx - rr) + 'px'; el.style.top = (cy - rr) + 'px'; el.style.width = el.style.height = (2*rr) + 'px'; });
+      frond.hidden = shown > 0;
+    }
+    function tick(){ const live = !!(window.MangoPreview && MangoPreview.ready()); box.classList.toggle('live', live); if (live) place(); }
+    addEventListener('resize', place); place(); setInterval(tick, 400);
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
@@ -4544,6 +4586,33 @@ async function animateRound(res, cost){
   renderSpinCard(res);
   return win;
 }
+// Max-win preview (Oz, for showing people live). Injected into the game's own scope by build.js, just before
+// playRound. In Barrel (SPECIAL3) mode with no round running, a coconut click plays the full-board max win through the
+// game's real animation path: all 5 reels wild at x25, 16 lines x 10 x 125 = 20,000x the bet. Client side only: no
+// server call, no bet, the balance never changes. LAST WIN, the message line and the spin card go back afterwards.
+async function mangoMaxPreview(){
+  if (busy || mode !== 'SPECIAL3') return false;
+  busy = true; meta();
+  const keep = {last: $('lastwin').textContent, list: $('winlist').innerHTML, sub: $('spinsub').textContent, msg: $('msg').innerHTML, bet: roundBet};
+  try {
+    roundBet = levels[betIdx]/API; $('msg').textContent = ''; clearStacks(); resetWinBoxes();
+    banner(`${TRICK[2]} · TRICK SPIN`);
+    const M = 25, g = [], mults = [], merged = [];
+    for (let c=0; c<CELLS; c++){ g.push(randInt(9)); mults.push(0); }
+    for (let r=0; r<REELS; r++){ const row = randInt(ROWS), raw = []; for (let k=0; k<ROWS; k++) raw.push(g[TT.cell(r,k)]);
+      merged.push({r, from: [{c: TT.cell(r,row), m: M}], M, raw}); for (let k=0; k<ROWS; k++){ const c = TT.cell(r,k); g[c] = W; mults[c] = M; } }
+    const pay5 = (GAME.pays && GAME.pays[W] && GAME.pays[W][2]) || 10, cap = 20000;
+    const wins = TT.LINES.map((ln, li) => ({li, k: REELS, s: W, pay: pay5, mult: M*REELS, win: pay5*M*REELS}));
+    const total = Math.min(cap, wins.reduce((a, w) => a + w.win, 0));
+    await animateRound({kind: 'special', n: 3, g, mults, merged, ramps: [], wins, lineWin: total, topUp: 0, total, full: true, capped: true, tier: -1, bonus: null}, roundBet*costOf('SPECIAL3'));
+  } finally {
+    roundBet = keep.bet; $('lastwin').textContent = keep.last; $('winlist').innerHTML = keep.list; $('spinsub').textContent = keep.sub; $('msg').innerHTML = keep.msg;
+    busy = false; meta();
+  }
+  return true;
+}
+window.MangoPreview = {ready: () => !busy && mode === 'SPECIAL3', play: mangoMaxPreview};
+
 async function playRound(name){
   const amount = levels[betIdx], cost = amount/API*costOf(name);
   if (busy) return;
