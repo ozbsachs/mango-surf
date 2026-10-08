@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mango Surf Animation Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2a0e12;--gold:#ffd23f;--pink:#ff4f8b;--cyan:#3be3ff;--cream:#fff7d6;--muted:#b8d3ee;--card1:#134472;--card2:#0d3152;--bar:rgba(6,24,44,.94)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+body{margin:0;min-height:100vh;color:var(--cream);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:radial-gradient(1100px 520px at 50% -8%,#1f6a9c 0,rgba(31,106,156,0) 70%),linear-gradient(#0b2c4d,#061629 60%,#05111f);background-attachment:fixed;overflow-x:hidden}
+.lil{font-family:"Lilita One",system-ui,sans-serif;font-weight:400;letter-spacing:.02em}
+a{color:var(--cyan)}
+header.top{max-width:1180px;margin:0 auto;padding:28px 16px 18px;display:grid;gap:10px}
+.brand{font-family:"Lilita One",system-ui,sans-serif;font-size:clamp(30px,6vw,52px);line-height:1;margin:0;
+  background:linear-gradient(#fff3a6,#ffc21f 45%,#ff7a1f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  -webkit-text-stroke:2px var(--ink);filter:drop-shadow(0 4px 0 var(--ink))}
+.brand small{display:block;font-size:.42em;margin-top:6px;-webkit-text-stroke:1px var(--ink)}
+.how{max-width:860px;margin:0;color:var(--muted);font-size:16px}
+.how b{color:var(--cream)}
+.how code{font-family:"Lilita One",system-ui,sans-serif;font-size:1.05em;color:var(--ink);background:var(--gold);border:2px solid var(--ink);border-radius:8px;padding:0 6px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.pickchip{font-family:"Lilita One",system-ui,sans-serif;font-size:12px;color:var(--ink);background:linear-gradient(#7dffb0,#2fd27a);border:2px solid var(--ink);border-radius:999px;padding:1px 8px}
+
+/* sticky bar: category tabs + global controls */
+.bar{position:sticky;top:0;z-index:50;background:var(--bar);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:3px solid var(--ink);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.bar-in{max-width:1180px;margin:0 auto;padding:8px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.tabs{display:flex;gap:6px;overflow-x:auto;flex:1 1 520px;min-width:0;padding:2px 0 4px;scrollbar-width:thin}
+.tab{flex:0 0 auto;font-family:"Lilita One",system-ui,sans-serif;font-size:14px;letter-spacing:.02em;text-decoration:none;color:var(--cream);background:#0f4c78;border:2px solid var(--ink);border-radius:999px;padding:4px 11px 5px;box-shadow:0 3px 0 var(--ink);white-space:nowrap}
+.tab b{font-weight:400;color:var(--gold);margin-right:4px}
+.tab i{font-style:normal;opacity:.7;font-size:12px;margin-left:4px}
+.tab.on{background:linear-gradient(#ffe066,#ffae1f);color:var(--ink)}
+.tab.on b{color:var(--ink)}
+.ctrls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{font-family:"Lilita One",system-ui,sans-serif;font-size:14px;letter-spacing:.02em;color:#fff;background:linear-gradient(#ff8fb8,#ff4f8b);border:2px solid var(--ink);border-radius:10px;padding:5px 12px 6px;box-shadow:0 3px 0 var(--ink);cursor:pointer;white-space:nowrap}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn.sea{background:linear-gradient(#5fd4ff,#1a8fd6)}
+.btn.ghost{background:#0f4c78}
+.btn:focus-visible,.tab:focus-visible,.idbtn:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.speed{display:flex;align-items:center;gap:8px;font-family:"Lilita One",system-ui,sans-serif;font-size:14px}
+.speed input{width:120px;accent-color:var(--gold)}
+.speed output{min-width:44px;color:var(--gold)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer}
+.chk input{accent-color:var(--gold)}
+
+main{max-width:1180px;margin:0 auto;padding:6px 16px 120px}
+section.cat{padding-top:26px}
+.cat-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 4px}
+.cat-h h2{font-family:"Lilita One",system-ui,sans-serif;font-weight:400;font-size:clamp(24px,4vw,34px);margin:0;color:var(--cream);text-shadow:0 3px 0 var(--ink)}
+.cat-h .pre{font-family:"Lilita One",system-ui,sans-serif;font-size:clamp(24px,4vw,34px);color:var(--gold);text-shadow:0 3px 0 var(--ink)}
+.cat-note{color:var(--muted);margin:0 0 14px;max-width:880px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:22px}
+.card{position:relative;background:linear-gradient(var(--card1),var(--card2));border:3px solid var(--ink);border-radius:20px;padding:14px 14px 12px;box-shadow:0 6px 0 rgba(0,0,0,.4);min-width:0}
+.card.picked{border-color:#2fd27a;box-shadow:0 0 0 3px #2fd27a,0 6px 0 rgba(0,0,0,.4)}
+.head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.idbtn{font-family:"Lilita One",system-ui,sans-serif;font-size:26px;line-height:1;color:var(--ink);background:linear-gradient(#fff3a6,#ffc21f);border:3px solid var(--ink);border-radius:12px;padding:5px 10px 6px;box-shadow:0 3px 0 var(--ink);cursor:pointer}
+.card.picked .idbtn{background:linear-gradient(#b6ffd6,#2fd27a)}
+.name{font-family:"Lilita One",system-ui,sans-serif;font-size:22px;line-height:1.1;flex:1 1 160px;min-width:0}
+.toppick{font-family:"Lilita One",system-ui,sans-serif;font-size:12px;color:var(--ink);background:linear-gradient(#ffb3cf,#ff6b9d);border:2px solid var(--ink);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.desc{color:#d6e8fa;margin:8px 0 12px;min-height:3em}
+.stage{position:relative;max-width:480px;margin:0 auto;aspect-ratio:1/.93;border-radius:18px;background:#5cc8f5 url("img/bg-day.webp") center 72%/cover no-repeat;overflow:hidden}
+.stage.sunset{background-image:url("img/bg-sunset.webp")}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap}
+.meta{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+.meta .d{font-family:"Lilita One",system-ui,sans-serif;color:var(--cream);background:#0a2944;border:2px solid var(--ink);border-radius:999px;padding:1px 9px}
+.meta code{font-size:12px;color:#9fd3ff}
+.tray{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);
+  background:rgba(6,24,44,.96);border:3px solid var(--ink);border-radius:999px;padding:8px 10px 8px 16px;box-shadow:0 6px 0 rgba(0,0,0,.4),0 0 0 2px #2fd27a}
+.tray[hidden]{display:none}
+.tray .ids{font-family:"Lilita One",system-ui,sans-serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+footer{color:var(--muted);text-align:center;font-size:13px;padding:30px 16px 90px}
+@media (max-width:560px){
+  .bar-in{padding:6px 12px;gap:6px 10px}
+  .ctrls{gap:8px;flex-wrap:nowrap}
+  .long{display:none}
+  .ctrls .btn{font-size:12.5px;padding:4px 9px 5px}
+  .speed{font-size:12.5px;gap:5px}
+  .speed output{min-width:36px}
+  .tab{font-size:13px;padding:3px 9px 4px}
+  .tabs{flex-basis:100%}
+  .speed input{width:74px}
+  .card{padding:12px 10px 10px;border-radius:16px}
+  .idbtn{font-size:22px}
+  .name{font-size:19px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1 class="brand">Mango Surf <small>Animation Lab</small></h1>
+  <p class="how">Every card below is <b>one option</b> for one moment of the game, playing live with the real art. Pick one or two per moment and
+    <b>tell Claude the IDs you like</b>, for example <code>G8</code> <code>S3</code> <code>L2</code> <code>B5</code>. Click an ID badge to add it to your pick list at the bottom of the screen, then copy it.</p>
+  <div class="legend">
+    <span><span class="toppick">TOP PICK</span> Claude's top 3 per category for a premium feel</span>
+    <span>Cards loop by themselves while on screen and stop when you scroll past.</span>
+    <label class="chk"><input type="checkbox" id="reduced"> Preview the reduced-motion version</label>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="bar-in">
+    <nav class="tabs" id="tabs" aria-label="Categories"></nav>
+    <div class="ctrls">
+      <button class="btn" id="playall" type="button" title="Restart every card on screen at once">Play all<span class="long"> in view</span></button>
+      <label class="speed" title="Global speed (gsap.globalTimeline.timeScale)">Speed
+        <input id="speed" type="range" min="0.1" max="2" step="0.05" value="1" aria-label="Global animation speed">
+        <output id="speedv">1.00x</output></label>
+      <button class="btn ghost" id="pause" type="button">Pause</button>
+    </div>
+  </div>
+</div>
+
+<main id="main"></main>
+<footer>Mango Surf animation lab · GSAP 3.13 · effects in <code>fx-lib.js</code> (<code>window.MangoFX</code>)</footer>
+
+<div class="tray" id="tray" hidden>
+  <span class="lil">Picks:</span><span class="ids" id="trayids"></span>
+  <button class="btn sea" id="copy" type="button">Copy</button>
+  <button class="btn ghost" id="clear" type="button">Clear</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/MotionPathPlugin.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Physics2DPlugin.min.js"></script>
+<script src="fx-lib.js"></script>
+<script>
+(function(){
+  'use strict';
+  const FX = window.MangoFX;
+  if (!FX) { document.getElementById('main').textContent = 'fx-lib.js did not load.'; return; }
+  const $ = s => document.querySelector(s);
+
+  // Claude's top 3 per category (premium feel), in order
+  const TOP = { start:['G8','G1','G2'], stop:['S1','S3','S8'], tease:['T8','T1','T3'], win:['P13','P2','P12'], line:['L1','L9','L7'],
+    count:['C3','C4','C1'], big:['B8','B1','B4'], wild:['W2','W5','W6'], bonus:['F6','F2','F3'], idle:['I1','I2','I6'] };
+  const NOTES = {
+    start: 'What happens the moment the player hits SPIN. Each card spins into the same standard stop (S1) so you only judge the start.',
+    stop: 'How the five reels land, left to right. Each card uses the same start (G1) so you only judge the stop.',
+    tease: 'Two SURF badges have landed; reels 4 and 5 keep the player waiting. The third SURF lands on reel 4.',
+    win: 'A five-of-a-kind mango line (with the wild). Losing symbols dim in every variant.',
+    line: 'The payline drawn over the grid through the cell centres. Line shown: rows 1-2-3-2-1 (a V).',
+    count: 'How the win amount reaches the win box under the reels.',
+    big: 'Big win presentations. B8 is the full 20,000x max-win show (about 11 s).',
+    wild: 'Wild landings, full-reel expansions and multipliers.',
+    bonus: 'Three SURF badges trigger free spins: the badges celebrate, then a transition into the sunset bonus.',
+    idle: 'Ambient life while nobody is spinning. These loop; kill them when a spin starts.'
+  };
+  const SCENES = { start: FX.DEMO.start, line: FX.DEMO.line, bonus: FX.DEMO.bonus, wild2: FX.DEMO.wild2 };
+  const HOLD = 1.1;
+
+  // ---------- picks (per-viewer convenience only) ----------
+  let picks = [];
+  try { picks = JSON.parse(localStorage.getItem('mfx-picks') || '[]') || []; } catch (e) { picks = []; }
+  const savePicks = () => { try { localStorage.setItem('mfx-picks', JSON.stringify(picks)); } catch (e) {} };
+  function renderTray(){
+    $('#tray').hidden = !picks.length; $('#trayids').textContent = picks.join(', ');
+    document.querySelectorAll('.card').forEach(c => c.classList.toggle('picked', picks.includes(c.dataset.id)));
+  }
+  function togglePick(id){ picks = picks.includes(id) ? picks.filter(x => x !== id) : picks.concat(id); savePicks(); renderTray(); }
+  $('#copy').addEventListener('click', async () => {
+    const txt = 'Mango Surf picks: ' + picks.join(', ');
+    try { await navigator.clipboard.writeText(txt); $('#copy').textContent = 'Copied'; }
+    catch (e) { window.prompt('Copy your picks:', txt); }
+    setTimeout(() => { $('#copy').textContent = 'Copy'; }, 1400);
+  });
+  $('#clear').addEventListener('click', () => { picks = []; savePicks(); renderTray(); });
+
+  // ---------- one card per variant ----------
+  class Card {
+    constructor(v, node){ this.v = v; this.node = node; this.stage = node.querySelector('.stage'); this.visible = false; this.M = null; this.master = null; this.ctx = null; this.gen = 0; }
+    play(){
+      this.stop(); const v = this.v, gen = ++this.gen;
+      this.M = FX.build(this.stage, { symbols: SCENES[v.scene] || FX.DEMO.line });
+      let tl = null;
+      this.ctx = gsap.context(() => { tl = v(this.M, {}); });
+      const d = tl.duration(), len = (v.loop || d > 1000) ? (v.loop || 6) : d;
+      this.master = gsap.timeline();
+      this.master.add(tl, 0.25);
+      this.master.call(() => requestAnimationFrame(() => { if (this.visible && gen === this.gen) this.play(); }), null, 0.25 + len + HOLD);
+    }
+    stop(){
+      if (this.master) { this.master.kill(); this.master = null; }
+      if (this.ctx) { this.ctx.kill(); this.ctx = null; }
+      if (this.M) { FX.destroy(this.M); this.M = null; }
+    }
+  }
+
+  const main = $('#main'), tabs = $('#tabs'), cards = [], sections = [];
+  const byCat = {}; FX.list().forEach(v => { (byCat[v.cat] = byCat[v.cat] || []).push(v); });
+  const natural = (a, b) => parseInt(a.id.slice(1), 10) - parseInt(b.id.slice(1), 10);
+  FX.categories.forEach((c, ci) => {
+    const list = (byCat[c.key] || []).sort(natural); if (!list.length) return;
+    const tab = document.createElement('a'); tab.className = 'tab'; tab.href = '#cat-' + c.key;
+    tab.innerHTML = `<b>${ci + 1}</b>${c.label}<i>${list.length}</i>`; tabs.appendChild(tab);
+    const sec = document.createElement('section'); sec.className = 'cat'; sec.id = 'cat-' + c.key; sec._tab = tab;
+    sec.innerHTML = `<div class="cat-h"><span class="pre">${ci + 1}.</span><h2>${c.label}</h2></div><p class="cat-note">${NOTES[c.key] || ''}</p><div class="cards"></div>`;
+    const grid = sec.querySelector('.cards');
+    list.forEach(v => {
+      const top = (TOP[c.key] || []).indexOf(v.id);
+      const node = document.createElement('article'); node.className = 'card'; node.dataset.id = v.id;
+      node.innerHTML = `<div class="head"><button class="idbtn" type="button" title="Add ${v.id} to your picks" aria-label="Pick ${v.id}">${v.id}</button>`
+        + `<div class="name">${v.title}</div>${top >= 0 ? `<span class="toppick">TOP PICK #${top + 1}</span>` : ''}</div>`
+        + `<p class="desc">${v.desc}</p><div class="stage${v.scene === 'sunset' ? ' sunset' : ''}"></div>`
+        + `<div class="foot"><div class="meta"><span class="d">${v.cat === "start" || v.cat === "stop" ? "effect " : ""}${v.dur}</span><code>MangoFX.${v.cat}.${v.id}(M, opts)</code></div><button class="btn sea replay" type="button">Replay</button></div>`;
+      grid.appendChild(node);
+      const card = new Card(v, node); cards.push(card);
+      node.querySelector('.replay').addEventListener('click', () => card.play());
+      node.querySelector('.idbtn').addEventListener('click', () => togglePick(v.id));
+    });
+    main.appendChild(sec); sections.push(sec);
+  });
+  renderTray();
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) requestAnimationFrame(() => t.scrollIntoView()); }
+
+  // ---------- play only what is on screen ----------
+  function startObservers(){
+    const io = new IntersectionObserver(entries => entries.forEach(e => {
+      const card = cards.find(c => c.node === e.target); if (!card) return;
+      if (e.isIntersecting) { if (!card.visible) { card.visible = true; card.play(); } }
+      else if (card.visible) { card.visible = false; card.stop(); }
+    }), { threshold: 0.25 });
+    cards.forEach(c => io.observe(c.node));
+    const so = new IntersectionObserver(entries => entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      sections.forEach(s => s._tab.classList.toggle('on', s === e.target));
+      e.target._tab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }), { rootMargin: '-35% 0px -60% 0px' });
+    sections.forEach(s => so.observe(s));
+  }
+  // wait for the font and the pre-blurred spin art (max 2.5 s) so the first cards look right
+  Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0, FX.prepBlur()]), new Promise(r => setTimeout(r, 2500))]).then(startObservers);
+
+  // ---------- global controls ----------
+  $('#playall').addEventListener('click', () => cards.filter(c => c.visible).forEach(c => c.play()));
+  $('#speed').addEventListener('input', e => { const v = +e.target.value; gsap.globalTimeline.timeScale(v); $('#speedv').textContent = v.toFixed(2) + 'x'; });
+  $('#pause').addEventListener('click', e => { const p = !gsap.globalTimeline.paused(); gsap.globalTimeline.paused(p); e.target.textContent = p ? 'Resume' : 'Pause'; });
+  const rm = $('#reduced'); rm.checked = FX.isReduced();
+  rm.addEventListener('change', () => { FX.setReduced(rm.checked); cards.filter(c => c.visible).forEach(c => c.play()); });
+  window.MangoLab = { cards };
+})();
+</script>
+</body>
+</html>
