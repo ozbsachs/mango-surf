@@ -455,8 +455,8 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 :root{--f-d:"Lilita One",system-ui,sans-serif;--f-n:"Lilita One",system-ui,sans-serif;--accent:#ff4f8b;--lime:#7dffb0;--outline:#2a0e12}
 
 /* beach scene; sunset during bonuses */
-.slot .scene{background:#7fd6ff url("img/beach-day.svg") center bottom/cover no-repeat!important}
-.slot:has(.stage.bonus) .scene{background:#ff9a5a url("img/beach-sunset.svg") center bottom/cover no-repeat!important}
+.slot .scene{background:#7fd6ff url("img/bg-day.webp?v=1ebec342") center bottom/cover no-repeat!important}
+.slot:has(.stage.bonus) .scene{background:#f58a5a url("img/bg-sunset.webp?v=b4d20a63") center bottom/cover no-repeat!important}
 
 /* chrome in beach colours */
 .slotbar{background:linear-gradient(rgba(6,40,70,.55),rgba(6,40,70,0))}
@@ -605,7 +605,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .nuts.live .nut:not([hidden]){display:block}
 
 </style>
-<script>window.MANGO_IMG_V = {"H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2001,10 +2001,10 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   }
 
   // ---------- coconuts: in Barrel mode, a click plays the max-win preview (MangoPreview, injected into the game) ----------
-  // The palms are drawn in img/beach-day.svg (1600x900, background-size cover, anchored centre bottom). These are its
+  // The palms are drawn in img/bg-day.webp (2000x1125, background-size cover, anchored centre bottom). These are its
   // coconut centres and radii in that box; invisible buttons sit exactly on top (a little larger, easier to hit).
   // Coconuts that are off screen or under the machine get no button.
-  const NUTS = [[186.6, 475.8, 14.7], [209.7, 480, 13.7], [1432.6, 516.2, 13.3], [1411.7, 520, 12.4]];
+  const BG_W = 2000, BG_H = 1125, NUTS = [[120, 535, 58], [35, 531, 52], [92, 478, 40], [1680, 344, 55], [1750, 342, 45], [1710, 295, 40]];
   function coconuts(){
     const box = document.createElement('div'); box.className = 'nuts'; document.body.appendChild(box);
     const els = NUTS.map(() => { const b = document.createElement('button'); b.type = 'button'; b.className = 'nut'; b.setAttribute('aria-label', 'Coconut'); box.appendChild(b); return b; });
@@ -2012,9 +2012,9 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     els.forEach(b => b.onclick = play);
     function place(){
       const sc = document.querySelector('.scene'), st = document.querySelector('.machine .stage'); if (!sc) return;
-      const R = sc.getBoundingClientRect(), k = Math.max(R.width/1600, R.height/900), x0 = R.left + (R.width - 1600*k)/2, y0 = R.top + R.height - 900*k;
+      const R = sc.getBoundingClientRect(), k = Math.max(R.width/BG_W, R.height/BG_H), x0 = R.left + (R.width - BG_W*k)/2, y0 = R.top + R.height - BG_H*k;
       const S = st ? st.getBoundingClientRect() : null; let shown = 0;
-      NUTS.forEach(([x, y, r], i) => { const cx = x0 + x*k, cy = y0 + y*k, rr = r*k*1.4, el = els[i];
+      NUTS.forEach(([x, y, r], i) => { const cx = x0 + x*k, cy = y0 + y*k, rr = r*k*1.1, el = els[i];
         const off = cx < rr || cx > innerWidth - rr || cy < 60 || cy > innerHeight - 70 || (S && cx > S.left - rr && cx < S.right + rr && cy > S.top - rr && cy < S.bottom + rr);
         el.hidden = off; if (off) return; shown++;
         el.style.left = (cx - rr) + 'px'; el.style.top = (cy - rr) + 'px'; el.style.width = el.style.height = (2*rr) + 'px'; });
