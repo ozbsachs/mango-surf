@@ -604,6 +604,84 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .nuts .nut{position:fixed;display:none;padding:0;border:0;border-radius:50%;background:transparent;cursor:default;pointer-events:auto;-webkit-tap-highlight-color:transparent;outline:none}
 .nuts.live .nut:not([hidden]){display:block}
 
+/* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
+:root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
+.ctrlbar.mhud{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:14px;
+  width:min(880px,calc(100% - 20px));margin:0 auto calc(8px + env(safe-area-inset-bottom));padding:10px 14px;
+  background:linear-gradient(180deg,#22c3ff,var(--cy) 45%,var(--cy2));border:3px solid #fff;border-radius:20px;
+  box-shadow:0 0 0 3px rgba(0,80,138,.55),0 8px 22px rgba(0,40,80,.35),inset 0 2px 0 rgba(255,255,255,.45)}
+.mhud .k{font:400 11px/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.08em;color:#e6f7ff!important;text-shadow:0 1px 0 var(--cyd)}
+.mhud b{font:400 26px/1.05 "Lilita One",system-ui,sans-serif!important;color:#fff;text-shadow:0 2px 0 var(--cyd)}
+/* menu: a white-outlined rounded square with three bars */
+.mhud .iconbtn{width:54px;height:54px;margin:0!important;background:transparent;border:3px solid #fff;border-radius:12px;box-shadow:none;padding:0 12px;gap:6px}
+.mhud .iconbtn span{height:5px;background:#fff;border-radius:3px}
+.mhud .iconbtn:hover{background:rgba(255,255,255,.15)}
+/* balance */
+.mhud .balctl{align-items:flex-start;gap:4px;margin-right:auto}
+/* bet: a boxed value with stacked up/down buttons */
+.mhud .betctl{flex-direction:row;align-items:center;gap:8px}
+.mhud .mbetbox{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:116px;padding:6px 14px 7px;background:var(--cy3);border:2px solid rgba(255,255,255,.85);border-radius:10px;box-shadow:inset 0 2px 4px rgba(0,40,80,.35)}
+.mhud .mbetbox b{font-size:22px!important}
+.mhud .mbetstack{display:flex;flex-direction:column;gap:5px}
+.mhud .mbetstack .round{width:40px;height:24px;padding:0;border:2px solid #fff;border-radius:7px;background:#fff;font-size:0;cursor:pointer;position:relative;box-shadow:0 2px 0 var(--cyd)}
+.mhud .mbetstack .round::before{content:"";position:absolute;left:50%;top:50%;border:7px solid transparent}
+.mhud #betplus::before{border-bottom:8px solid var(--cy2);transform:translate(-50%,-80%)}
+.mhud #betminus::before{border-top:8px solid var(--cy2);transform:translate(-50%,-20%)}
+.mhud .mbetstack .round:disabled{opacity:.5;cursor:not-allowed}
+.mhud .mbetstack .round:not(:disabled):active{transform:translateY(2px);box-shadow:none}
+/* spin: a big ring with the circular arrows; a small caption only when it says more than SPIN */
+.mhud .mspinwrap{position:relative;flex:0 0 auto;margin:-26px 4px}
+.mhud #spinbtn{width:96px;height:96px;padding:0;border-radius:50%;font-size:0;color:transparent;cursor:pointer;position:relative;
+  background:radial-gradient(circle at 50% 38%,#4fd2ff,var(--cy) 55%,var(--cy3));border:5px solid #fff;
+  box-shadow:0 0 0 4px var(--cy3),0 0 0 7px #fff,0 8px 18px rgba(0,40,80,.45);transition:transform .12s,filter .12s}
+.mhud #spinbtn::before{content:"";position:absolute;inset:16%;background:url("img/spin-arrows.svg?v=7672b570") center/contain no-repeat;filter:drop-shadow(0 2px 0 rgba(0,60,110,.6));transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.mhud #spinbtn:not(:disabled):hover{transform:scale(1.04)}
+.mhud #spinbtn:not(:disabled):hover::before{transform:rotate(180deg)}
+.mhud #spinbtn:not(:disabled):active{transform:scale(.95)}
+.mhud #spinbtn:disabled{filter:saturate(.55) brightness(.92);cursor:not-allowed}
+.mhud #spinbtn:disabled::before{animation:spinicon .9s linear infinite}
+@keyframes spinicon{to{transform:rotate(360deg)}}
+.mhud #spinbtn[data-label]:not([data-label=""])::after{content:attr(data-label);position:absolute;left:50%;top:calc(100% + 9px);transform:translateX(-50%);white-space:nowrap;
+  font:400 12px/1 "Lilita One",system-ui,sans-serif;color:var(--cyd);background:#fff;border-radius:999px;padding:4px 9px;box-shadow:0 2px 0 var(--cy3)}
+/* autoplay, turbo, mode: small squares like the reference, filled white when on */
+.mhud .tools{flex-direction:row;gap:8px;flex-wrap:nowrap}
+.mhud .tools .pill{height:42px;min-width:42px;padding:0;border:3px solid #fff;border-radius:10px;background:transparent;color:#fff;font-size:0;position:relative;box-shadow:none}
+.mhud .tools .pill::before{content:"";position:absolute;inset:6px;background:center/contain no-repeat}
+.mhud #autobtn::before{background-image:url("img/icon-auto.svg?v=3f71e34b")}
+.mhud #speedbtn::before{background-image:url("img/icon-bolt.svg?v=e06f0746")}
+.mhud #speedbtn[data-level="1"]::before{background-image:url("img/icon-bolt-on.svg?v=4fb7ca6b")}
+.mhud #speedbtn[data-level="2"]::before{background-image:url("img/icon-bolt2-on.svg?v=47aa9d32")}
+.mhud #speedbtn:not([data-level="0"]){background:#fff}
+.mhud #modebtn{font:400 12px/1 "Lilita One",system-ui,sans-serif!important;padding:0 12px!important;letter-spacing:.03em}
+.mhud #modebtn::before{display:none}
+.mhud .tools .pill:disabled{opacity:.5}
+.mhud .tools .pill:not(:disabled):hover{background:rgba(255,255,255,.18)}
+.mhud #speedbtn:not([data-level="0"]):hover{background:#fff}
+/* the rest of the chrome in the same colours */
+.pill{background:var(--cy2);border-color:#fff;color:#fff}
+.pill.hot,#buybtn{background:#fff!important;color:var(--cy3)!important;border-color:var(--cy3)!important}
+.winarea{background:linear-gradient(180deg,#22c3ff,var(--cy2));border:3px solid #fff;box-shadow:0 0 0 3px rgba(0,80,138,.5),0 5px 0 rgba(0,40,80,.3)}
+.winarea .k{color:#e6f7ff}
+.winarea .v{color:#fff;text-shadow:0 2px 0 var(--cyd)}
+/* phones: two rows. Top: menu, balance, bet. Bottom: autoplay, turbo, the spin button centred, mode */
+@media (max-width:640px){
+  .ctrlbar.mhud{flex-wrap:wrap;gap:8px;padding:8px 10px;border-radius:16px}
+  .ctrlbar.mhud::after{content:"";order:4;flex-basis:100%;height:0}
+  .mhud .iconbtn{order:1;width:44px;height:44px;padding:0 9px;gap:5px}
+  .mhud .balctl{order:2}
+  .mhud .betctl{order:3}
+  .mhud .tools{display:contents}
+  .mhud #autobtn,.mhud #speedbtn{order:5}
+  .mhud .mspinwrap{order:6;margin:0 auto}
+  .mhud #modebtn{order:7}
+  .mhud b{font-size:20px}
+  .mhud .mbetbox{min-width:84px;padding:5px 8px}
+  .mhud .mbetbox b{font-size:17px!important}
+  .mhud #spinbtn{width:72px;height:72px;border-width:4px;box-shadow:0 0 0 3px var(--cy3),0 0 0 5px #fff,0 6px 12px rgba(0,40,80,.4)}
+  .mhud #spinbtn[data-label]:not([data-label=""])::after{top:auto;bottom:calc(100% + 6px)}
+}
+@media (prefers-reduced-motion:reduce){.mhud #spinbtn::before{transition:none;animation:none!important}}
+
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -2023,11 +2101,31 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     addEventListener('resize', place); place(); setInterval(tick, 400);
   }
 
+  // ---------- HUD: one rounded control bar (menu | balance | bet with up/down | round spin | autoplay, turbo, mode) ----------
+  // Layout after the reference bar Oz sent, coloured like the bubble art (cyan #00b3ff and white). The game's own buttons
+  // are moved, not rebuilt, so every click handler and label update still works. The game rewrites the spin button's
+  // text (SPIN / BARREL SPIN / STOP (5)), so the icon is CSS and the text shows as a small caption only when it says more.
+  function hud(){
+    const $i = id => document.getElementById(id), bar = document.querySelector('.ctrlbar'), spin = $i('spinbtn'), bet = bar && bar.querySelector('.betctl');
+    if (!bar || !spin || !bet) return;
+    bar.classList.add('mhud');
+    const box = document.createElement('div'), stack = document.createElement('div'), wrap = document.createElement('div');
+    box.className = 'mbetbox'; stack.className = 'mbetstack'; wrap.className = 'mspinwrap';
+    box.append(bet.querySelector('.k'), $i('cost')); stack.append($i('betplus'), $i('betminus'));
+    bet.textContent = ''; bet.append(box, stack); wrap.append(spin); bet.after(wrap);
+    const sync = () => { const t = spin.textContent.trim(); spin.dataset.label = t === 'SPIN' ? '' : t; spin.setAttribute('aria-label', t || 'Spin'); };
+    new MutationObserver(sync).observe(spin, {childList: true, characterData: true, subtree: true}); sync();
+    const sp = $i('speedbtn'), ap = $i('autobtn');
+    const speed = () => { const t = sp.textContent; sp.dataset.level = /SUPER/.test(t) ? 2 : /TURBO/.test(t) ? 1 : 0; sp.setAttribute('aria-label', t.trim()); };
+    if (sp){ new MutationObserver(speed).observe(sp, {childList: true, characterData: true, subtree: true}); speed(); }
+    if (ap) ap.setAttribute('aria-label', 'Autoplay');
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
