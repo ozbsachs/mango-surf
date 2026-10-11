@@ -682,6 +682,72 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 }
 @media (prefers-reduced-motion:reduce){.mhud #spinbtn::before{transition:none;animation:none!important}}
 
+/* ---------- bigger slot on desktop: the spin button now lives in the bar, so the reels get that height back ---------- */
+/* stage height is about 50px of banner + 0.8 x width of reels; the rest of the screen is top bar, win box and HUD */
+@media (min-width:900px){
+  .machine .stage{width:min(94vw,calc((100dvh - 280px)*1.25),1120px)}
+  .machine{padding-top:0}
+  .stagetop .banner{font-size:clamp(13px,1.3vw,18px)!important}
+}
+
+/* ---------- bonus buy sheet: a centred cyan panel with mode tiles and bonus cards ---------- */
+.sheet.mbuy{top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(940px,calc(100vw - 20px));max-height:92dvh}
+.sheet.mbuy > .win{background:linear-gradient(180deg,#0a4f86,#063a68);border:3px solid #fff!important;border-radius:22px;
+  box-shadow:0 0 0 4px var(--cy3),0 24px 60px rgba(0,20,50,.55);color:#fff}
+.sheet.mbuy .bar{background:transparent;padding:16px 18px 6px;font-size:26px;letter-spacing:.04em;color:#fff;text-shadow:0 3px 0 var(--cyd)}
+.sheet.mbuy .bar .pill{font-size:13px!important;height:auto;padding:8px 14px}
+.sheet.mbuy .body{padding:6px 18px 20px}
+.sheet.mbuy .dh{font:400 15px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#9fe3ff;margin:14px 0 10px;border:0;padding:0}
+/* mode tiles */
+.sheet.mbuy .modes{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0}
+.sheet.mbuy .modes .btn{display:grid;justify-items:center;align-content:start;gap:4px;padding:12px 8px 10px;min-height:118px;border-radius:16px;border:3px solid rgba(255,255,255,.75)!important;
+  background:linear-gradient(180deg,#1aa9ef,var(--cy3));color:#fff;font:400 17px/1.05 "Lilita One",system-ui,sans-serif;letter-spacing:.02em;text-align:center;box-shadow:0 4px 0 var(--cyd);transition:transform .12s}
+.sheet.mbuy .modes .btn small{display:block;font:400 11.5px/1.25 "Lilita One",system-ui,sans-serif;color:#d8f3ff;letter-spacing:.01em;opacity:.95}
+.sheet.mbuy .modes .btn:not(:disabled):hover{transform:translateY(-3px)}
+.sheet.mbuy .modes .btn.on{background:#fff;color:var(--cy3);border-color:#fff!important;box-shadow:0 0 0 3px var(--cy),0 4px 0 var(--cyd)}
+.sheet.mbuy .modes .btn.on small{color:var(--cy3)}
+.mt-art{display:flex;justify-content:center;align-items:center;height:42px;margin-bottom:2px}
+.mt-art img{height:40px;width:40px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,30,60,.35))}
+.mt-art img + img{margin-left:-18px}
+.mt-art.icon img{height:30px;width:30px}
+.sheet.mbuy .modes .btn.on .mt-art.icon img{filter:invert(37%) sepia(91%) saturate(1500%) hue-rotate(181deg) brightness(92%)}
+/* bonus cards */
+.sheet.mbuy .buys{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.sheet.mbuy .buy.bc{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 14px 16px;min-height:300px;border-radius:20px;overflow:hidden;text-align:center;
+  border:3px solid #fff!important;color:#fff;box-shadow:0 6px 0 rgba(0,25,50,.5),0 12px 26px rgba(0,20,50,.35);transition:transform .15s,box-shadow .15s;cursor:pointer}
+.sheet.mbuy .bc1{background:radial-gradient(circle at 50% 22%,#7fe0ff,#1aa9ef 45%,#0a5fa8)}
+.sheet.mbuy .bc2{background:radial-gradient(circle at 50% 22%,#ffd27a,#ff8a3d 45%,#c2306b)}
+.sheet.mbuy .bc3{background:radial-gradient(circle at 50% 22%,#ffe066,#c77dff 42%,#4b1d8f)}
+.sheet.mbuy .buy.bc:not(:disabled):hover{transform:translateY(-5px) scale(1.02);box-shadow:0 10px 0 rgba(0,25,50,.5),0 18px 34px rgba(0,20,50,.45)}
+.sheet.mbuy .buy.bc:disabled{filter:grayscale(.75) brightness(.8);cursor:not-allowed}
+.bc-art{position:relative;display:block;width:100%;height:132px;margin-top:6px}
+.bc-art img{position:absolute;left:50%;top:50%;width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35));
+  transform:translate(calc(-50% + (var(--k) - (var(--n) - 1)/2)*calc(156px/var(--n))),calc(-50% + (var(--k) - (var(--n) - 1)/2)*(var(--k) - (var(--n) - 1)/2)*7px)) rotate(calc((var(--k) - (var(--n) - 1)/2)*12deg))}
+.sheet.mbuy .buy.bc:not(:disabled):hover .bc-art img{animation:bcbob .9s ease-in-out infinite alternate;animation-delay:calc(var(--k)*.12s)}
+@keyframes bcbob{to{translate:0 -6px}}
+.sheet.mbuy .buy.bc b{font:400 28px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.03em;text-shadow:0 3px 0 rgba(0,30,60,.55)}
+.bc-trig{font:400 12px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.05em;background:rgba(0,30,60,.35);border-radius:999px;padding:4px 10px}
+.sheet.mbuy .buy.bc .p{font:400 26px/1 "Lilita One",system-ui,sans-serif;color:var(--cy3);background:#fff;border-radius:999px;padding:7px 16px 8px;box-shadow:0 3px 0 rgba(0,30,60,.4);margin:2px 0}
+.sheet.mbuy .buy.bc small{font-size:12px;line-height:1.35;color:#fff;opacity:.92;max-width:28ch}
+.bc-cta{margin-top:auto;font:400 18px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#fff;background:linear-gradient(#ff8fb8,#ff4f8b);border:3px solid #fff;border-radius:999px;padding:9px 30px;box-shadow:0 4px 0 #a3204f}
+.sheet.mbuy .buy.bc:disabled .bc-cta{background:#7c8a99;box-shadow:none}
+@media (max-width:760px){
+  .sheet.mbuy .modes{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sheet.mbuy .buys{grid-template-columns:1fr}
+  .sheet.mbuy .buy.bc{min-height:0;display:grid;grid-template-columns:110px 1fr;grid-template-areas:"art name" "art trig" "art price" "art desc" "art cta";justify-items:start;text-align:left;padding:10px 14px 12px 6px;column-gap:6px;row-gap:4px}
+  .bc-art{grid-area:art;height:100%;min-height:120px;margin:0}
+  .bc-art img{width:62px;height:62px;transform:translate(calc(-50% + (var(--k) - (var(--n) - 1)/2)*20px),calc(-50% + (var(--k) - (var(--n) - 1)/2)*22px))}
+  .sheet.mbuy .buy.bc b{grid-area:name;font-size:22px}
+  .bc-trig{grid-area:trig}
+  .sheet.mbuy .buy.bc .p{grid-area:price;font-size:20px;padding:5px 12px}
+  .sheet.mbuy .buy.bc small{grid-area:desc}
+  .bc-cta{grid-area:cta;margin-top:4px;padding:7px 22px;font-size:15px}
+  .sheet.mbuy .bar{font-size:21px}
+}
+@media (prefers-reduced-motion:reduce){.sheet.mbuy .buy.bc,.sheet.mbuy .modes .btn{transition:none}.bc-art img{animation:none!important}}
+.mt-art{position:relative}
+.mt-n{position:absolute;right:-12px;bottom:-4px;font:400 13px/1 "Lilita One",system-ui,sans-serif;font-style:normal;color:#fff;background:#ff4f8b;border:2px solid #fff;border-radius:999px;padding:2px 6px}
+
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -2121,11 +2187,36 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     if (ap) ap.setAttribute('aria-label', 'Autoplay');
   }
 
+  // ---------- bonus buy sheet: mode tiles with icons, bonus cards with art ----------
+  // The game rewrites #modes and #buys with plain buttons every time it renders; this decorates them after each render
+  // (watching only their direct children, so the decoration itself does not trigger another pass).
+  const MODE_ART = {BASE: ['icon', 'spin-arrows.svg'], ANTE: ['icon', 'icon-bolt.svg'], SPECIAL1: ['wild', 1], SPECIAL2: ['wild', 2], SPECIAL3: ['wild', 3]};
+  const BUY_ART = {BONUS1: ['W', 3, 'Land 3 wilds'], BONUS2: ['S1', 3, '3 SURF badges'], BONUS3: ['S1', 4, '4 SURF badges']};
+  function decorateBuys(){
+    const modes = document.getElementById('modes'), buys = document.getElementById('buys'); if (!modes || !buys) return;
+    modes.querySelectorAll('[data-mode]').forEach(b => { if (b.querySelector('.mt-art')) return; const a = MODE_ART[b.dataset.mode]; if (!a) return;
+      const art = document.createElement('span'); art.className = 'mt-art' + (a[0] === 'icon' ? ' icon' : '');
+      art.innerHTML = a[0] === 'icon' ? `<img src="img/${a[1]}" alt="">` : `<img src="${src('W')}" alt=""><i class="mt-n">×${a[1]}</i>`;
+      b.prepend(art); });
+    buys.querySelectorAll('[data-buy]').forEach((b, i) => { if (b.querySelector('.bc-art')) return; const a = BUY_ART[b.dataset.buy]; if (!a) return;
+      b.classList.add('bc', 'bc' + (i + 1));
+      const art = document.createElement('span'); art.className = 'bc-art'; art.style.setProperty('--n', a[1]);
+      art.innerHTML = Array.from({length: a[1]}, (_, k) => `<img src="${src(a[0])}" alt="" style="--k:${k}">`).join('');
+      const trig = document.createElement('span'); trig.className = 'bc-trig'; trig.textContent = a[2];
+      const cta = document.createElement('span'); cta.className = 'bc-cta'; cta.textContent = 'BUY';
+      b.prepend(art); b.querySelector('b') && b.querySelector('b').after(trig); b.append(cta); });
+  }
+  function buySheet(){
+    const modes = document.getElementById('modes'), buys = document.getElementById('buys'); if (!modes || !buys) return;
+    const sheet = document.getElementById('buysheet'); if (sheet) sheet.classList.add('mbuy');
+    const mo = new MutationObserver(decorateBuys); mo.observe(modes, {childList: true}); mo.observe(buys, {childList: true}); decorateBuys();
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
