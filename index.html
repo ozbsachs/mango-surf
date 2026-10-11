@@ -748,6 +748,58 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .mt-art{position:relative}
 .mt-n{position:absolute;right:-12px;bottom:-4px;font:400 13px/1 "Lilita One",system-ui,sans-serif;font-style:normal;color:#fff;background:#ff4f8b;border:2px solid #fff;border-radius:999px;padding:2px 6px}
 
+/* ---------- burger menu: an ocean-blue side panel with cards ---------- */
+.drawer.mdrawer{width:min(400px,92vw);background:transparent}
+.drawer.mdrawer > .win{background:linear-gradient(180deg,#0a4f86,#063a68 60%,#052f56);border:0!important;border-right:3px solid #fff!important;border-radius:0 22px 22px 0;
+  box-shadow:6px 0 0 rgba(0,114,184,.6),12px 0 40px rgba(0,20,50,.5);color:#fff;min-height:100%}
+.drawer.mdrawer .bar{background:transparent;padding:18px 18px 8px;font:400 30px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.05em;color:#fff;text-shadow:0 3px 0 var(--cyd)}
+.drawer.mdrawer .mclose{width:44px;height:44px;padding:0!important;border-radius:50%!important;font-size:0!important;background:#fff!important;border:3px solid var(--cy)!important;position:relative;box-shadow:0 3px 0 var(--cyd)}
+.drawer.mdrawer .mclose::before,.drawer.mdrawer .mclose::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:4px;border-radius:2px;background:var(--cy3);transform:translate(-50%,-50%) rotate(45deg)}
+.drawer.mdrawer .mclose::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.drawer.mdrawer .mclose:hover{transform:rotate(90deg);transition:transform .2s}
+.drawer.mdrawer .body{padding:6px 14px 22px;display:grid;gap:12px}
+.mcard{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.18);border-radius:18px;padding:12px 14px 14px;color:#e6f7ff}
+.mcard-h{margin:0 0 10px;font:400 14px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.1em;color:#9fe3ff}
+.mcard .sub{color:#cbeeff!important;font-size:12.5px}
+/* views: two big row buttons */
+.mnav{padding:8px;background:transparent;border:0}
+.mnav .menutabs{display:grid;gap:8px}
+.mnav .mrow{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:16px!important;border:3px solid #fff!important;
+  background:linear-gradient(180deg,#22c3ff,var(--cy2))!important;color:#fff!important;font:400 19px/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.03em;text-align:left;box-shadow:0 4px 0 var(--cyd);cursor:pointer;transition:transform .12s}
+.mnav .mrow::before{content:"";width:28px;height:28px;flex:0 0 28px;background:center/contain no-repeat}
+#t-rules.mrow::before{background-image:url("img/icon-rules.svg?v=bccdae3d")}
+#t-history.mrow::before{background-image:url("img/icon-history.svg?v=aa92c900")}
+.mnav .mrow .chev{margin-left:auto;width:10px;height:10px;border:solid #fff;border-width:0 3.5px 3.5px 0;transform:rotate(-45deg)}
+.mnav .mrow:hover{transform:translateX(4px)}
+/* wallet */
+.mwallet #nameline{font:400 18px/1.2 "Lilita One",system-ui,sans-serif;color:#fff}
+.mwallet #loadrow{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important;margin-top:4px}
+.mwallet #loadrow .pill{height:44px;border-radius:12px;font:400 17px/1 "Lilita One",system-ui,sans-serif!important;background:#fff!important;color:var(--cy3)!important;border:3px solid var(--cy)!important;box-shadow:0 3px 0 var(--cyd)}
+.mwallet #loadrow .pill:hover{background:#e6f7ff!important}
+.mwallet #namebtn{border-radius:999px;font-size:11px!important}
+.mwallet #sidline{opacity:.55!important;word-break:break-all}
+/* sound: labelled sliders in cyan */
+.msound label{display:flex;align-items:center;gap:8px;font:400 15px/1 "Lilita One",system-ui,sans-serif;color:#fff;letter-spacing:.02em}
+.msound label::before{content:"";width:22px;height:22px;background:center/contain no-repeat}
+.msound label[for="musicvol"]::before{background-image:url("img/icon-music.svg?v=966fa121")}
+.msound label[for="sfxvol"]::before{background-image:url("img/icon-sfx.svg?v=1b863502")}
+.msound input[type=range]{-webkit-appearance:none;appearance:none;height:12px;border-radius:999px;background:rgba(255,255,255,.18);outline:none;margin:4px 0 6px}
+.msound input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;border:4px solid var(--cy);box-shadow:0 2px 0 var(--cyd);cursor:pointer}
+.msound input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--cy);cursor:pointer}
+.msound input[type=range]::-moz-range-progress{background:var(--cy);height:12px;border-radius:999px}
+/* this spin */
+.mspin #spinsub{color:#fff!important;font-weight:700}
+.mspin .winlist{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:4px}
+.mspin .winlist li{display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border-radius:10px;background:rgba(0,20,50,.3);font-size:13px;color:#e6f7ff}
+.mspin .winlist li .mono{color:#ffd23f;font-weight:700}
+.mspin #calib{font-size:11px!important;opacity:.6}
+/* more games */
+.mmore .moregames{display:grid!important;gap:8px!important}
+.mmore .moregames .pill{display:flex;align-items:center;justify-content:center;height:46px;border-radius:14px;font:400 16px/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.04em}
+.mmore .moregames .pill[data-keep]{background:linear-gradient(180deg,#ff8fb8,#ff4f8b)!important;color:#fff!important;border:3px solid #fff!important;box-shadow:0 3px 0 #a3204f}
+/* the game has two "play money only" notes; the second one says it all */
+.mwallet > p.sub:first-of-type{display:none}
+
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -2212,11 +2264,29 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     const mo = new MutationObserver(decorateBuys); mo.observe(modes, {childList: true}); mo.observe(buys, {childList: true}); decorateBuys();
   }
 
+  // ---------- burger menu: grouped into cards (views, wallet, sound, this spin, more games) ----------
+  // The game's own nodes are moved into the cards, not rebuilt, so every handler, id and live update keeps working.
+  function drawerSkin(){
+    const d = document.getElementById('drawer'), body = d && d.querySelector('.body'); if (!body || body.dataset.mskin) return;
+    body.dataset.mskin = '1'; d.classList.add('mdrawer');
+    const groups = {}; let key = 'top';
+    Array.from(body.children).forEach(n => { if (n.matches('h3.dh')) key = n.textContent.trim().toUpperCase(); (groups[key] = groups[key] || []).push(n); });
+    const card = (cls, title, nodes) => { const c = document.createElement('section'); c.className = 'mcard ' + cls;
+      if (title){ const h = document.createElement('h3'); h.className = 'mcard-h'; h.textContent = title; c.append(h); }
+      nodes.forEach(n => { if (!n.matches('h3.dh')) c.append(n); }); return c; };
+    const top = groups.top || [], nav = top.filter(n => n.matches('nav')), sound = top.filter(n => !n.matches('nav'));
+    nav.forEach(n => n.querySelectorAll('button').forEach(b => { b.classList.add('mrow'); b.insertAdjacentHTML('beforeend', '<i class="chev" aria-hidden="true"></i>'); }));
+    const out = [card('mnav', '', nav), card('mwallet', 'WALLET', groups.WALLET || []), card('msound', 'SOUND', sound),
+      card('mspin', 'THIS SPIN', groups['THIS SPIN'] || []), card('mmore', 'MORE', groups.MORE || [])];
+    body.textContent = ''; out.forEach(c => body.append(c));
+    const close = d.querySelector('.bar [data-close]'); if (close){ close.classList.add('mclose'); close.setAttribute('aria-label', 'Close menu'); }
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
