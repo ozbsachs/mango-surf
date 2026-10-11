@@ -938,6 +938,41 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .ss-html .disc{margin-top:10px}
 @container (max-width:640px){ .sa-bon{grid-template-columns:1fr} .sbon{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:8px} .ss-slide.modes .sa-modes,.sa-paygrid{grid-template-columns:1fr} }
 
+/* ---------- confirmation popup for buys and modes ---------- */
+#confirm.mconfirm{background:rgba(0,20,45,.5);backdrop-filter:blur(2px)}
+.mconfirm > .win{width:min(440px,calc(100vw - 24px))!important;max-width:none;border:3px solid #fff!important;border-radius:24px;overflow:hidden;color:#fff;
+  box-shadow:0 0 0 4px var(--cy3),0 24px 60px rgba(0,20,50,.55);background:radial-gradient(circle at 50% 0%,#5fd6ff,#1aa9ef 30%,#0a4f86 70%,#063a68);animation:cfin .28s cubic-bezier(.2,1.5,.4,1)}
+.mconfirm.t2 > .win{background:radial-gradient(circle at 50% 0%,#ffd27a,#ff8a3d 30%,#a8306b 70%,#5e1a4f)}
+.mconfirm.t3 > .win{background:radial-gradient(circle at 50% 0%,#ffe066,#c77dff 30%,#5b2aa8 70%,#2e0f63)}
+@keyframes cfin{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+.mconfirm .bar{background:transparent;justify-content:center;padding:4px 18px 0;order:2}
+.mconfirm .bar #cf-t{font:400 30px/1.05 "Lilita One",system-ui,sans-serif;letter-spacing:.03em;text-align:center;text-shadow:0 3px 0 rgba(0,20,50,.6)}
+.mconfirm > .win{display:flex;flex-direction:column}
+.mconfirm .body{padding:0 22px 22px;display:flex;flex-direction:column;align-items:stretch}
+.mconfirm .win > .bar{order:0}
+.cf-art{display:flex;align-items:center;justify-content:center;height:130px;margin:14px 0 4px;order:-1}
+.cf-art .sa-fan{height:120px}
+.cf-art .sa-fan img{width:96px;transform:translate(calc(-50% + (var(--k) - (var(--n) - 1)/2)*calc(160px/var(--n))),-50%) rotate(calc((var(--k) - (var(--n) - 1)/2)*12deg))}
+.cf-art .cf-ico{width:70px;height:70px;filter:drop-shadow(0 4px 0 rgba(0,40,80,.5))}
+.cf-wild{position:relative;width:110px;height:110px}
+.cf-wild img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}
+.cf-wild i{position:absolute;right:-14px;top:-2px;font:400 18px/1 "Lilita One",system-ui,sans-serif;font-style:normal;background:#ff4f8b;border:3px solid #fff;border-radius:999px;padding:3px 9px}
+.mconfirm #cf-desc{order:1;text-align:center;font-size:14px;line-height:1.45;color:#eaf8ff;margin:6px 0 4px!important}
+.mconfirm .cf-odds{order:1;background:rgba(255,255,255,.95);color:var(--cy3);border:0;font:400 13px/1.3 "Lilita One",system-ui,sans-serif;text-align:center}
+.mconfirm .cf-row{order:2;background:rgba(0,20,50,.32);border-radius:16px;padding:10px 14px;margin-top:10px}
+.mconfirm .cf-row .k{font:400 13px/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.1em;color:#cbeeff}
+.mconfirm .betrow{display:flex;align-items:center;gap:12px}
+.mconfirm .betrow b{font:400 22px/1 "Lilita One",system-ui,sans-serif;min-width:70px;text-align:center}
+.mconfirm .betrow .round{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--cy3);border:3px solid var(--cy);font:400 22px/1 "Lilita One",system-ui,sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--cyd)}
+.mconfirm .betrow .round:disabled{opacity:.4;cursor:not-allowed}
+.mconfirm .cf-price{font:400 30px/1 "Lilita One",system-ui,sans-serif!important;color:#ffd23f;text-shadow:0 3px 0 rgba(0,20,50,.6)}
+.mconfirm .acts{order:3;display:grid;gap:8px;margin-top:16px}
+.mconfirm #cf-ok{height:58px;border-radius:999px!important;border:3px solid #fff!important;background:linear-gradient(#ff8fb8,#ff4f8b)!important;color:#fff!important;
+  font:400 22px/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.04em;box-shadow:0 5px 0 #a3204f!important;cursor:pointer;transition:transform .12s}
+.mconfirm #cf-ok:not(:disabled):hover{transform:translateY(-2px) scale(1.02)}
+.mconfirm #cf-ok:disabled{background:#7c8a99!important;box-shadow:none!important}
+.mconfirm #cf-cancel{height:42px;border-radius:999px!important;background:transparent!important;border:2px solid rgba(255,255,255,.7)!important;color:#fff!important;font:400 15px/1 "Lilita One",system-ui,sans-serif!important}
+
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -2533,11 +2568,30 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     const snd = document.querySelector('#drawer .msound'); if (snd) snd.hidden = true;   // sound lives in settings now
   }
 
+  // ---------- the confirmation after picking a buy or a mode: bonus art on top, tinted per bonus ----------
+  // The game fills #cf-t / #cf-desc / #cf-price itself; this adds the art and the colour from the title it wrote.
+  function confirmSkin(){
+    const cf = document.getElementById('confirm'), title = document.getElementById('cf-t'); if (!cf || !title) return;
+    cf.classList.add('mconfirm');
+    const art = document.createElement('div'); art.className = 'cf-art'; cf.querySelector('.win').prepend(art);
+    const fan = (k, n) => `<div class="sa-fan">${imgs(k, n)}</div>`;
+    const ART = [[/SWELL/i, 't1', () => fan('W', 3)], [/SURF/i, 't2', () => fan('S1', 3)], [/KAHUNA/i, 't3', () => fan('S1', 4)],
+      [/BOOST/i, 't0', () => `<img class="cf-ico" src="img/icon-bolt.svg" alt="">`],
+      [/RIPPLE/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i>×1</i></div>`],
+      [/CURL/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i>×2</i></div>`],
+      [/BARREL/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i>×3</i></div>`]];
+    let last = '';
+    const sync = () => { const t = title.textContent.trim(); if (t === last) return; last = t;
+      const hit = ART.find(([re]) => re.test(t)) || [null, 't0', () => ''];
+      cf.classList.remove('t0', 't1', 't2', 't3'); cf.classList.add(hit[1]); art.innerHTML = hit[2](); };
+    new MutationObserver(sync).observe(title, {childList: true, characterData: true, subtree: true}); sync();
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
