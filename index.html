@@ -800,6 +800,144 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 /* the game has two "play money only" notes; the second one says it all */
 .mwallet > p.sub:first-of-type{display:none}
 
+/* ---------- i and cog buttons, next to the menu in the bottom bar ---------- */
+.mhud .mhb{position:relative;font-size:0}
+.mhud .mhb span{display:none}
+.mhud .mhb::before{content:"";position:absolute;inset:10px;background:center/contain no-repeat}
+.mhud .minfo-btn::before{background-image:url("img/icon-info.svg?v=3400c1ab")}
+.mhud .mset-btn::before{background-image:url("img/icon-cog.svg?v=3b8f5250");transition:transform .4s}
+.mhud .mset-btn:hover::before{transform:rotate(90deg)}
+.mhud .balctl{margin-left:6px}
+@media (max-width:640px){ .mhud .mhb{order:5;width:42px;height:42px} .mhud .mhb::before{inset:8px} .mhud .balctl{margin-left:0} }
+
+/* ---------- panels: a box over the reels, slightly smaller than the slot screen ---------- */
+.mpanel{position:fixed;inset:0;z-index:75;background:rgba(0,20,45,.45);backdrop-filter:blur(2px)}
+.mpanel[hidden]{display:none}
+.mp-box{container-type:inline-size;position:fixed;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,#0a4f86,#063a68 70%,#052f56);border:3px solid #fff;border-radius:22px;
+  box-shadow:0 0 0 4px var(--cy3),0 24px 60px rgba(0,20,50,.55);color:#fff;opacity:0;transform:scale(.94);transition:opacity .18s,transform .22s cubic-bezier(.2,1.4,.4,1)}
+.mpanel.on .mp-box{opacity:1;transform:none}
+.mp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 6px 20px}
+.mp-head h2{margin:0;font:400 clamp(20px,2.4vw,28px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.04em;text-shadow:0 3px 0 var(--cyd)}
+.mp-x{width:40px;height:40px;border-radius:50%;background:#fff;border:3px solid var(--cy);position:relative;cursor:pointer;box-shadow:0 3px 0 var(--cyd);flex:0 0 auto}
+.mp-x::before,.mp-x::after{content:"";position:absolute;left:50%;top:50%;width:16px;height:4px;border-radius:2px;background:var(--cy3);transform:translate(-50%,-50%) rotate(45deg)}
+.mp-x::after{transform:translate(-50%,-50%) rotate(-45deg)}
+.mp-body{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* ---------- slideshow ---------- */
+.ss-view{flex:1;min-height:0;overflow:hidden;touch-action:pan-y}
+.ss-track{display:flex;height:100%;transition:transform .45s cubic-bezier(.3,1,.4,1)}
+.ss-slide{flex:0 0 100%;height:100%;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);align-items:center;gap:18px;padding:6px 28px 10px;overflow:hidden}
+.ss-slide:not(:has(.ss-art)){grid-template-columns:1fr}
+.ss-art{display:flex;align-items:center;justify-content:center;height:100%;max-height:100%}
+.ss-text{overflow:auto;max-height:100%;padding-right:6px}
+.ss-text h3{margin:0 0 10px;font:400 clamp(22px,2.6vw,34px)/1.05 "Lilita One",system-ui,sans-serif;color:#ffd23f;letter-spacing:.02em;text-shadow:0 3px 0 rgba(0,20,50,.6)}
+.ss-html{font-size:clamp(13px,1.25vw,16px);line-height:1.5;color:#e6f7ff}
+.ss-html p{margin:0 0 10px}
+.ss-html strong{color:#fff}
+.ss-slide.cur .ss-art > *{animation:ssin .5s cubic-bezier(.2,1.5,.4,1) both}
+.ss-slide.cur .ss-text{animation:ssfade .45s .08s both}
+@keyframes ssin{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes ssfade{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+/* slide art */
+.sa-row{position:relative;display:flex;gap:4px;width:100%;justify-content:center}
+.sa-row img{position:relative;z-index:1;width:19%;max-width:120px;aspect-ratio:1;object-fit:contain;opacity:.5}
+.sa-row img.hit{opacity:1;filter:drop-shadow(0 0 10px rgba(255,210,63,.9))}
+.sa-line{position:absolute;z-index:0;left:8%;width:50%;top:50%;height:10px;border-radius:4px;background:#ffd23f;border:2px solid #2a0e12;transform:translateY(-50%)}
+.sa-wild{position:relative;width:min(70%,240px);aspect-ratio:1}
+.sa-wild img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(0,0,0,.35))}
+.sa-wild .mx{position:absolute;font-size:clamp(14px,1.6vw,22px)!important;right:auto;left:-6%;top:6%;bottom:auto}
+.sa-wild .mx.m2{left:auto;right:-6%;top:30%;background:linear-gradient(#7dff6b,#21a83a)}
+.sa-wild .mx.m3{left:30%;top:auto;bottom:-4%;background:linear-gradient(#c77dff,#6b2cd8)}
+.sa-stack{position:relative;width:min(34%,150px);aspect-ratio:1/3.2}
+.sa-stack .mstack{position:absolute;inset:0}
+.sa-big{font:400 clamp(54px,8vw,110px)/1 "Lilita One",system-ui,sans-serif;color:#ffd23f;-webkit-text-stroke:3px #2a0e12;text-shadow:0 6px 0 #2a0e12,0 0 40px rgba(255,210,63,.55)}
+.sa-big small{font-size:.5em}
+.sa-fan{position:relative;width:100%;height:min(70%,240px)}
+.sa-fan img{position:absolute;left:50%;top:50%;width:min(38%,140px);aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 8px 8px rgba(0,0,0,.35));
+  transform:translate(calc(-50% + (var(--k) - (var(--n) - 1)/2)*min(22%,90px)),-50%) rotate(calc((var(--k) - (var(--n) - 1)/2)*10deg))}
+.sa-fan img:only-of-type{position:relative;left:auto;top:auto;transform:none;display:inline-block}
+/* paytable, lines, modes, lists */
+.sa-pay{width:100%;border-collapse:separate;border-spacing:0 6px;font:400 clamp(15px,1.6vw,20px)/1 "Lilita One",system-ui,sans-serif}
+.sa-pay th{color:#9fe3ff;font-size:.75em;letter-spacing:.08em;text-align:right;padding:0 10px}
+.sa-pay th:first-child{text-align:left}
+.sa-pay td{background:rgba(255,255,255,.08);padding:6px 10px;text-align:right;color:#fff}
+.sa-pay td:first-child{text-align:left;border-radius:12px 0 0 12px;display:flex;align-items:center;gap:10px}
+.sa-pay td:last-child{border-radius:0 12px 12px 0;color:#ffd23f}
+.sa-pay .ico{width:clamp(34px,4vw,52px);height:clamp(34px,4vw,52px);margin:0}
+.ss-html .note{font-size:12px;opacity:.75;margin-top:6px}
+.ss-slide.lines .linesgrid{grid-template-columns:repeat(8,minmax(0,1fr));gap:10px}
+.ss-slide.lines .linesgrid figure{background:rgba(255,255,255,.08);border-radius:12px;padding:6px;color:#e6f7ff;font:400 13px/1.2 "Lilita One",system-ui,sans-serif}
+.ss-slide.lines .linesgrid svg{width:100%;color:#fff}
+.sa-modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.smode{background:rgba(255,255,255,.08);border-radius:14px;padding:9px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline}
+.smode b{font:400 17px/1.1 "Lilita One",system-ui,sans-serif;color:#fff}
+.smode .cost{font:400 15px/1 "Lilita One",system-ui,sans-serif;color:#ffd23f}
+.smode p{grid-column:1/-1;margin:2px 0;font-size:12px;line-height:1.35;color:#d8f3ff}
+.smode .meta{grid-column:1/-1;font-size:11px;color:#9fe3ff}
+.ss-slide.list ul{margin:0;padding-left:18px;display:grid;gap:6px}
+/* nav */
+.ss-nav{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 16px 14px}
+.ss-prev,.ss-next{width:48px;height:48px;border-radius:50%;background:#fff;border:3px solid var(--cy);position:relative;cursor:pointer;box-shadow:0 3px 0 var(--cyd);flex:0 0 auto}
+.ss-prev::before,.ss-next::before{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;border:solid var(--cy3);border-width:0 4px 4px 0}
+.ss-next::before{transform:translate(-65%,-50%) rotate(-45deg)}
+.ss-prev::before{transform:translate(-35%,-50%) rotate(135deg)}
+.ss-prev:disabled,.ss-next:disabled{opacity:.35;cursor:default}
+.ss-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:60%}
+.ss-dots button{width:10px;height:10px;padding:0;border-radius:50%;border:0;background:rgba(255,255,255,.35);cursor:pointer;transition:width .2s,background .2s}
+.ss-dots button.on{width:26px;border-radius:999px;background:#fff}
+.ss-count{font:400 13px/1 "Lilita One",system-ui,sans-serif;color:#9fe3ff;min-width:44px;text-align:center}
+
+/* ---------- settings ---------- */
+.st-grid{display:grid;gap:12px;padding:8px 22px 22px;overflow:auto}
+.st-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"l t" "v v";gap:10px 14px;align-items:center;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.16);border-radius:18px;padding:14px 16px}
+.st-row.sp{grid-template-areas:"l" "s";grid-template-columns:1fr}
+.st-l{grid-area:l;display:flex;align-items:center;gap:10px;font:400 19px/1 "Lilita One",system-ui,sans-serif}
+.st-l::before{content:"";width:26px;height:26px;background:center/contain no-repeat}
+.st-l.music::before{background-image:url("img/icon-music.svg?v=966fa121")}
+.st-l.sfx::before{background-image:url("img/icon-sfx.svg?v=1b863502")}
+.st-l.speed::before{background-image:url("img/icon-bolt.svg?v=e06f0746")}
+.st-tog{grid-area:t;width:62px;height:34px;border-radius:999px;border:3px solid #fff;background:rgba(255,255,255,.2);position:relative;cursor:pointer;transition:background .2s}
+.st-tog::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .2s cubic-bezier(.3,1.5,.5,1)}
+.st-tog.on{background:var(--cy)}
+.st-tog.on::after{transform:translateX(28px)}
+.st-vol{grid-area:v;-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:999px;background:rgba(255,255,255,.18);outline:none}
+.st-vol::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--cy);box-shadow:0 2px 0 var(--cyd);cursor:pointer}
+.st-vol::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--cy);cursor:pointer}
+.st-seg{grid-area:s;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:rgba(0,20,50,.35);border-radius:14px;padding:5px}
+.st-seg button{height:42px;border:0;border-radius:10px;background:transparent;color:#cbeeff;font:400 15px/1 "Lilita One",system-ui,sans-serif;cursor:pointer}
+.st-seg button.on{background:#fff;color:var(--cy3);box-shadow:0 2px 0 var(--cyd)}
+.st-note{margin:2px 4px 0;font-size:12px;color:#9fe3ff}
+
+/* narrow panels (phones, small windows): art on top, text below */
+@container (max-width:640px){
+  .ss-slide{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);align-items:start;padding:4px 16px 8px;gap:10px}
+  .ss-art{height:auto;min-height:110px;max-height:150px}
+  .sa-stack{width:70px}
+  .sa-big{font-size:58px}
+  .ss-slide.lines .linesgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .sa-modes{grid-template-columns:1fr}
+  .ss-dots{max-width:52%}
+}
+@media (prefers-reduced-motion:reduce){.ss-track,.mp-box{transition:none}.ss-slide.cur .ss-art > *,.ss-slide.cur .ss-text{animation:none}}
+/* 8-slide layout pieces: bonuses side by side, grouped buys, one-slide paytable */
+.sa-bon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.sbon{border-radius:16px;padding:8px 10px 10px;border:2px solid rgba(255,255,255,.35)}
+.sbon.b1{background:linear-gradient(180deg,rgba(26,169,239,.55),rgba(10,95,168,.35))}
+.sbon.b2{background:linear-gradient(180deg,rgba(255,138,61,.55),rgba(194,48,107,.35))}
+.sbon.b3{background:linear-gradient(180deg,rgba(199,125,255,.55),rgba(75,29,143,.35))}
+.sbon .sa-fan{height:74px}
+.sbon .sa-fan img{width:62px;transform:translate(calc(-50% + (var(--k) - (var(--n) - 1)/2)*24px),-50%) rotate(calc((var(--k) - (var(--n) - 1)/2)*10deg))}
+.sbon-t{font-size:12.5px;line-height:1.4}
+.sh{margin:4px 0 6px;font:400 14px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#9fe3ff}
+.ss-slide.modes .sa-modes{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:8px}
+.sa-paygrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.spay{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:12px;padding:5px 10px;font:400 15px/1 "Lilita One",system-ui,sans-serif}
+.spay .ico{width:40px;height:40px;margin:0;flex:0 0 40px}
+.spay-v{margin-left:auto;display:flex;align-items:baseline;gap:4px;color:#ffd23f;white-space:nowrap}
+.spay-v i{font-style:normal;font-size:11px;color:#9fe3ff;margin-left:6px}
+.ss-html .disc{margin-top:10px}
+@container (max-width:640px){ .sa-bon{grid-template-columns:1fr} .sbon{display:grid;grid-template-columns:84px 1fr;align-items:center;gap:8px} .ss-slide.modes .sa-modes,.sa-paygrid{grid-template-columns:1fr} }
+
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
 <script>
@@ -2282,11 +2420,124 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     const close = d.querySelector('.bar [data-close]'); if (close){ close.classList.add('mclose'); close.setAttribute('aria-label', 'Close menu'); }
   }
 
+  // ---------- i (rules and paytable as a slideshow) and cog (settings) in the bottom bar ----------
+  // Slides are built from the game's own rules page (#rules, rendered from the live server's math, then renamed to
+  // surf words), so every number stays right when the math changes. The panel sits over the reels, a bit smaller.
+  function panel(id, title){
+    let p = document.getElementById(id); if (p) return p;
+    p = document.createElement('div'); p.id = id; p.className = 'mpanel'; p.hidden = true; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', title);
+    p.innerHTML = `<div class="mp-box"><div class="mp-head"><h2>${title}</h2><button type="button" class="mp-x" aria-label="Close"></button></div><div class="mp-body"></div></div>`;
+    p.querySelector('.mp-x').onclick = () => closePanel(p); p.onclick = e => { if (e.target === p) closePanel(p); };
+    document.body.append(p); return p;
+  }
+  function fitPanel(p){
+    const st = document.querySelector('.machine .stage'), box = p.querySelector('.mp-box'); if (!st) return;
+    const r = st.getBoundingClientRect(), w = Math.min(r.width * 0.96, innerWidth - 16), h = Math.min(Math.max(r.height * 0.96, 420), innerHeight - 16);
+    box.style.width = w + 'px'; box.style.height = h + 'px';
+    box.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + (r.width - w) / 2)) + 'px';
+    box.style.top = Math.max(8, Math.min(innerHeight - h - 8, r.top + (r.height - h) / 2)) + 'px';
+  }
+  let openP = null;
+  function openPanel(p){ if (openP && openP !== p) closePanel(openP); fitPanel(p); p.hidden = false; openP = p; requestAnimationFrame(() => p.classList.add('on')); }
+  function closePanel(p){ p.classList.remove('on'); p.hidden = true; if (openP === p) openP = null; }
+  addEventListener('resize', () => { if (openP) fitPanel(openP); });
+  addEventListener('keydown', e => { if (!openP) return; if (e.key === 'Escape') closePanel(openP);
+    if (openP.id === 'minfo' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')){ e.preventDefault(); e.stopPropagation(); goSlide(slideAt + (e.key === 'ArrowRight' ? 1 : -1)); }
+    if (e.key === ' ') e.stopPropagation(); }, true);
+
+  // slides
+  let slideAt = 0, slideN = 0;
+  const imgs = (k, n) => Array.from({length: n}, (_, i) => `<img src="${src(k)}" alt="" style="--k:${i};--n:${n}">`).join('');
+  function buildSlides(){
+    const R = document.getElementById('rules'); if (!R) return [];
+    const secs = Array.from(R.querySelectorAll(':scope > .win')), get = n => secs.find(s => ((s.querySelector('.bar span') || {}).textContent || '').trim().toUpperCase() === n);
+    // the rules page nests a symbol picture (a div) inside a <p>, which the browser splits in two; rebuild the
+    // paragraphs from the cleaned body: drop the pictures, cut at paragraph ends, glue loose tails back on
+    const paras = sec => { if (!sec) return []; const b = sec.querySelector('.body').cloneNode(true);
+      b.querySelectorAll('.ico,.ms,p.sub').forEach(n => n.remove());
+      const frags = b.innerHTML.replace(/<p[^>]*>/g, '').split('</p>').map(t => t.trim()).filter(Boolean), out = [];
+      frags.forEach(f => { if (out.length && !/^<strong>|^[A-Z]/.test(f)) out[out.length - 1] += ' ' + f; else out.push(f); });
+      return out.map(t => t.replace(/\s+([.,])/g, '$1')); };
+    const how = paras(get('HOW TO PLAY')), bon = paras(get('BONUSES')), S = [];
+    const add = (title, art, html, cls) => S.push({title, art, html, cls: cls || ''});
+    const noIco = t => (t || '').replace(/<span class="ico">[\s\S]*?<\/div><\/span>/g, '').replace(/<span class="ico">[\s\S]*?<\/span>/g, '');
+    // 8 slides: how to play, wilds, bonuses, buys and modes together, paytable, lines, max and minimum win, good to know
+    const P = t => t ? '<p>' + t + '</p>' : '';
+    // 1 how to play
+    add('How to play', `<div class="sa-row">${['H3','H3','H3','L2','H1'].map((k, i) => `<img class="${i < 3 ? 'hit' : ''}" src="${src(k)}" alt="">`).join('')}<i class="sa-line"></i></div>`, P(how[0]));
+    // 2 wilds, multipliers and full wild reels
+    add('Wilds', `<div class="sa-wild"><img src="${src('W')}" alt=""><b class="mx">x2</b><b class="mx m2">x5</b><b class="mx m3">x25</b></div>`, P(how[1]) + P(how[2]) + P(how[3]));
+    // 3 the three free spin bonuses side by side, then how they trigger
+    const bonusArt = [['W', 3], ['S1', 3], ['S1', 4]];
+    add('Free spin bonuses', '', `<div class="sa-bon">${bon.slice(0, 3).map((t, i) => `<div class="sbon b${i + 1}"><div class="sa-fan">${imgs(bonusArt[i][0], bonusArt[i][1])}</div><div class="sbon-t">${noIco(t)}</div></div>`).join('')}</div>${P(bon[3])}`, 'bonuses');
+    // 4 every way to spend more than a normal spin, together
+    const gm = get('GAME MODES'), modes = gm ? Array.from(gm.querySelectorAll('tbody tr')).map(tr => Array.from(tr.children).map(td => td.innerHTML)) : [];
+    const card = c => `<div class="smode"><b>${c[0].replace(/\s*\(bonus buy\)/i, '')}</b><span class="cost">${c[1]}</span><p>${c[2]}</p><span class="meta">max ${c[4]}</span></div>`;
+    const spinModes = modes.filter(c => !/bonus buy/i.test(c[0]) && !/^Normal$/i.test(c[0].trim())), buys = modes.filter(c => /bonus buy/i.test(c[0]));
+    if (modes.length) add('Buys & modes', '', `<h4 class="sh">Bonus buys</h4><div class="sa-modes">${buys.map(card).join('')}</div><h4 class="sh">Spin modes</h4><div class="sa-modes">${spinModes.map(card).join('')}</div><p class="note">Every mode returns ${(modes[0] || [])[3] || '96.01%'} over the long run.</p>`, 'modes');
+    // 5 the whole paytable on one slide
+    const pay = get('PAYTABLE'), rows = pay ? Array.from(pay.querySelectorAll('tbody tr')).reverse() : [];
+    if (rows.length) add('Paytable', '', `<div class="sa-paygrid">${rows.map(tr => { const c = Array.from(tr.children);
+      return `<div class="spay">${c[0].innerHTML}<span class="spay-v"><i>3</i>${c[1].textContent}<i>4</i>${c[2].textContent}<i>5</i>${c[3].textContent}</span></div>`; }).join('')}</div><p class="note">Wins are multiples of your bet, per line.</p>`, 'pay');
+    // 6 lines
+    const lines = get('LINES'), lg = lines && lines.querySelector('.linesgrid'); if (lg) add('16 paylines', '', lg.outerHTML, 'lines');
+    // 7 max win and the minimum win on bonuses and Wave Spins
+    add('Max win & minimum win', `<div class="sa-big">20,000<small>x</small></div>`, P(how[4]) + P(how[5]));
+    // 8 buttons and the disclaimer
+    const btns = get('BUTTONS'), ul = btns && btns.querySelector('ul'), disc = get('DISCLAIMER'), dp = disc && disc.querySelector('p');
+    add('Good to know', '', (ul ? ul.outerHTML : '') + (dp ? `<p class="note disc">${dp.innerHTML}</p>` : ''), 'list');
+    return S;
+  }
+  function goSlide(i){
+    const p = document.getElementById('minfo'); if (!p || !slideN) return; slideAt = Math.max(0, Math.min(slideN - 1, i));
+    p.querySelector('.ss-track').style.transform = `translateX(${-100 * slideAt}%)`;
+    p.querySelectorAll('.ss-dots button').forEach((d, k) => d.classList.toggle('on', k === slideAt));
+    p.querySelector('.ss-prev').disabled = slideAt === 0; p.querySelector('.ss-next').disabled = slideAt === slideN - 1;
+    p.querySelector('.ss-count').textContent = `${slideAt + 1} / ${slideN}`;
+    p.querySelectorAll('.ss-slide').forEach((s, k) => { s.setAttribute('aria-hidden', String(k !== slideAt)); s.classList.toggle('cur', k === slideAt); });
+  }
+  function openInfo(){
+    const p = panel('minfo', 'Rules & Paytable'), S = buildSlides(); slideN = S.length;
+    p.querySelector('.mp-body').innerHTML = `<div class="ss-view"><div class="ss-track">${S.map(s => `<section class="ss-slide ${s.cls}">${s.art ? `<div class="ss-art">${s.art}</div>` : ''}<div class="ss-text"><h3>${s.title}</h3><div class="ss-html">${s.html || ''}</div></div></section>`).join('')}</div></div>
+      <div class="ss-nav"><button type="button" class="ss-prev" aria-label="Previous"></button><div class="ss-dots">${S.map(s => `<button type="button" aria-label="${s.title}"></button>`).join('')}</div><span class="ss-count"></span><button type="button" class="ss-next" aria-label="Next"></button></div>`;
+    p.querySelector('.ss-prev').onclick = () => goSlide(slideAt - 1); p.querySelector('.ss-next').onclick = () => goSlide(slideAt + 1);
+    p.querySelectorAll('.ss-dots button').forEach((d, k) => d.onclick = () => goSlide(k));
+    const view = p.querySelector('.ss-view'); let x0 = null;
+    view.addEventListener('pointerdown', e => { x0 = e.clientX; });
+    view.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) goSlide(slideAt + (dx < 0 ? 1 : -1)); });
+    goSlide(0); openPanel(p);
+  }
+  // settings: the game's own controls drive everything, so choices persist exactly as before
+  function openSettings(){
+    const p = panel('mset', 'Settings'), $i = id => document.getElementById(id);
+    const row = (key, label, btnId, volId) => `<div class="st-row"><span class="st-l ${key}">${label}</span><button type="button" class="st-tog" data-btn="${btnId}" aria-label="${label} on or off"></button>
+      <input type="range" min="0" max="100" class="st-vol" data-vol="${volId}" aria-label="${label} volume"></div>`;
+    p.querySelector('.mp-body').innerHTML = `<div class="st-grid">${row('music', 'Music', 'musicbtn', 'musicvol')}${row('sfx', 'Sound effects', 'soundbtn', 'sfxvol')}
+      <div class="st-row sp"><span class="st-l speed">Spin speed</span><div class="st-seg" role="group" aria-label="Spin speed"><button type="button" data-lv="0">Normal</button><button type="button" data-lv="1">Turbo</button><button type="button" data-lv="2">Super Turbo</button></div></div>
+      <p class="st-note">Every spin's result is decided by the server; speed only changes the animation.</p></div>`;
+    const sync = () => { p.querySelectorAll('.st-tog').forEach(t => { const b = $i(t.dataset.btn); t.classList.toggle('on', !!b && b.getAttribute('aria-pressed') === 'true'); });
+      p.querySelectorAll('.st-vol').forEach(v => { const o = $i(v.dataset.vol); if (o) v.value = o.value; });
+      const st = ($i('speedbtn') || {}).textContent || '', lv = /SUPER/.test(st) ? '2' : /TURBO/.test(st) ? '1' : '0'; p.querySelectorAll('.st-seg button').forEach(b => b.classList.toggle('on', b.dataset.lv === lv)); };
+    p.querySelectorAll('.st-tog').forEach(t => t.onclick = () => { const b = $i(t.dataset.btn); if (b) b.click(); setTimeout(sync, 50); });
+    p.querySelectorAll('.st-vol').forEach(v => v.oninput = () => { const o = $i(v.dataset.vol); if (o){ o.value = v.value; o.dispatchEvent(new Event('input', {bubbles: true})); } });
+    p.querySelectorAll('.st-seg button').forEach(b => b.onclick = () => { const sp = $i('speedbtn'); if (!sp || sp.disabled) return;
+      const lvOf = () => /SUPER/.test(sp.textContent) ? '2' : /TURBO/.test(sp.textContent) ? '1' : '0';
+      for (let i = 0; i < 3 && lvOf() !== b.dataset.lv; i++) sp.click(); setTimeout(sync, 50); });
+    sync(); openPanel(p);
+  }
+  function infoSettings(){
+    const menu = document.getElementById('menubtn'); if (!menu) return;
+    const mk = (cls, label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'iconbtn mhb ' + cls; b.setAttribute('aria-label', label); b.onclick = fn; return b; };
+    menu.after(mk('minfo-btn', 'Rules and paytable', openInfo), mk('mset-btn', 'Settings', openSettings));
+    const rules = document.getElementById('t-rules'); if (rules) rules.hidden = true;   // the i replaces the menu's rules row
+    const snd = document.querySelector('#drawer .msound'); if (snd) snd.hidden = true;   // sound lives in settings now
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
