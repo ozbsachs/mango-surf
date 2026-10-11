@@ -5074,7 +5074,7 @@ const RGS = (() => {
     hasReplay: !!host,
     setName: name => call('/wallet/name', {sessionID, name}),
     history: () => call('/wallet/history', {sessionID, limit: 100}),
-    game: () => call('/game', null, 'GET'),
+    game: () => call('/game?game=mango', null, 'GET'),
     deposit: amount => call('/wallet/deposit', {sessionID, amount}),
     sessionID,
   };
