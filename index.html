@@ -662,6 +662,21 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .grid .c.hit{position:relative;z-index:3}
 .grid.focusing .c.focus{z-index:4}
 .grid:has(.c.hit) .reel:has(.c.hit){z-index:2}
+/* ---------- full-reel wild: the mango surfing a tall wave (no foam dots, no stripes) ---------- */
+.mstack.surf .swell,.mstack.surf .foam{display:none}
+.mstack.surf .mw-wave{position:absolute;left:50%;top:50%;width:auto;height:118%;max-width:none;transform:translate(-50%,-50%);opacity:.95;
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.25));animation:wavebob 2.6s ease-in-out infinite}
+.mstack.surf .mw-rider{position:absolute;left:50%;top:50%;width:92%;max-width:none;margin:0;filter:drop-shadow(0 6px 5px rgba(0,0,0,.35));animation:carve 2.4s ease-in-out infinite}
+.mstack.surf .mw-trail{position:absolute;left:50%;top:50%;width:70%;height:30%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 30%,rgba(255,255,255,.85),rgba(255,255,255,0) 65%);animation:trail 2.4s ease-in-out infinite;opacity:.8}
+@keyframes wavebob{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-52%) scale(1.03)}}
+/* up the face, hit the lip, drop back down: leaning into each turn */
+@keyframes carve{0%,100%{transform:translate(-50%,-10%) rotate(-10deg)}25%{transform:translate(-56%,-95%) rotate(-24deg)}45%{transform:translate(-44%,-115%) rotate(14deg)}
+  70%{transform:translate(-50%,15%) rotate(18deg)}85%{transform:translate(-54%,5%) rotate(-4deg)}}
+@keyframes trail{0%,100%{transform:translate(-50%,40%) scaleX(.8);opacity:.6}25%{transform:translate(-55%,-60%) scaleX(1);opacity:.9}45%{transform:translate(-45%,-85%) scaleX(.6);opacity:.4}70%{transform:translate(-50%,70%) scaleX(1.1);opacity:.9}}
+.reel:has(.c.hit) .stackov .mstack.surf .mw-rider{animation:carve 1.6s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.mstack.surf .mw-wave,.mstack.surf .mw-rider,.mstack.surf .mw-trail{animation:none}}
+.reel:has(.c.hit) .stackov .mstack.surf .mw-wave{animation:wavebob 1.3s ease-in-out infinite}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -1202,7 +1217,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","surf-tricks":"428d180b","W":"d1ec9fa7","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","surf-tricks":"428d180b","W":"d1ec9fa7","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2467,7 +2482,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   // ---------- full-reel wild ----------
   function stack(M, sticky){
     const tier = M >= 200 ? 't4' : M >= 50 ? 't3' : M >= 10 ? 't2' : M ? 't1' : 't0';
-    return `<div class="mstack ${tier}"><div class="foam"></div><div class="swell"></div><img src="${src('W')}" alt="" draggable="false">`
+    // a full-reel wild is the mango surfing a tall wave: the wave fills the reel, the mango carves up and down its face
+    return `<div class="mstack surf ${tier}"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false"><i class="mw-trail"></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false">`
       + `<b class="mx big">${M ? 'x' + fmtM(M) : 'WILD'}</b>${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
   }
 
