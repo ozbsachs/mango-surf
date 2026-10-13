@@ -1386,8 +1386,8 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   /* board as big as the space allows: the TOTAL WIN sign hangs left of centre so it never stacks on the spin button */
   .machine .stagewrap{top:-22px!important}
   .machine .stage{height:min(100dvh - 325px, max(660px, 61dvh))!important;width:min(70vw,calc(min(100dvh - 325px, max(660px, 61dvh)) * 1.62),1760px,calc(100vw - var(--fw) * 1.12 - 2 * var(--bw) - 40px))!important;max-width:none!important}
-  .machine .stagewrap{--bw:clamp(110px,11vw,180px)}
-  .machine .stagewrap > #buybtn{width:var(--bw)!important;padding-top:calc(var(--bw) * .05)!important;font-size:clamp(12px,1.15vw,18px)!important}
+  .machine .stagewrap{--bw:clamp(150px,calc(min(100dvh - 325px, max(660px, 61dvh)) * .42),300px)}   /* the plank sized to the board, not the window */
+  .machine .stagewrap > #buybtn{width:var(--bw)!important;padding-top:calc(var(--bw) * .05)!important;font-size:calc(var(--bw) * .105)!important}
   /* the plank stands just left of the left post, a third of the way down */
   .machine .stagewrap > .sidebuy{right:calc(100% + var(--fw) * .56 - 2px)!important;top:32%!important;transform:translateY(-50%)!important}
   .machine .stage > .winrow{top:calc(100% + var(--fw) * .30 + 6px)!important}
@@ -2733,7 +2733,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   function symbol(id, o){
     o = o || {}; const k = IMG[id] || 'L1';
     return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})"><img src="${src(k)}" alt="" draggable="false">`
-      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : '') + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';
+      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : k === 'W' ? '<b class="mx plain">WILD</b>' : '')   // a plain wild says WILD + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';
   }
   window.MangoArt = {symbol, skater: () => `<img class="mg" src="${src('H3')}" alt="">`};
 
@@ -2759,7 +2759,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     // a full-reel wild is the mango surfing a tall wave: the wave fills the reel, the mango carves up and down its face.
     // The wave and trail sit in their own clipped box (.mw-sea) so the rider can lean past the tower's sides uncut
     return `<div class="mstack surf ${tier}"><i class="mw-sea"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false"><i class="mw-trail"></i></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false">`
-      + (M > 1 ? `<b class="mx big">x${fmtM(M)}</b>` : '') + `${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
+      + (M > 1 ? `<b class="mx big">x${fmtM(M)}</b>` : '<b class="mx big plain">WILD</b>') + `${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
   }
 
   // ---------- after the game draws its win lines: wavy lines that draw themselves, popping symbols, splashes ----------
