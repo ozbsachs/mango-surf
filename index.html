@@ -655,6 +655,17 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 body:not(.mwl-side) .mwins{opacity:0;pointer-events:none;transform:scale(.92);transition:opacity .2s,transform .2s}
 body:not(.mwl-side) .mwins.open{opacity:1;pointer-events:auto;transform:none;z-index:60}
 body.mwl-side .mwl-btn{display:none}
+/* LAST WIN / TOTAL WIN: on desktop they leave the bottom of the reels and stack under the win box, at the bottom of
+   the left column (absolute to the board, which is their containing block because of its backdrop blur) */
+body.mwl-side .machine .stage > .winrow{position:absolute!important;left:var(--wl-x)!important;bottom:0!important;top:auto!important;transform:none!important;
+  width:var(--wl-w)!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important;margin:0!important}
+body.mwl-side .machine .stage > .winrow .winarea{width:auto!important;min-width:0!important;padding:6px 12px!important;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:14px}
+body.mwl-side .machine .stage > .winrow .winarea .k{font-size:12px!important}
+body.mwl-side .machine .stage > .winrow .winarea .v{font-size:clamp(18px,1.6vw,26px)!important}
+/* phones: the win amounts stay under the reels, smaller */
+body:not(.mwl-side) .machine .stage > .winrow .winarea{padding:3px 14px!important}
+body:not(.mwl-side) .machine .stage > .winrow .winarea .v{font-size:20px!important}
+body:not(.mwl-side) .machine .stage > .winrow .winarea .k{font-size:11px!important}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -734,12 +745,38 @@ body.mwl-side .mwl-btn{display:none}
 }
 @media (prefers-reduced-motion:reduce){.mhud #spinbtn::before{transition:none;animation:none!important}}
 
+/* ---------- a slimmer bar (Oz: smaller) ---------- */
+.mhud .k{font-size:10px!important}
+.mhud .iconbtn span{height:4px}
+.mhud .mbetstack{gap:3px}
+.mhud .mbetstack .round{width:32px;height:18px}
+@media (min-width:1001px){
+  .ctrlbar.mhud{gap:10px;padding:5px 12px;width:min(780px,calc(100% - 20px));border-radius:16px}
+  .mhud b{font-size:20px!important}
+  .mhud .iconbtn{width:40px;height:40px;border-radius:10px;padding:0 9px;gap:4px}
+  .mhud .mbetbox{min-width:88px;padding:3px 10px 4px;gap:1px}
+  .mhud .mbetbox b{font-size:17px!important}
+  .mhud .tools .pill{height:36px;min-width:36px}
+  .mhud .mspinwrap{margin:-18px 2px}
+  .mhud #spinbtn{width:74px;height:74px;border-width:4px;box-shadow:0 0 0 3px var(--cy3),0 0 0 6px #fff,0 6px 14px rgba(0,40,80,.45)}
+}
+@media (max-width:1000px){
+  .ctrlbar.mhud{gap:6px;padding:5px 8px;border-radius:14px}
+  .mhud b{font-size:17px!important}
+  .mhud .iconbtn{width:38px;height:38px;padding:0 8px;gap:4px;border-radius:10px}
+  .mhud .mbetbox{min-width:76px;padding:3px 8px}
+  .mhud .mbetbox b{font-size:15px!important}
+  .mhud .tools .pill{height:36px;min-width:36px}
+  .mhud #modebtn{font-size:11px!important}
+  .mhud #spinbtn{width:60px;height:60px}
+}
+
 /* ---------- big slot on desktop (like Sweet Bonanza: the reels fill ~70% of the width and nearly all the height) ----------
    The stage takes the height between the top bar and the control bar, and up to 70% of the width; cells may be wider
    than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
 @media (min-width:900px) and (min-aspect-ratio:4/3){
   .machine{padding:0 10px}
-  .machine .stage{width:min(70vw,calc((100dvh - 316px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 316px);display:flex;flex-direction:column}
+  .machine .stage{width:min(70vw,calc((100dvh - 290px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 290px);display:flex;flex-direction:column}
   .machine .stage .gridbox{flex:1 1 0;min-height:0;height:auto!important;aspect-ratio:auto!important;width:100%}
   .machine .stage .grid{height:100%}
   .stagetop{margin-bottom:6px}
@@ -2683,10 +2720,11 @@ body.mwl-side .mwl-btn{display:none}
 
   // ---------- the confirmation after picking a buy or a mode: bonus art on top, tinted per bonus ----------
   // The game fills #cf-t / #cf-desc / #cf-price itself; this adds the art and the colour from the title it wrote.
-  // ---------- win log: a little box that lists what hit in this spin, or in the whole bonus for a buy ----------
+  // ---------- win log: a little box that lists what hit in this spin (in a bonus: the free spin on screen) ----------
   // The game tells the skin when a round starts (log.start), when each free spin lands (log.spin), every set of line
   // wins (afterLines -> log.wins), a minimum-win top-up and the round total (log.end). Biggest hit first in each spin.
-  // Desktop: the box stands left of the reels. Phones: a WINS button opens it over the reels.
+  // Desktop: the box stands left of the reels, with LAST WIN / TOTAL WIN under it. Phones: a WINS button opens it.
+  // The bonus total lives in TOTAL WIN; the box only ever shows the spin on screen.
   const log = (() => {
     let box, list, head, foot, btn, total = 0, cost = 0, bonusName = '', isBuy = false, cur = null;
     const NAMES_ON = ['10','J','Q','K','A','Coconut','Beach ball','Mango','Surfboard','Wild','SURF badge','KAHUNA badge'];
@@ -2707,30 +2745,32 @@ body.mwl-side .mwl-btn{display:none}
       const r = st.getBoundingClientRect(), out = Math.max(0, -parseFloat(getComputedStyle(st, '::after').left) || 0) + 14;
       const room = r.left - out - 16, w = Math.min(300, room), side = w >= 170 && innerWidth >= 900;
       document.body.classList.toggle('mwl-side', side);
-      if (side){ box.style.width = w + 'px'; box.style.left = Math.max(8, r.left - out - w) + 'px'; box.style.top = r.top + 'px'; box.style.maxHeight = r.height + 'px'; box.classList.remove('open'); }
+      const wr = st.querySelector(':scope > .winrow'), wh = side && wr ? wr.getBoundingClientRect().height : 0, x = Math.max(8, r.left - out - w);
+      if (side){ box.style.width = w + 'px'; box.style.left = x + 'px'; box.style.top = r.top + 'px'; box.style.maxHeight = (r.height - wh - 12) + 'px'; box.classList.remove('open');
+        st.style.setProperty('--wl-x', (x - r.left) + 'px'); st.style.setProperty('--wl-w', w + 'px'); }
       else { const bw = Math.min(innerWidth - 24, 360); box.style.width = bw + 'px'; box.style.left = (innerWidth - bw) / 2 + 'px'; box.style.top = Math.max(8, r.top) + 'px'; box.style.maxHeight = Math.max(220, r.height) + 'px'; }
     }
     const fmtM = v => money(v * BET);
-    const setFoot = () => { foot.innerHTML = `<span>TOTAL</span><b>${fmtM(total)}</b>` + (isBuy && cost ? `<small>${num(total * BET / cost)}x the price</small>` : '');
+    const setFoot = () => { foot.innerHTML = `<span>SPIN WIN</span><b>${fmtM(total)}</b>`;
       if (btn) btn.querySelector('b').textContent = total > 0 ? fmtM(total) : ''; };
     const add = html => { const d = document.createElement('div'); d.innerHTML = html; const el = d.firstElementChild; list.appendChild(el); list.scrollTop = list.scrollHeight; return el; };
     return {
       start(res, c){ build(); total = 0; cost = c || 0; isBuy = res && res.kind === 'buy'; cur = null; bonusName = '';
-        head.textContent = isBuy ? 'BONUS BUY' : 'THIS SPIN'; list.innerHTML = ''; setFoot(); if (!isBuy) cur = add(`<div class="mwl-spin"></div>`); },
-      spin(i, n, name){ build(); if (i === 1){ bonusName = name; head.textContent = (isBuy ? 'BONUS BUY · ' : 'BONUS · ') + name; if (!isBuy) add(`<div class="mwl-sep">${name} BONUS · ${n} FREE SPINS</div>`); }
-        cur = add(`<div class="mwl-spin"><div class="mwl-sub">Spin ${i} of ${n}</div></div>`); },
+        head.textContent = 'THIS SPIN'; list.innerHTML = isBuy ? `<p class="mwl-empty">Free spins coming up...</p>` : ''; setFoot(); if (!isBuy) cur = add(`<div class="mwl-spin"></div>`); place(); },
+      spin(i, n, name){ build(); bonusName = name; total = 0; head.textContent = `SPIN ${i} OF ${n} · ${name}`; list.innerHTML = ''; setFoot();
+        cur = add(`<div class="mwl-spin"></div>`); place(); },
       wins(wins){ if (!box || !cur) return;
         // the same symbol, count and multiplier on several lines shows once, with how many lines
         const grp = new Map(); (wins || []).forEach(w => { const key = w.s + '|' + w.k + '|' + w.mult, g = grp.get(key);
           if (g){ g.win += w.win; g.n++; } else grp.set(key, {s: w.s, k: w.k, mult: w.mult, win: w.win, n: 1}); });
         const ws = Array.from(grp.values()).sort((a, b) => b.win - a.win);
-        if (!ws.length){ if (cur.querySelector('.mwl-sub')) cur.classList.add('none'); else cur.innerHTML = `<p class="mwl-empty">No line wins.</p>`; return; }
+        if (!ws.length){ cur.innerHTML = `<p class="mwl-empty">No win this spin.</p>`; return; }
         cur.insertAdjacentHTML('beforeend', ws.map(w => { const k = SYM[w.s] || 'W';
           return `<div class="mwl-row"><img src="${src(k)}" alt=""><span class="mwl-k">${w.k}×</span><span class="mwl-n">${NAMES_ON[w.s] || 'Wild'}</span>` +
             (w.mult > 1 ? `<i class="mwl-x">x${num(w.mult)}</i>` : '') + (w.n > 1 ? `<small class="mwl-l">${w.n} lines</small>` : '') + `<b>${fmtM(w.win)}</b></div>`; }).join(''));
-        total += ws.reduce((t, w) => t + w.win, 0); setFoot(); list.scrollTop = list.scrollHeight; cur = isBuy || bonusName ? null : cur; },
+        total += ws.reduce((t, w) => t + w.win, 0); setFoot(); list.scrollTop = list.scrollHeight; },
       topUp(v){ if (!box) return; add(`<div class="mwl-row top"><span class="mwl-n">Minimum win top-up</span><b>+${fmtM(v)}</b></div>`); total += v; setFoot(); },
-      end(t){ if (!box) return; if (Math.abs(t - total) > 1e-9){ total = t; setFoot(); } if (t <= 0 && !list.querySelector('.mwl-row')) list.innerHTML = `<p class="mwl-empty">No win this time.</p>`; }
+      end(t){ if (!box) return; if (!bonusName && Math.abs(t - total) > 1e-9){ total = t; setFoot(); } }
     };
   })();
 
