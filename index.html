@@ -1216,8 +1216,19 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 
 @media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
 
+/* the bush in the bottom-left corner is cut out of the plate and drawn again over the palms, so the left palm's trunk
+   stands behind its leaves, as in the painting */
+.sc-bush{position:absolute;left:0;top:640px;width:900px;height:485px;transition:opacity 1.2s;pointer-events:none}
+.sc-bush.sunset{opacity:0}
+.slot:has(.stage.bonus) .sc-bush.sunset{opacity:1}
+.slot:has(.stage.bonus) .sc-bush.day{opacity:0}
+.sc-chair{position:absolute;left:1370px;top:540px;width:330px;height:370px;transition:opacity 1.2s;pointer-events:none}
+.sc-chair.sunset{opacity:0}
+.slot:has(.stage.bonus) .sc-chair.sunset{opacity:1}
+.slot:has(.stage.bonus) .sc-chair.day{opacity:0}
+
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","surf-tricks":"428d180b","W":"d1ec9fa7","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-bush-day":"cbded6bf","sc-bush-sunset":"81a88854","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"099b00c1","sc-water-sunset":"9151dd61","sc-whale":"6d2091dd","surf-tricks":"428d180b","W":"d1ec9fa7","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2902,6 +2913,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
         ${water('day')}${water('sunset')}
         <div class="sc-sea" style="left:0;top:0;width:2000px;height:${SC.sea.y}px"></div>
         ${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
+        <img class="sc-chair day" src="img/sc-chair-day.webp" alt=""><img class="sc-chair sunset" src="img/sc-chair-sunset.webp" alt=""><img class="sc-bush day" src="img/sc-bush-day.webp" alt=""><img class="sc-bush sunset" src="img/sc-bush-sunset.webp" alt="">
       </div>`;
     host.appendChild(box); host.classList.add('live');
     const world = box.firstElementChild, sea = box.querySelector('.sc-sea');
