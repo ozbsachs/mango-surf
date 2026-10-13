@@ -3101,7 +3101,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   function frameCrabs(){
     const st = document.querySelector('.machine .stage'); if (!st || st.querySelector('.fcrabs')) return;
     const box = document.createElement('div'); box.className = 'fcrabs'; box.setAttribute('aria-hidden', 'true');
-    box.innerHTML = FRAME_CRABS.map((c, i) => `<div class="sc-crab fc${i}" style="left:${c.x * 100}%;--t:${c.t}s;animation-delay:${c.d || 0}s"><img src="img/sc-crab.webp" alt=""></div>`).join('');
+    box.innerHTML = FRAME_CRABS.map((c, i) => `<div class="sc-crab fc${i}" style="left:${c.x * 100}%;--t:${c.t}s;animation-delay:${c.d || 0}s"><img src="${src(`sc-crab`)}" alt=""></div>`).join('');
     st.appendChild(box);
     // the walk is a sideways slide in pixels: set it from the board width, and again when the board resizes
     // the walk runs through the Web Animations API with plain pixel values: Safari does not animate a CSS variable inside
@@ -3171,15 +3171,15 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     const host = document.querySelector('.scene'); if (!host || host.querySelector('.mscene')) return;
     const box = document.createElement('div'); box.className = 'mscene'; box.setAttribute('aria-hidden', 'true');
     const palm = (k, p) => { const f = p.w / p.iw;
-      return `<div class="sc-palm ${k}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px"><img class="trunk" src="img/sc-${k}-trunk.webp" alt="">` +
-        `<img class="crown" src="img/sc-${k}-crown.webp" alt="" style="height:${p.ch * f}px;transform-origin:${p.cx * f}px ${p.cy * f}px"></div>`; };
-    const water = k => `<div class="sc-water ${k}" style="top:${SC.water.y}px;height:${SC.water.h}px"><img class="wv a" src="img/sc-water-${k}.webp" alt=""><img class="wv b" src="img/sc-water-${k}.webp" alt=""></div>`;
+      return `<div class="sc-palm ${k}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px"><img class="trunk" src="${src(`sc-${k}-trunk`)}" alt="">` +
+        `<img class="crown" src="${src(`sc-${k}-crown`)}" alt="" style="height:${p.ch * f}px;transform-origin:${p.cx * f}px ${p.cy * f}px"></div>`; };
+    const water = k => `<div class="sc-water ${k}" style="top:${SC.water.y}px;height:${SC.water.h}px"><img class="wv a" src="${src(`sc-water-${k}`)}" alt=""><img class="wv b" src="${src(`sc-water-${k}`)}" alt=""></div>`;
     box.innerHTML = `<div class="sc-world">
-        <img class="sc-plate day" src="img/sc-plate-day.webp" alt=""><img class="sc-plate sunset" src="img/sc-plate-sunset.webp" alt="">
+        <img class="sc-plate day" src="${src(`sc-plate-day`)}" alt=""><img class="sc-plate sunset" src="${src(`sc-plate-sunset`)}" alt="">
         ${water('day')}${water('sunset')}
         <div class="sc-sea" style="left:0;top:0;width:2000px;height:${SC.sea.y}px"></div>
         ${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
-        <img class="sc-chair day" src="img/sc-chair-day.webp" alt=""><img class="sc-chair sunset" src="img/sc-chair-sunset.webp" alt=""><img class="sc-bush day" src="img/sc-bush-day.webp" alt=""><img class="sc-bush sunset" src="img/sc-bush-sunset.webp" alt="">
+        <img class="sc-chair day" src="${src(`sc-chair-day`)}" alt=""><img class="sc-chair sunset" src="${src(`sc-chair-sunset`)}" alt=""><img class="sc-bush day" src="${src(`sc-bush-day`)}" alt=""><img class="sc-bush sunset" src="${src(`sc-bush-sunset`)}" alt="">
       </div>`;
     host.appendChild(box); host.classList.add('live');
     const world = box.firstElementChild, sea = box.querySelector('.sc-sea');
@@ -3192,9 +3192,9 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     const creature = () => {
       const whale = false, x = SC.sea.x0 + Math.random()*(SC.sea.x1 - SC.sea.x0 - 260), el = document.createElement('div');
       el.className = whale ? 'sc-whale' : 'sc-dolphin'; el.style.left = x + 'px';
-      el.innerHTML = whale ? `<img src="img/sc-whale.webp" alt="">` : `<img src="img/sc-dolphin.webp" alt="">`;
+      el.innerHTML = whale ? `<img src="${src(`sc-whale`)}" alt="">` : `<img src="${src(`sc-dolphin`)}" alt="">`;
       sea.appendChild(el);
-      const sp = (dx, delay) => setTimeout(() => { const s = document.createElement('img'); s.className = 'sc-splash'; s.src = 'img/sc-splash.webp'; s.alt = '';
+      const sp = (dx, delay) => setTimeout(() => { const s = document.createElement('img'); s.className = 'sc-splash'; s.src = src('sc-splash'); s.alt = '';
         s.style.left = (x + dx) + 'px'; sea.appendChild(s); setTimeout(() => s.remove(), 1200); }, delay);
       if (whale){ sp(30, 300); sp(40, 2600); } else { sp(-10, 150); sp(190, 1500); }
       setTimeout(() => el.remove(), whale ? 4200 : 2200);
