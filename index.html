@@ -1385,7 +1385,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 @media (min-width:900px) and (min-aspect-ratio:4/3){
   /* board as big as the space allows: the TOTAL WIN sign hangs left of centre so it never stacks on the spin button */
   .machine .stagewrap{top:-22px!important}
-  .machine .stage{height:calc(100dvh - 325px)!important;width:min(70vw,calc((100dvh - 325px) * 1.62),1760px,calc(100vw - var(--fw) * 1.12 - 2 * var(--bw) - 40px))!important;max-width:none!important}
+  .machine .stage{height:min(100dvh - 325px, max(660px, 61dvh))!important;width:min(70vw,calc(min(100dvh - 325px, max(660px, 61dvh)) * 1.62),1760px,calc(100vw - var(--fw) * 1.12 - 2 * var(--bw) - 40px))!important;max-width:none!important}
   .machine .stagewrap{--bw:clamp(110px,11vw,180px)}
   .machine .stagewrap > #buybtn{width:var(--bw)!important;padding-top:calc(var(--bw) * .05)!important;font-size:clamp(12px,1.15vw,18px)!important}
   /* the plank stands just left of the left post, a third of the way down */
@@ -1472,6 +1472,11 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 @media (min-width:900px) and (min-aspect-ratio:4/3){ .machine .stage > .winrow{left:27%!important} }
 /* the mode name under the spin button is gone (the MODE button already says it) */
 .mhud #spinbtn[data-label]::after{display:none!important}
+/* big screens (taller than about 1200px): the whole game scales together, like a fixed 1080p design scaled up; the board
+   grows with the screen (61% of its height, never less than the 660px laptop cap) and the bar, header and sign grow too */
+@media (min-width:1600px) and (min-height:1200px){ .ctrlbar.mhud,header.slotbar,.machine .stage > .winrow{zoom:1.25} }
+@media (min-width:1900px) and (min-height:1380px){ .ctrlbar.mhud,header.slotbar,.machine .stage > .winrow{zoom:1.4} }
+@media (min-width:2400px) and (min-height:1600px){ .ctrlbar.mhud,header.slotbar,.machine .stage > .winrow{zoom:1.7} }
 
 /* ---------- spins left (extras.js): gold ring, dark wood, big number ---------- */
 #mspins{position:fixed;z-index:48;width:clamp(70px,9vw,96px);aspect-ratio:1/1;border-radius:50%;display:none;flex-direction:column;align-items:center;justify-content:center;
