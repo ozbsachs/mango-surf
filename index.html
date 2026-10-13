@@ -2728,7 +2728,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   function symbol(id, o){
     o = o || {}; const k = IMG[id] || 'L1';
     return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})"><img src="${src(k)}" alt="" draggable="false">`
-      + (o.mult ? `<b class="mx">x${fmtM(o.mult)}</b>` : '') + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';
+      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : '') + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';
   }
   window.MangoArt = {symbol, skater: () => `<img class="mg" src="${src('H3')}" alt="">`};
 
@@ -2749,11 +2749,12 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 
   // ---------- full-reel wild ----------
   function stack(M, sticky){
-    const tier = M >= 200 ? 't4' : M >= 50 ? 't3' : M >= 10 ? 't2' : M ? 't1' : 't0';
+    // M 0 = a plain wild reel; M 1 = a held plain wild reel (Kahuna, cfg.legendStickPlain): both show as a wild reel with no tag, never x1
+    const tier = M >= 200 ? 't4' : M >= 50 ? 't3' : M >= 10 ? 't2' : M > 1 ? 't1' : 't0';
     // a full-reel wild is the mango surfing a tall wave: the wave fills the reel, the mango carves up and down its face.
     // The wave and trail sit in their own clipped box (.mw-sea) so the rider can lean past the tower's sides uncut
     return `<div class="mstack surf ${tier}"><i class="mw-sea"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false"><i class="mw-trail"></i></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false">`
-      + (M ? `<b class="mx big">x${fmtM(M)}</b>` : '') + `${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
+      + (M > 1 ? `<b class="mx big">x${fmtM(M)}</b>` : '') + `${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
   }
 
   // ---------- after the game draws its win lines: wavy lines that draw themselves, popping symbols, splashes ----------
@@ -5515,12 +5516,13 @@ async function mergeAnim(merged, fast, sticky){
   for (const mg of loud){
     if (!fast){ const gb = gridEl.parentElement.getBoundingClientRect(), rb = reelEls[mg.r].getBoundingClientRect();
       const tag = document.createElement('div'); tag.className = 'mergetag';
-      tag.textContent = mg.M && mg.from.length + (mg.upgrade ? 1 : 0) > 1 ? (mg.upgrade ? 'x'+fx(mg.upgrade)+' × ' : '') + mg.from.map(f=>'x'+fx(f.m)).join(' × ') + ' = x' + fx(mg.M) : mg.M ? 'STACK x' + fx(mg.M) : 'WILD REEL';
+      const fac = (mg.upgrade > 1 ? [mg.upgrade] : []).concat(mg.from.map(f=>f.m).filter(m=>m > 1));
+      tag.textContent = mg.M > 1 && fac.length > 1 ? fac.map(m=>'x'+fx(m)).join(' × ') + ' = x' + fx(mg.M) : mg.M > 1 ? 'STACK x' + fx(mg.M) : 'WILD REEL';
       tag.style.left = (rb.left-gb.left+rb.width/2)+'px'; tag.style.top = (rb.top-gb.top+rb.height*.45)+'px'; gridEl.parentElement.appendChild(tag);
       const lit = mg.from.map(f=>f.c).concat(mg.anchor ? [mg.anchor.c] : []);
       lit.forEach(c=>cells[c].classList.add('hit')); sfx('wildLand', mg.M); await wait(T(650)); tag.remove(); lit.forEach(c=>cells[c].classList.remove('hit')); }
     if (fast) setStack(mg.r, mg.M, sticky); else { const rws = mg.from.map(f => f.c % ROWS).concat(mg.anchor ? [mg.anchor.c % ROWS] : []); await growStack(mg.r, mg.M, sticky, [Math.min(...rws), Math.max(...rws)]); }
-    if (!fast){ gridEl.classList.remove('shake'); void gridEl.offsetWidth; gridEl.classList.add('shake'); banner(mg.M ? `STACK! x${fx(mg.M)} ON REEL ${mg.r+1}` : `WILD REEL ON REEL ${mg.r+1}`); await wait(T(420)); }
+    if (!fast){ gridEl.classList.remove('shake'); void gridEl.offsetWidth; gridEl.classList.add('shake'); banner(mg.M > 1 ? `STACK! x${fx(mg.M)} ON REEL ${mg.r+1}` : `WILD REEL ON REEL ${mg.r+1}`); await wait(T(420)); }
   }
 }
 
