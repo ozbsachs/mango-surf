@@ -467,8 +467,13 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 .pill.hot{background:linear-gradient(#ffe066,#ffae1f);color:var(--outline)}
 .pill.on{background:#7dffb0;color:var(--outline)}
 .iconbtn{background:#0f5d82;border-color:var(--outline);box-shadow:0 4px 0 var(--outline)}
-.machine .stage{background:linear-gradient(rgba(10,70,120,.62),rgba(6,40,80,.72));border-color:var(--outline);box-shadow:0 8px 0 rgba(42,14,18,.45),inset 0 0 0 3px rgba(255,255,255,.18)}
-.machine .stage.bonus{background:linear-gradient(rgba(120,40,90,.62),rgba(60,20,70,.74))}
+/* the board: a washed-up driftwood frame (rope-lashed planks) around a see-through glass pane that blurs the beach behind it.
+   The planks sit just outside the stage edge (the frame image's inner plank edge is 72% into its 24% border slice). */
+.machine .stage{--fw:clamp(34px,4.2vw,66px);background:rgba(8,60,100,.16);border:0!important;border-radius:6px;box-shadow:none;
+  -webkit-backdrop-filter:blur(7px) saturate(1.1);backdrop-filter:blur(7px) saturate(1.1);overflow:visible}
+.machine .stage.bonus{background:rgba(110,35,70,.18)}
+.machine .stage::after{content:"";position:absolute;inset:calc(var(--fw) * -.72);pointer-events:none;z-index:40;
+  border:var(--fw) solid transparent;border-image:url("img/frame-driftwood.webp?v=978fb7b1") 24% stretch;filter:drop-shadow(0 10px 8px rgba(40,20,5,.45))}
 .winarea{background:rgba(6,34,62,.82);border-color:var(--outline)}
 .winarea .k{color:#ffd23f;font-size:14px}
 .winarea .v{color:#fff7d6}
@@ -603,6 +608,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .nuts{position:fixed;inset:0;pointer-events:none;z-index:30}
 .nuts .nut{position:fixed;display:none;padding:0;border:0;border-radius:50%;background:transparent;cursor:default;pointer-events:auto;-webkit-tap-highlight-color:transparent;outline:none}
 .nuts.live .nut:not([hidden]){display:block}
+#buybtn{position:relative;z-index:46}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -687,7 +693,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
    than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
 @media (min-width:900px) and (min-aspect-ratio:4/3){
   .machine{padding:0 10px}
-  .machine .stage{width:min(70vw,calc((100dvh - 196px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 196px);display:flex;flex-direction:column}
+  .machine .stage{width:min(70vw,calc((100dvh - 276px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 276px);display:flex;flex-direction:column}
   .machine .stage .gridbox{flex:1 1 0;min-height:0;height:auto!important;aspect-ratio:auto!important;width:100%}
   .machine .stage .grid{height:100%}
   .stagetop{margin-bottom:6px}
@@ -987,12 +993,15 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .sc-plate.sunset{opacity:0}
 .slot:has(.stage.bonus) .sc-plate.sunset{opacity:1}
 /* at sunset the moving pieces take the warm light too */
-.slot:has(.stage.bonus) .sc-palm,.slot:has(.stage.bonus) .sc-crab img,.slot:has(.stage.bonus) .sc-sea img{filter:sepia(.35) saturate(1.25) hue-rotate(-12deg) brightness(.92)}
+.slot:has(.stage.bonus) .sc-palm img,.slot:has(.stage.bonus) .sc-crab img,.slot:has(.stage.bonus) .sc-sea img{filter:sepia(.35) saturate(1.25) hue-rotate(-12deg) brightness(.92)}
 
-/* palms bend in the wind from the trunk base, each at its own pace */
-.sc-palm{position:absolute;display:block;animation:sway 5.5s ease-in-out infinite;will-change:transform}
-.sc-palm.palmR{animation-duration:6.7s;animation-delay:-2s}
-@keyframes sway{0%,100%{transform:rotate(-1.4deg)}35%{transform:rotate(1.6deg)}60%{transform:rotate(.4deg)}80%{transform:rotate(1.2deg)}}
+/* palms: the trunk stands still, the crown of leaves rocks in the wind from the top of the trunk */
+.sc-palm{position:absolute}
+.sc-palm img{position:absolute;left:0;top:0;width:100%;display:block}
+.sc-palm .trunk{height:100%}
+.sc-palm .crown{animation:sway 5.5s ease-in-out infinite;will-change:transform}
+.sc-palm.palmR .crown{animation-duration:6.7s;animation-delay:-2s}
+@keyframes sway{0%,100%{transform:rotate(-2.2deg)}30%{transform:rotate(2.6deg)}50%{transform:rotate(1deg)}70%{transform:rotate(3deg) skewX(-1deg)}85%{transform:rotate(.2deg)}}
 
 /* crabs scuttle sideways along the sand, stop, then come back */
 .sc-crab{position:absolute;animation:scuttle var(--t) ease-in-out infinite;will-change:transform}
@@ -1001,12 +1010,17 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes scuttle{0%,12%{transform:translateX(0)}45%,62%{transform:translateX(var(--dx))}95%,100%{transform:translateX(0)}}
 @keyframes legs{0%{transform:rotate(-3deg) translateY(0)}100%{transform:rotate(3deg) translateY(-3px)}}
 
-/* foam washes up the sand and drains back */
-.sc-wash{position:absolute;inset:0;width:2000px;height:1125px}
-.sc-wash path{fill:rgba(255,255,255,.75);transform-box:fill-box;transform-origin:50% 0}
-.sc-wash .w1{animation:wash 6s ease-in-out infinite}
-.sc-wash .w2{fill:rgba(220,248,255,.55);animation:wash 6s ease-in-out infinite;animation-delay:-3s}
-@keyframes wash{0%{transform:translateY(-34px) scaleY(.6);opacity:0}25%{opacity:1}55%{transform:translateY(18px) scaleY(1.05);opacity:.9}100%{transform:translateY(-34px) scaleY(.6);opacity:0}}
+/* the painted sea moves: the whole water layer reaches up the sand and drains back (stretching down from the
+   horizon, so the foam line slides over the sand), and a second copy drifts across it for moving ripples */
+.sc-water{position:absolute;left:0;width:2000px;transition:opacity 1.2s}
+.sc-water .wv{position:absolute;left:0;top:0;width:2000px;height:100%;display:block;transform-origin:50% 0}
+.sc-water .wv.a{animation:wash 7s ease-in-out infinite}
+.sc-water .wv.b{opacity:0;animation:ripple 4.6s ease-in-out infinite;mix-blend-mode:screen}
+@keyframes wash{0%,100%{transform:scaleY(1)}45%{transform:translateX(-4px) scaleY(1.085)}60%{transform:translateX(-2px) scaleY(1.07)}}
+@keyframes ripple{0%,100%{transform:translate(-14px,2px) scaleY(1.01);opacity:0}50%{transform:translate(14px,5px) scaleY(1.04);opacity:.35}}
+.sc-water.sunset{opacity:0}
+.slot:has(.stage.bonus) .sc-water.sunset{opacity:1}
+.slot:has(.stage.bonus) .sc-water.day{opacity:0}
 
 /* the sea band: anything below the surface line is hidden, so creatures rise out of and dive back into the water */
 .sc-sea{position:absolute;overflow:hidden}
@@ -1020,10 +1034,10 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .sc-splash{position:absolute;bottom:-20px;width:150px;animation:splash 1.1s ease-out forwards;transform-origin:50% 100%}
 @keyframes splash{0%{transform:scale(.2);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(1.15) translateY(10px);opacity:0}}
 
-@media (prefers-reduced-motion:reduce){.sc-palm,.sc-crab,.sc-crab img,.sc-wash path{animation:none}}
+@media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL":"dcb46604","sc-palmR":"037041cd","sc-plate-day":"fef75a40","sc-plate-sunset":"03561971","sc-splash":"fd32b9b1","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","frame-driftwood":"978fb7b1","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"420a42b6","sc-palmL-trunk":"74a2414d","sc-palmL":"dcb46604","sc-palmR-crown":"986dfb35","sc-palmR-trunk":"09795acf","sc-palmR":"037041cd","sc-plate-day":"fef75a40","sc-plate-sunset":"03561971","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2644,8 +2658,10 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   // bottom like the old still image, so the pieces line up with the painted beach at every screen size. Day and sunset
   // plates (the beach with the crabs and palms painted out) swap with the bonus; the moving pieces are separate images.
   const SC = {
-    palmL: {x: -200, y: 280, w: 654, h: 700, ox: 346, oy: 686},   // ox/oy: the trunk base inside the image (pivot)
-    palmR: {x: 1511, y: 188, w: 449, h: 646, ox: 215, oy: 633},
+    // trunks stand still; only the crown (leaves + coconuts) moves, bending at the top of the trunk (cx/cy, image pixels)
+    palmL: {x: -200, y: 280, w: 654, h: 700, iw: 654, ch: 358, cx: 290, cy: 262},
+    palmR: {x: 1511, y: 188, w: 449, h: 646, iw: 528, ch: 282, cx: 235, cy: 205},
+    water: {y: 395, h: 350},                                      // the painted sea and its foam line, cut from the plates
     crabs: [{x: 600, x2: 900, y: 560, w: 224, t: 9}, {x: 1060, x2: 760, y: 610, w: 144, t: 7}],
     sea: {x0: 420, x1: 1380, y: 470}                              // where dolphins and whales show: the open water, its surface line
   };
@@ -2653,11 +2669,14 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     const host = document.querySelector('.scene'); if (!host || host.querySelector('.mscene')) return;
     const box = document.createElement('div'); box.className = 'mscene'; box.setAttribute('aria-hidden', 'true');
     const crabs = SC.crabs.map((c, i) => `<div class="sc-crab c${i}" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;--dx:${c.x2 - c.x}px;--t:${c.t}s"><img src="img/sc-crab.webp" alt=""></div>`).join('');
-    const palm = (k, p) => `<img class="sc-palm ${k}" src="img/sc-${k}.webp" alt="" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px;transform-origin:${p.ox / p.w * 100}% ${p.oy / p.h * 100}%">`;
+    const palm = (k, p) => { const f = p.w / p.iw;
+      return `<div class="sc-palm ${k}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px"><img class="trunk" src="img/sc-${k}-trunk.webp" alt="">` +
+        `<img class="crown" src="img/sc-${k}-crown.webp" alt="" style="height:${p.ch * f}px;transform-origin:${p.cx * f}px ${p.cy * f}px"></div>`; };
+    const water = k => `<div class="sc-water ${k}" style="top:${SC.water.y}px;height:${SC.water.h}px"><img class="wv a" src="img/sc-water-${k}.webp" alt=""><img class="wv b" src="img/sc-water-${k}.webp" alt=""></div>`;
     box.innerHTML = `<div class="sc-world">
         <img class="sc-plate day" src="img/sc-plate-day.webp" alt=""><img class="sc-plate sunset" src="img/sc-plate-sunset.webp" alt="">
+        ${water('day')}${water('sunset')}
         <div class="sc-sea" style="left:0;top:0;width:2000px;height:${SC.sea.y}px"></div>
-        <svg class="sc-wash" viewBox="0 0 2000 1125" preserveAspectRatio="none"><path class="w1" d="M0 642 C 220 610 420 668 640 630 S 1060 598 1280 590 S 1700 560 2000 552 L 2000 600 C 1700 612 1460 640 1280 642 S 860 682 640 690 S 220 666 0 700 Z"/><path class="w2" d="M0 652 C 260 628 460 676 700 640 S 1100 610 1320 600 S 1720 572 2000 566 L 2000 590 C 1740 600 1500 626 1320 630 S 900 668 700 676 S 260 664 0 690 Z"/></svg>
         ${crabs}${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
       </div>`;
     host.appendChild(box); host.classList.add('live');
