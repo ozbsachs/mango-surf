@@ -618,41 +618,43 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .nuts.live .nut:not([hidden]){display:block}
 #buybtn{position:relative;z-index:46}
 
-/* ---------- pay wheel (payWheel() in skin.js): a red and white life ring that turns through the symbols ---------- */
-@property --rot{syntax:'<angle>';inherits:true;initial-value:0deg}
-.mwheel{--sz:220px;position:fixed;z-index:30;width:var(--sz);height:var(--sz);transition:--rot .9s cubic-bezier(.3,1.35,.5,1),opacity .3s;font-family:var(--f-d)}
-.mw-disc{position:absolute;inset:0;border-radius:50%;border:4px solid var(--outline);
-  background:repeating-conic-gradient(from calc(var(--rot) + 22.5deg),#ff4b4b 0 45deg,#fffaf0 45deg 90deg);
-  box-shadow:0 8px 0 rgba(42,14,18,.35),inset 0 0 0 5px rgba(255,255,255,.35),inset 0 -10px 18px rgba(0,0,0,.18)}
-/* the symbols ride round the ring and stay upright */
-.mw-rot{position:absolute;inset:0}
-.mw-it{position:absolute;left:50%;top:50%;width:calc(var(--sz) * .15);height:calc(var(--sz) * .15);margin:calc(var(--sz) * -.075) 0 0 calc(var(--sz) * -.075);padding:0;border:0;background:none;cursor:pointer;
-  transform:rotate(calc(var(--a) + var(--rot))) translateY(calc(var(--sz) * -.375)) rotate(calc(-1 * (var(--a) + var(--rot))));transition:scale .3s}
-.mw-it img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(42,14,18,.6))}
-.mw-it.on{scale:1.2;z-index:2}
-.mw-it.on img{filter:drop-shadow(0 0 5px #fff6c4) drop-shadow(0 0 10px #ffc430)}
-/* the pointer at the top */
-.mw-ptr{position:absolute;left:50%;top:calc(var(--sz) * -.085);width:0;height:0;transform:translateX(-50%);z-index:3;
-  border-left:calc(var(--sz) * .07) solid transparent;border-right:calc(var(--sz) * .07) solid transparent;border-top:calc(var(--sz) * .1) solid #ffd23f;filter:drop-shadow(0 2px 0 var(--outline)) drop-shadow(0 -2px 0 var(--outline))}
-.mw-title{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);padding:2px 14px;border-radius:999px;background:var(--cy3);color:#fff;border:2px solid #fff;font-size:calc(var(--sz) * .075);letter-spacing:.06em;white-space:nowrap}
-/* the middle: the symbol under the pointer and its pays at the current bet */
-.mw-hub{position:absolute;left:50%;top:50%;width:54%;height:54%;box-sizing:border-box;border-radius:50%!important;background:radial-gradient(circle at 50% 35%,#fffdf6,#ffefc9)!important;border:3px solid var(--outline);box-shadow:inset 0 3px 0 rgba(255,255,255,.8),0 2px 0 rgba(42,14,18,.25);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--outline);text-align:center;line-height:1}
-.mw-hub img{width:32%;height:auto;margin-bottom:1px}
-.mw-hub .mw-nm{font-size:calc(var(--sz) * .062);font-weight:400;white-space:nowrap}
-.mw-hub .mw-row{font-size:calc(var(--sz) * .062);white-space:nowrap}
-.mw-hub .mw-row i{font-style:normal;display:inline-block;min-width:1.5em;margin-right:4px;padding:0 3px;border-radius:5px;background:var(--cy3);color:#fff;font-size:.85em}
-.mw-hub .mw-row i::after{content:"×"}
-.mw-hub .mw-note{font-size:calc(var(--sz) * .045);opacity:.8}
-.mw-hub.mw-pop{animation:mwin .35s cubic-bezier(.2,1.6,.4,1)}
-@keyframes mwin{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
-/* phones: hidden until the ring button is tapped, then it opens over the reels */
-.mw-btn{position:fixed;z-index:31;left:10px;top:64px;width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;border:3px solid var(--outline);
-  background:radial-gradient(circle,#0072b8 0 34%,transparent 35%),repeating-conic-gradient(from 22.5deg,#ff4b4b 0 45deg,#fffaf0 45deg 90deg);box-shadow:0 3px 0 rgba(42,14,18,.4)}
-.mw-btn::after{content:"PAYS";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font:400 9px/1 var(--f-d)}
-body:not(.mw-side) .mwheel{opacity:0;pointer-events:none;scale:.85;transition:--rot .9s cubic-bezier(.3,1.35,.5,1),opacity .25s,scale .25s}
-body:not(.mw-side) .mwheel.open{opacity:1;pointer-events:auto;scale:1;z-index:60}
-body.mw-side .mw-btn{display:none}
-@media (prefers-reduced-motion:reduce){.mwheel{transition:none}}
+/* ---------- crabs on the driftwood: they stand on the top plank (its top edge is about .3 of the frame width above the
+   board) and walk back and forth on it, over the frame ---------- */
+.fcrabs{position:absolute;left:0;right:0;top:calc(var(--fw) * -.3 + 10px);height:0;z-index:41;pointer-events:none}
+.fcrabs .sc-crab{position:absolute;bottom:0;width:calc(var(--fw) * .62);margin-left:calc(var(--fw) * -.31)}
+
+/* ---------- win log (log in skin.js): what hit this spin, or the whole bonus ---------- */
+.mwins{position:fixed;z-index:30;width:260px;display:flex;flex-direction:column;font-family:var(--f-d);color:var(--outline);
+  background:linear-gradient(#fffaf0,#ffefc9);border:3px solid var(--outline);border-radius:16px;box-shadow:0 6px 0 rgba(42,14,18,.35);overflow:hidden}
+.mwl-head{padding:7px 12px 6px;background:var(--cy3);color:#fff;font-size:15px;letter-spacing:.05em;border-bottom:3px solid var(--outline);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mwl-list{flex:1 1 auto;min-height:60px;overflow-y:auto;padding:6px 8px;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin}
+.mwl-empty{margin:8px 4px;font:600 13px/1.3 system-ui,sans-serif;opacity:.7}
+.mwl-sep{margin:4px 0 0;padding:4px 8px;border-radius:8px;background:#ff4f8b;color:#fff;font-size:12px;text-align:center}
+.mwl-spin{display:flex;flex-direction:column;gap:3px}
+.mwl-spin:empty{display:none}
+.mwl-sub{font-size:12px;opacity:.65;margin-top:3px}
+.mwl-spin.none .mwl-sub::after{content:" · no win"}
+.mwl-row{display:flex;align-items:center;gap:6px;padding:3px 8px 3px 4px;border-radius:10px;background:#fff;border:2px solid rgba(42,14,18,.18);font-size:14px;animation:mwlin .3s cubic-bezier(.2,1.5,.4,1)}
+.mwl-row img{width:28px;height:28px;object-fit:contain;flex:none}
+.mwl-k{min-width:24px}
+.mwl-n{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.mwl-x{font-style:normal;padding:1px 5px;border-radius:6px;background:#ffd23f;border:2px solid var(--outline);font-size:12px}
+.mwl-row b{font-weight:400;color:#0a7a3e}
+.mwl-l{font-size:11px;opacity:.65;white-space:nowrap}
+.mwl-row.top{background:#e9fbff}
+@keyframes mwlin{0%{transform:translateX(-12px);opacity:0}100%{transform:none;opacity:1}}
+.mwl-foot{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:7px 12px;border-top:3px solid var(--outline);background:#fff3d1;font-size:14px}
+.mwl-foot:empty{display:none}
+.mwl-foot b{margin-left:auto;font-weight:400;font-size:18px;color:#0a7a3e}
+.mwl-foot small{width:100%;text-align:right;font-size:11px;opacity:.7}
+/* phones: a WINS button (shows the total) opens the box over the reels */
+.mwl-btn{position:fixed;z-index:31;left:10px;top:64px;min-width:52px;padding:6px 10px;border-radius:12px;cursor:pointer;border:3px solid var(--outline);
+  background:#fffaf0;color:var(--outline);font:400 13px/1 var(--f-d);box-shadow:0 3px 0 rgba(42,14,18,.4);display:flex;flex-direction:column;align-items:center;gap:2px}
+.mwl-btn b{font-weight:400;font-size:11px;color:#0a7a3e}
+.mwl-btn b:empty{display:none}
+body:not(.mwl-side) .mwins{opacity:0;pointer-events:none;transform:scale(.92);transition:opacity .2s,transform .2s}
+body:not(.mwl-side) .mwins.open{opacity:1;pointer-events:auto;transform:none;z-index:60}
+body.mwl-side .mwl-btn{display:none}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -2421,6 +2423,7 @@ body.mw-side .mw-btn{display:none}
     }
     svg.querySelectorAll('text').forEach(t => t.remove());   // the stacked middle-reel labels; the walkthrough labels every win instead
     try { walkWins(wins, colors); } catch(e){}
+    try { log.wins(wins); } catch(e){}
     const hits = document.querySelectorAll('.grid .c.hit'); if (!hits.length) return;
     const stage = document.querySelector('.grid').parentElement, sb = stage.getBoundingClientRect();
     const nd = hits.length > 8 ? 4 : 7;
@@ -2680,67 +2683,68 @@ body.mw-side .mw-btn{display:none}
 
   // ---------- the confirmation after picking a buy or a mode: bonus art on top, tinted per bonus ----------
   // The game fills #cf-t / #cf-desc / #cf-price itself; this adds the art and the colour from the title it wrote.
-  // ---------- pay wheel: a life ring beside the reels that turns through every symbol, biggest pay first ----------
-  // The symbol under the pointer shows in the middle with what 3, 4 and 5 in a line pay at the current bet. Pays are
-  // read from the game's own rules page (rendered from the live server math), so they follow any math change.
-  // Room beside the reels (desktop): the wheel stands there. No room (phones): a small ring button opens it over the reels.
-  function payWheel(){
-    if (document.getElementById('mwheel')) return;
-    const wrap = document.createElement('div'); wrap.id = 'mwheel'; wrap.className = 'mwheel'; wrap.setAttribute('aria-label', 'Pay wheel');
-    wrap.innerHTML = `<div class="mw-disc"><div class="mw-rot"></div><div class="mw-hub"></div></div><i class="mw-ptr"></i><div class="mw-title">PAYS</div>`;
-    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mw-btn'; btn.setAttribute('aria-label', 'Show what every symbol pays');
-    document.body.append(wrap, btn);
-    const rot = wrap.querySelector('.mw-rot'), hub = wrap.querySelector('.mw-hub');
-    let items = [], at = 0, angle = 0, hold = 0, timer = 0;
-    const betNow = () => { const b = document.querySelector('.mbetbox b') || document.querySelector('.mbetbox'); const v = parseFloat(((b && b.textContent) || '').replace(/[^0-9.]/g, '')); return v > 0 ? v : 1; };
-    const read = () => {
-      const R = document.getElementById('rules'); if (!R) return [];
-      const sec = Array.from(R.querySelectorAll(':scope > .win')).find(x => /PAYTABLE/i.test((x.querySelector('.bar span') || {}).textContent || ''));
-      if (!sec) return [];
-      const rows = Array.from(sec.querySelectorAll('tbody tr')).map(tr => { const c = Array.from(tr.children), im = c[0].querySelector('img');
-        const k = im ? (im.getAttribute('src').match(/img\/(\w+)\.webp/) || [])[1] : null, x = t => parseFloat(t) || 0;
-        return {k, name: c[0].textContent.trim().replace(/^x?\d+\s+/, ''), p: [x(c[1].textContent), x(c[2].textContent), x(c[3].textContent)], wild: k === 'W'}; }).filter(r => r.k);
-      // the wild first (it pays the most and multiplies), then every symbol from the biggest five-of-a-kind down
-      return rows.sort((a, b) => (b.wild - a.wild) || (b.p[2] - a.p[2]) || (b.p[1] - a.p[1]));
+  // ---------- win log: a little box that lists what hit in this spin, or in the whole bonus for a buy ----------
+  // The game tells the skin when a round starts (log.start), when each free spin lands (log.spin), every set of line
+  // wins (afterLines -> log.wins), a minimum-win top-up and the round total (log.end). Biggest hit first in each spin.
+  // Desktop: the box stands left of the reels. Phones: a WINS button opens it over the reels.
+  const log = (() => {
+    let box, list, head, foot, btn, total = 0, cost = 0, bonusName = '', isBuy = false, cur = null;
+    const NAMES_ON = ['10','J','Q','K','A','Coconut','Beach ball','Mango','Surfboard','Wild','SURF badge','KAHUNA badge'];
+    const build = () => {
+      if (box) return;
+      box = document.createElement('div'); box.id = 'mwins'; box.className = 'mwins'; box.setAttribute('aria-live', 'polite');
+      box.innerHTML = `<div class="mwl-head"></div><div class="mwl-list"></div><div class="mwl-foot"></div>`;
+      btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mwl-btn'; btn.innerHTML = 'WINS<b></b>'; btn.setAttribute('aria-label', 'What hit this spin');
+      document.body.append(box, btn);
+      head = box.querySelector('.mwl-head'); list = box.querySelector('.mwl-list'); foot = box.querySelector('.mwl-foot');
+      btn.onclick = e => { e.stopPropagation(); box.classList.toggle('open'); place(); };
+      document.addEventListener('pointerdown', e => { if (box.classList.contains('open') && !box.contains(e.target) && e.target !== btn) box.classList.remove('open'); });
+      addEventListener('resize', place); setInterval(place, 1500);
+      head.textContent = 'WHAT HIT'; list.innerHTML = `<p class="mwl-empty">Spin, and every hit shows up here.</p>`; foot.innerHTML = ''; place();
     };
-    const draw = () => {
-      items = read(); if (!items.length) return false;
-      const n = items.length;
-      rot.innerHTML = items.map((r, i) => `<button type="button" class="mw-it" style="--a:${i * 360 / n}deg" data-i="${i}" aria-label="${r.wild ? 'Wild' : r.name}"><img src="${src(r.k)}" alt=""></button>`).join('');
-      rot.querySelectorAll('.mw-it').forEach(b => b.onclick = e => { e.stopPropagation(); go(+b.dataset.i, true); });
-      go(at, false); return true;
-    };
-    const hubHtml = r => { const bet = betNow(), m = v => money(v * bet);
-      if (r.wild) return `<img src="${src(r.k)}" alt=""><b class="mw-nm">Wild</b><span class="mw-row"><i>5</i>${m(r.p[2])}</span><span class="mw-note">× its multipliers</span>`;
-      return `<img src="${src(r.k)}" alt=""><b class="mw-nm">${r.name}</b>` + [2, 1, 0].map(j => `<span class="mw-row"><i>${j + 3}</i>${m(r.p[j])}</span>`).join(''); };
-    function go(i, byHand){
-      const n = items.length; if (!n) return; at = ((i % n) + n) % n;
-      // turn the short way round so the chosen symbol sits under the pointer at the top
-      const want = -at * 360 / n; let d = (want - angle) % 360; if (d > 180) d -= 360; if (d < -180) d += 360; angle += d;
-      wrap.style.setProperty('--rot', angle + 'deg');
-      rot.querySelectorAll('.mw-it').forEach((b, j) => b.classList.toggle('on', j === at));
-      hub.classList.remove('mw-pop'); void hub.offsetWidth; hub.innerHTML = hubHtml(items[at]); hub.classList.add('mw-pop');
-      if (byHand) hold = Date.now() + 9000;
+    function place(){
+      if (!box) return; const st = document.querySelector('.machine .stage'); if (!st) return;
+      const r = st.getBoundingClientRect(), out = Math.max(0, -parseFloat(getComputedStyle(st, '::after').left) || 0) + 14;
+      const room = r.left - out - 16, w = Math.min(300, room), side = w >= 170 && innerWidth >= 900;
+      document.body.classList.toggle('mwl-side', side);
+      if (side){ box.style.width = w + 'px'; box.style.left = Math.max(8, r.left - out - w) + 'px'; box.style.top = r.top + 'px'; box.style.maxHeight = r.height + 'px'; box.classList.remove('open'); }
+      else { const bw = Math.min(innerWidth - 24, 360); box.style.width = bw + 'px'; box.style.left = (innerWidth - bw) / 2 + 'px'; box.style.top = Math.max(8, r.top) + 'px'; box.style.maxHeight = Math.max(220, r.height) + 'px'; }
     }
-    const tick = () => { if (Date.now() > hold && !wrap.matches(':hover')) go(at + 1, false); };
-    // placement: in the gap left of the framed reels when it fits, else the button
-    const place = () => {
-      const st = document.querySelector('.machine .stage'); if (!st) return;
-      const r = st.getBoundingClientRect(), fw = Math.max(0, -parseFloat(getComputedStyle(st, '::after').left) || 0) + 10;   // how far the frame reaches out
-      const room = r.left - fw - 24, size = Math.min(290, room - 12, r.height * 0.62);
-      const side = size >= 150 && innerWidth >= 900;
-      document.body.classList.toggle('mw-side', side);
-      if (side){ wrap.style.setProperty('--sz', size + 'px'); wrap.style.left = Math.max(10, (r.left - fw - size) / 2) + 'px'; wrap.style.top = (r.top + r.height / 2 - size / 2) + 'px'; wrap.classList.remove('open'); }
-      else { const sz = Math.min(innerWidth * 0.8, 340); wrap.style.setProperty('--sz', sz + 'px'); wrap.style.left = (innerWidth - sz) / 2 + 'px'; wrap.style.top = Math.max(10, r.top + r.height / 2 - sz / 2) + 'px'; }
+    const fmtM = v => money(v * BET);
+    const setFoot = () => { foot.innerHTML = `<span>TOTAL</span><b>${fmtM(total)}</b>` + (isBuy && cost ? `<small>${num(total * BET / cost)}x the price</small>` : '');
+      if (btn) btn.querySelector('b').textContent = total > 0 ? fmtM(total) : ''; };
+    const add = html => { const d = document.createElement('div'); d.innerHTML = html; const el = d.firstElementChild; list.appendChild(el); list.scrollTop = list.scrollHeight; return el; };
+    return {
+      start(res, c){ build(); total = 0; cost = c || 0; isBuy = res && res.kind === 'buy'; cur = null; bonusName = '';
+        head.textContent = isBuy ? 'BONUS BUY' : 'THIS SPIN'; list.innerHTML = ''; setFoot(); if (!isBuy) cur = add(`<div class="mwl-spin"></div>`); },
+      spin(i, n, name){ build(); if (i === 1){ bonusName = name; head.textContent = (isBuy ? 'BONUS BUY · ' : 'BONUS · ') + name; if (!isBuy) add(`<div class="mwl-sep">${name} BONUS · ${n} FREE SPINS</div>`); }
+        cur = add(`<div class="mwl-spin"><div class="mwl-sub">Spin ${i} of ${n}</div></div>`); },
+      wins(wins){ if (!box || !cur) return;
+        // the same symbol, count and multiplier on several lines shows once, with how many lines
+        const grp = new Map(); (wins || []).forEach(w => { const key = w.s + '|' + w.k + '|' + w.mult, g = grp.get(key);
+          if (g){ g.win += w.win; g.n++; } else grp.set(key, {s: w.s, k: w.k, mult: w.mult, win: w.win, n: 1}); });
+        const ws = Array.from(grp.values()).sort((a, b) => b.win - a.win);
+        if (!ws.length){ if (cur.querySelector('.mwl-sub')) cur.classList.add('none'); else cur.innerHTML = `<p class="mwl-empty">No line wins.</p>`; return; }
+        cur.insertAdjacentHTML('beforeend', ws.map(w => { const k = SYM[w.s] || 'W';
+          return `<div class="mwl-row"><img src="${src(k)}" alt=""><span class="mwl-k">${w.k}×</span><span class="mwl-n">${NAMES_ON[w.s] || 'Wild'}</span>` +
+            (w.mult > 1 ? `<i class="mwl-x">x${num(w.mult)}</i>` : '') + (w.n > 1 ? `<small class="mwl-l">${w.n} lines</small>` : '') + `<b>${fmtM(w.win)}</b></div>`; }).join(''));
+        total += ws.reduce((t, w) => t + w.win, 0); setFoot(); list.scrollTop = list.scrollHeight; cur = isBuy || bonusName ? null : cur; },
+      topUp(v){ if (!box) return; add(`<div class="mwl-row top"><span class="mwl-n">Minimum win top-up</span><b>+${fmtM(v)}</b></div>`); total += v; setFoot(); },
+      end(t){ if (!box) return; if (Math.abs(t - total) > 1e-9){ total = t; setFoot(); } if (t <= 0 && !list.querySelector('.mwl-row')) list.innerHTML = `<p class="mwl-empty">No win this time.</p>`; }
     };
-    btn.onclick = () => { wrap.classList.toggle('open'); place(); };
-    wrap.onclick = e => { if (!document.body.classList.contains('mw-side') && e.target === wrap) wrap.classList.remove('open'); };
-    document.addEventListener('pointerdown', e => { if (wrap.classList.contains('open') && !wrap.contains(e.target) && e.target !== btn) wrap.classList.remove('open'); });
-    addEventListener('resize', place);
-    const boot = () => { if (!draw()) return setTimeout(boot, 800); place(); timer = setInterval(tick, 2600); setInterval(place, 1500);
-      // the bet changes: the middle shows the new amounts at once
-      const bb = document.querySelector('.mbetbox'); if (bb) new MutationObserver(() => { if (items[at]) hub.innerHTML = hubHtml(items[at]); }).observe(bb, {subtree: true, childList: true, characterData: true}); };
-    boot();
+  })();
+
+  // ---------- crabs on the frame: two small crabs walk back and forth along the top plank of the driftwood ----------
+  // x/x2: where each walk starts and turns, as a share of the board width; t: seconds for a full there-and-back
+  const FRAME_CRABS = [{x: .1, x2: .38, t: 9}, {x: .86, x2: .6, t: 7.5, d: -3}];
+  function frameCrabs(){
+    const st = document.querySelector('.machine .stage'); if (!st || st.querySelector('.fcrabs')) return;
+    const box = document.createElement('div'); box.className = 'fcrabs'; box.setAttribute('aria-hidden', 'true');
+    box.innerHTML = FRAME_CRABS.map((c, i) => `<div class="sc-crab fc${i}" style="left:${c.x * 100}%;--t:${c.t}s;animation-delay:${c.d || 0}s"><img src="img/sc-crab.webp" alt=""></div>`).join('');
+    st.appendChild(box);
+    // the walk is a sideways slide in pixels: set it from the board width, and again when the board resizes
+    const fit = () => { const w = st.getBoundingClientRect().width; box.querySelectorAll('.sc-crab').forEach((el, i) => el.style.setProperty('--dx', ((FRAME_CRABS[i].x2 - FRAME_CRABS[i].x) * w) + 'px')); };
+    fit(); new ResizeObserver(fit).observe(st);
   }
 
   function confirmSkin(){
@@ -2769,13 +2773,11 @@ body.mw-side .mw-btn{display:none}
     palmL: {x: -200, y: 280, w: 654, h: 700, iw: 654, ch: 358, cx: 290, cy: 262},
     palmR: {x: 1511, y: 188, w: 449, h: 646, iw: 528, ch: 282, cx: 235, cy: 205},
     water: {y: 395, h: 350},                                      // the painted sea and its foam line, cut from the plates
-    crabs: [{x: 600, x2: 900, y: 560, w: 224, t: 9}, {x: 1060, x2: 760, y: 610, w: 144, t: 7}],
     sea: {x0: 420, x1: 1380, y: 470}                              // where dolphins and whales show: the open water, its surface line
   };
   function liveScene(){
     const host = document.querySelector('.scene'); if (!host || host.querySelector('.mscene')) return;
     const box = document.createElement('div'); box.className = 'mscene'; box.setAttribute('aria-hidden', 'true');
-    const crabs = SC.crabs.map((c, i) => `<div class="sc-crab c${i}" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;--dx:${c.x2 - c.x}px;--t:${c.t}s"><img src="img/sc-crab.webp" alt=""></div>`).join('');
     const palm = (k, p) => { const f = p.w / p.iw;
       return `<div class="sc-palm ${k}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px"><img class="trunk" src="img/sc-${k}-trunk.webp" alt="">` +
         `<img class="crown" src="img/sc-${k}-crown.webp" alt="" style="height:${p.ch * f}px;transform-origin:${p.cx * f}px ${p.cy * f}px"></div>`; };
@@ -2784,7 +2786,7 @@ body.mw-side .mw-btn{display:none}
         <img class="sc-plate day" src="img/sc-plate-day.webp" alt=""><img class="sc-plate sunset" src="img/sc-plate-sunset.webp" alt="">
         ${water('day')}${water('sunset')}
         <div class="sc-sea" style="left:0;top:0;width:2000px;height:${SC.sea.y}px"></div>
-        ${crabs}${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
+        ${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
       </div>`;
     host.appendChild(box); host.classList.add('live');
     const world = box.firstElementChild, sea = box.querySelector('.sc-sea');
@@ -2811,8 +2813,8 @@ body.mw-side .mw-btn{display:none}
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
-  window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { payWheel(); } catch(e){} }};
+  window.MangoSkin = {stack, afterLines, game, log, scene(){},
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
@@ -5258,6 +5260,7 @@ async function playBonus(B, cost, startWin){
     const pins = sp.merged.filter(mg=>mg.anchor).map(mg=>mg.anchor);
     if (pins.length){ pins.forEach(a=>{ st[a.c] = 1; hold[Math.floor(a.c/ROWS)] = false; }); await shrinkStacks(pins, speed === 2); }
     await spinAnim(sp.g, sp.mults, st, false, true, {merged: sp.merged, hold, lock: B.tier === 2});
+    try { MangoSkin.log.spin(i+1, N, name); } catch(e){}
     drawLines(sp.wins, sp.ramps); run += sp.win; if (sp.win > 0) sfx('bonusSpinWin', sp.win*roundBet/Math.max(cost,1e-9));
     $('lastwin').textContent = fmt$(sp.win*roundBet); $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     const steps = comboSteps(sp.wins);
@@ -5265,7 +5268,7 @@ async function playBonus(B, cost, startWin){
     if (sp.win >= 5) await plainCount(sp.win*roundBet, bigHitTitle(sp.win), T(1300));   // 5x the bet or more
     await wait(T(sp.win > 0 ? 1200 : 750));
   }
-  if (B.topUp > 0){ run += B.topUp; $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
+  if (B.topUp > 0){ try { MangoSkin.log.topUp(B.topUp); } catch(e){} run += B.topUp; $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     banner(`MIN WIN · TOPPED UP TO ${fmt$(B.total*roundBet)} (10% OF THE BONUS PRICE)`); await wait(T(1400)); }
   sfx('bonusEnd', B.total*roundBet/cost); $('stage').classList.remove('bonus'); if (B.total*roundBet < cost){ mascot('bail'); sfx('bail'); }
 }
@@ -5348,14 +5351,14 @@ function modal(title, html, actions){
 const costOf = name => MODE(name).cost;
 const bookEvents = round => Array.isArray(round.state) ? round.state : (round.state && round.state.events) || [];
 async function animateRound(res, cost){
-  let antOn = false;
+  let antOn = false; try { MangoSkin.log.start(res, cost); } catch(e){}
   if (res.kind === 'buy'){ if (res.g){ await spinAnim(res.g, res.mults, null, false, false, {}); await wait(T(500)); } await playBonus(res.bonus, cost, 0); }
   else {
     antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged});
     drawLines(res.wins, res.ramps); $('lastwin').textContent = fmt$(res.lineWin*roundBet); await showTopUp(res);
     if (res.bonus){ autoLeft = 0; await wait(T(700)); await playBonus(res.bonus, cost, res.lineWin); }
   }
-  const win = res.total*roundBet; $('lastwin').textContent = fmt$(win);
+  const win = res.total*roundBet; $('lastwin').textContent = fmt$(win); try { MangoSkin.log.end(res.total); } catch(e){}
   if (win <= 0){ $('msg').textContent = 'No win.'; mascot(antOn ? 'bail' : 'idle'); if (antOn) sfx('bail'); }
   await finishRound(res, win, cost);
   renderSpinCard(res);
