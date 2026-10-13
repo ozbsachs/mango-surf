@@ -619,6 +619,17 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 /* bonus buy: above the frame (z-index works on it as a flex item of .stagewrap, so its position stays the game's own).
    When it stands left of the board it clears the driftwood (the frame reaches .56 of --fw - 8px out). */
 #buybtn{z-index:46}
+/* the bonus buy button is a washed-up driftwood plank with two mangos on it, the words burnt into the wood.
+   The plank face runs from 22% to 88% of the image's height, so the words sit in that band. */
+.machine .stagewrap > #buybtn{width:clamp(120px,13vw,190px)!important;aspect-ratio:640/328;height:auto;padding:0!important;margin:0 0 4px!important;
+  background:url("img/buy-plank.webp?v=602240fd") center/contain no-repeat!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:calc(clamp(120px,13vw,190px) * .2)!important;
+  font:400 clamp(13px,1.35vw,19px)/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.04em;color:#4a2a12!important;
+  text-shadow:0 1px 0 rgba(255,240,210,.7);filter:drop-shadow(0 6px 5px rgba(40,20,5,.45));transition:transform .15s,filter .15s}
+.machine .stagewrap > #buybtn br{display:none}
+.machine .stagewrap > #buybtn:hover:not(:disabled){filter:drop-shadow(0 6px 5px rgba(40,20,5,.45)) brightness(1.08)}
+.machine .stagewrap > #buybtn:active:not(:disabled){scale:.96}
+.machine .stagewrap > #buybtn:disabled{filter:grayscale(.6) brightness(.85);opacity:.75}
 .machine .stagewrap{--fw:clamp(72px,9vw,136px)}
 .machine .stagewrap > .sidebuy{right:calc(100% + var(--fw) * .56 + 6px)}
 
@@ -695,7 +706,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .mhud #speedbtn:not([data-level="0"]):hover{background:#fff}
 /* the rest of the chrome in the same colours */
 .pill{background:var(--cy2);border-color:#fff;color:#fff}
-.pill.hot,#buybtn{background:#fff!important;color:var(--cy3)!important;border-color:var(--cy3)!important}
+.pill.hot{background:#fff!important;color:var(--cy3)!important;border-color:var(--cy3)!important}
 .winarea{background:linear-gradient(180deg,#22c3ff,var(--cy2));border:3px solid #fff;box-shadow:0 0 0 3px rgba(0,80,138,.5),0 5px 0 rgba(0,40,80,.3)}
 .winarea .k{color:#e6f7ff}
 .winarea .v{color:#fff;text-shadow:0 2px 0 var(--cyd)}
@@ -1103,7 +1114,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"420a42b6","sc-palmL-trunk":"74a2414d","sc-palmL":"dcb46604","sc-palmR-crown":"986dfb35","sc-palmR-trunk":"09795acf","sc-palmR":"037041cd","sc-plate-day":"fef75a40","sc-plate-sunset":"03561971","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2705,7 +2716,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 
   // ---------- crabs on the frame: two small crabs walk back and forth along the top plank of the driftwood ----------
   // x/x2: where each walk starts and turns, as a share of the board width; t: seconds for a full there-and-back
-  const FRAME_CRABS = [{x: .1, x2: .38, t: 9}, {x: .86, x2: .6, t: 7.5, d: -3}];
+  const FRAME_CRABS = [{x: .42, x2: .62, t: 8}, {x: .9, x2: .7, t: 7.5, d: -3}];
   function frameCrabs(){
     const st = document.querySelector('.machine .stage'); if (!st || st.querySelector('.fcrabs')) return;
     const box = document.createElement('div'); box.className = 'fcrabs'; box.setAttribute('aria-hidden', 'true');
@@ -2764,8 +2775,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   // plates (the beach with the crabs and palms painted out) swap with the bonus; the moving pieces are separate images.
   const SC = {
     // trunks stand still; only the crown (leaves + coconuts) moves, bending at the top of the trunk (cx/cy, image pixels)
-    palmL: {x: -200, y: 280, w: 654, h: 700, iw: 654, ch: 358, cx: 290, cy: 262},
-    palmR: {x: 1511, y: 188, w: 449, h: 646, iw: 528, ch: 282, cx: 235, cy: 205},
+    palmL: {x: -200, y: 280, w: 654, h: 700, iw: 654, ch: 398, cx: 290, cy: 262},
+    palmR: {x: 1511, y: 188, w: 449, h: 646, iw: 528, ch: 280, cx: 235, cy: 205},
     water: {y: 395, h: 350},                                      // the painted sea and its foam line, cut from the plates
     sea: {x0: 420, x1: 1380, y: 470}                              // where dolphins and whales show: the open water, its surface line
   };
