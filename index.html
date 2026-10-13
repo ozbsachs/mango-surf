@@ -1465,6 +1465,9 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   .mhud #speedbtn{grid-area:5/2!important}
   .mhud #modebtn{grid-area:6/1/7/4!important;justify-self:stretch;height:30px!important;font-size:10px!important;padding:0 6px!important}
 }
+/* TOTAL WIN ropes: the same drawn rope as the frame's corner lashings (img/rope.webp, knot at the sign end) */
+.machine .stage > .winrow > #totalbox::before{left:12%!important;right:12%!important;top:-40px!important;height:46px!important;filter:none!important;
+  background:url("img/rope.webp?v=f927cf27") left bottom/13px 100% no-repeat,url("img/rope.webp?v=f927cf27") right bottom/13px 100% no-repeat!important}
 
 /* ---------- spins left (extras.js): gold ring, dark wood, big number ---------- */
 #mspins{position:fixed;z-index:48;width:clamp(70px,9vw,96px);aspect-ratio:1/1;border-radius:50%;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -1478,7 +1481,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 @keyframes sbump{0%{transform:scale(1.5)}100%{transform:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"76ee142b","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-bush-day":"cbded6bf","sc-bush-sunset":"81a88854","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"00880cf0","sc-palmL-trunk":"3bc60c90","sc-palmL":"dcb46604","sc-palmR-crown":"8b7e31b5","sc-palmR-trunk":"e3fd67fc","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"a91f85b4","sc-water-sunset":"86cba3e2","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"6c3e2365","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"76ee142b","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","rope":"f927cf27","S1":"f0935078","sc-bush-day":"cbded6bf","sc-bush-sunset":"81a88854","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"00880cf0","sc-palmL-trunk":"3bc60c90","sc-palmL":"dcb46604","sc-palmR-crown":"8b7e31b5","sc-palmR-trunk":"e3fd67fc","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"a91f85b4","sc-water-sunset":"86cba3e2","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"6c3e2365","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
