@@ -1477,6 +1477,10 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 @media (min-width:1600px) and (min-height:1200px){ .ctrlbar.mhud,header.slotbar,.machine .stage > .winrow{zoom:1.25} }
 @media (min-width:1900px) and (min-height:1380px){ .ctrlbar.mhud,header.slotbar,.machine .stage > .winrow{zoom:1.4} }
 @media (min-width:2400px) and (min-height:1600px){ .ctrlbar.mhud,header.slotbar,.machine .stage > .winrow{zoom:1.7} }
+/* a bottom-row wild's tag never runs under the frame's bottom plank: tags sit inside their cell, on the art's lower edge,
+   and the reels get a little more room above the plank */
+.grid .ms > .mx{bottom:4%!important}
+.machine .stage{padding-bottom:calc(10px + 1.2%)!important}
 
 /* ---------- spins left (extras.js): gold ring, dark wood, big number ---------- */
 #mspins{position:fixed;z-index:48;width:clamp(70px,9vw,96px);aspect-ratio:1/1;border-radius:50%;display:none;flex-direction:column;align-items:center;justify-content:center;
