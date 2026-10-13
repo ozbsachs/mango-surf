@@ -616,7 +616,15 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .nuts{position:fixed;inset:0;pointer-events:none;z-index:30}
 .nuts .nut{position:fixed;display:none;padding:0;border:0;border-radius:50%;background:transparent;cursor:default;pointer-events:auto;-webkit-tap-highlight-color:transparent;outline:none}
 .nuts.live .nut:not([hidden]){display:block}
-#buybtn{position:relative;z-index:46}
+/* bonus buy: above the frame (z-index works on it as a flex item of .stagewrap, so its position stays the game's own).
+   When it stands left of the board it clears the driftwood (the frame reaches .56 of --fw - 8px out). */
+#buybtn{z-index:46}
+.machine .stagewrap{--fw:clamp(72px,9vw,136px)}
+.machine .stagewrap > .sidebuy{right:calc(100% + var(--fw) * .56 + 6px)}
+/* desktop: it sits at the bottom of the left column, under the win box */
+@media (min-width:900px) and (min-aspect-ratio:4/3){
+  .machine .stagewrap > #buybtn{position:absolute;top:auto;bottom:0;transform:none!important;width:var(--wl-w,150px);padding:14px 8px;font-size:12px}
+}
 
 /* ---------- crabs on the driftwood: they stand on the top plank (its top edge is about .3 of the frame width above the
    board) and walk back and forth on it, over the frame ---------- */
@@ -780,7 +788,6 @@ body.mwl-side .mwl-btn{display:none}
   .stagetop .banner{font-size:clamp(14px,1.25vw,20px)!important}
   .machine .stage > .winrow{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);z-index:45;flex-direction:row;width:auto;gap:10px}
   .machine .stage > .winrow .winarea{padding:2px 26px}
-  #buybtn{transform:scale(1.25);transform-origin:right center}
 }
 /* ---------- bonus buy sheet: a centred cyan panel with mode tiles and bonus cards ---------- */
 .sheet.mbuy{top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(940px,calc(100vw - 20px));max-height:92dvh}
@@ -2742,7 +2749,10 @@ body.mwl-side .mwl-btn{display:none}
       const r = st.getBoundingClientRect(), out = Math.max(0, -parseFloat(getComputedStyle(st, '::after').left) || 0) + 14;
       const room = r.left - out - 16, w = Math.min(300, room), side = w >= 170 && innerWidth >= 900;
       document.body.classList.toggle('mwl-side', side);
-      if (side){ box.style.width = w + 'px'; box.style.left = Math.max(8, r.left - out - w) + 'px'; box.style.top = r.top + 'px'; box.style.maxHeight = r.height + 'px'; box.classList.remove('open'); }
+      // the bonus buy button shares the column: it sits at the bottom, the box above it, both the same width
+      const bb = document.getElementById('buybtn'), bh = side && bb && !bb.hidden ? bb.getBoundingClientRect().height + 14 : 0, wrapEl = st.parentElement;
+      if (wrapEl){ wrapEl.style.setProperty('--wl-w', w + 'px'); }
+      if (side){ box.style.width = w + 'px'; box.style.left = Math.max(8, r.left - out - w) + 'px'; box.style.top = r.top + 'px'; box.style.maxHeight = (r.height - bh) + 'px'; box.classList.remove('open'); }
       else { const bw = Math.min(innerWidth - 24, 360); box.style.width = bw + 'px'; box.style.left = (innerWidth - bw) / 2 + 'px'; box.style.top = Math.max(8, r.top) + 'px'; box.style.maxHeight = Math.max(220, r.height) + 'px'; }
     }
     const fmtM = v => money(v * BET);
@@ -2750,6 +2760,7 @@ body.mwl-side .mwl-btn{display:none}
       if (btn) btn.querySelector('b').textContent = total > 0 ? fmtM(total) : ''; };
     const add = html => { const d = document.createElement('div'); d.innerHTML = html; const el = d.firstElementChild; list.appendChild(el); list.scrollTop = list.scrollHeight; return el; };
     return {
+      init(){ build(); },
       start(res, c){ build(); total = 0; cost = c || 0; isBuy = res && res.kind === 'buy'; cur = null; bonusName = '';
         head.textContent = 'THIS SPIN'; list.innerHTML = isBuy ? `<p class="mwl-empty">Free spins coming up...</p>` : ''; setFoot(); if (!isBuy) cur = add(`<div class="mwl-spin"></div>`); place(); },
       spin(i, n, name){ build(); bonusName = name; total = 0; head.textContent = `SPIN ${i} OF ${n} · ${name}`; list.innerHTML = ''; setFoot();
@@ -2849,7 +2860,7 @@ body.mwl-side .mwl-btn{display:none}
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, log, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} try { log.init(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
