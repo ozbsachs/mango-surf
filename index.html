@@ -620,10 +620,11 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
    When it stands left of the board it clears the driftwood (the frame reaches .56 of --fw - 8px out). */
 #buybtn{z-index:46}
 /* the bonus buy button is a washed-up driftwood plank with two mangos on it, the words burnt into the wood.
-   The plank face runs from 22% to 88% of the image's height, so the words sit in that band. */
+   The plank body runs from 22% to 88% of the image's height (its middle is 55% down, 50% across), so the words are
+   centred there: the box is centred, then nudged down 5% of the width (= 10% of the height). */
 .machine .stagewrap > #buybtn{width:clamp(120px,13vw,190px)!important;aspect-ratio:640/328;height:auto;padding:0!important;margin:0 0 4px!important;
   background:url("img/buy-plank.webp?v=602240fd") center/contain no-repeat!important;border:0!important;border-radius:0!important;box-shadow:none!important;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:calc(clamp(120px,13vw,190px) * .2)!important;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:calc(clamp(120px,13vw,190px) * .05)!important;padding-left:.04em!important;
   font:400 clamp(13px,1.35vw,19px)/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.04em;color:#4a2a12!important;
   text-shadow:0 1px 0 rgba(255,240,210,.7);filter:drop-shadow(0 6px 5px rgba(40,20,5,.45));transition:transform .15s,filter .15s}
 .machine .stagewrap > #buybtn br{display:none}
@@ -650,6 +651,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 /* no LAST WIN: TOTAL WIN is always there and shows the round's win (skin.js mirrors it outside bonuses) */
 .machine .stage > .winrow > .winarea:not(#totalbox){display:none!important}
 .machine .stage > .winrow > #totalbox[hidden]{display:flex!important}
+/* no strip above the reels (Oz): the mango mascot and the rules / bonus text bar are gone, the reels get the room */
+.machine .stage .stagetop{display:none!important}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
