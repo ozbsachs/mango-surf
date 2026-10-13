@@ -677,6 +677,19 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .reel:has(.c.hit) .stackov .mstack.surf .mw-rider{animation:carve 1.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.mstack.surf .mw-wave,.mstack.surf .mw-rider,.mstack.surf .mw-trail{animation:none}}
 .reel:has(.c.hit) .stackov .mstack.surf .mw-wave{animation:wavebob 1.3s ease-in-out infinite}
+/* the bonus buy sheet never scrolls: skin.js scales it to fit */
+.sheet.mbuy{overflow:hidden!important;max-height:none!important}
+/* the bottom bar sits a little higher off the screen's edge */
+.ctrlbar.mhud{margin-bottom:calc(20px + env(safe-area-inset-bottom))!important}
+/* tighter cards so the no-scroll sheet needs less shrinking on phones */
+.sheet.mbuy .modes .btn{min-height:0!important;padding:8px 6px 7px!important}
+.sheet.mbuy .bar{padding:10px 16px 2px!important}
+.sheet.mbuy .dh{margin:8px 0 6px!important}
+@media (max-width:760px){
+  .sheet.mbuy .buy.bc{min-height:0!important;padding-bottom:10px!important;gap:3px!important}
+  .sheet.mbuy .bc-art{height:96px!important}
+  .sheet.mbuy .buys{gap:8px!important}
+}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -818,7 +831,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
    than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
 @media (min-width:900px) and (min-aspect-ratio:4/3){
   .machine{padding:0 10px}
-  .machine .stage{width:min(70vw,calc((100dvh - 290px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 290px);display:flex;flex-direction:column}
+  .machine .stage{width:min(70vw,calc((100dvh - 302px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 302px);display:flex;flex-direction:column}
   .machine .stage .gridbox{flex:1 1 0;min-height:0;height:auto!important;aspect-ratio:auto!important;width:100%}
   .machine .stage .grid{height:100%}
   .stagetop{margin-bottom:6px}
@@ -2699,6 +2712,12 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     const modes = document.getElementById('modes'), buys = document.getElementById('buys'); if (!modes || !buys) return;
     const sheet = document.getElementById('buysheet'); if (sheet) sheet.classList.add('mbuy');
     const mo = new MutationObserver(decorateBuys); mo.observe(modes, {childList: true}); mo.observe(buys, {childList: true}); decorateBuys();
+    // no scrolling (Oz): the whole sheet is scaled down to fit the screen it opens on
+    if (sheet){ const win = sheet.querySelector('.win');
+      const fit = () => { if (sheet.hidden || !win) return; win.style.zoom = 1; const avail = innerHeight * 0.94, h = win.scrollHeight;
+        win.style.zoom = h > avail ? (avail / h).toFixed(3) : 1; };
+      new MutationObserver(fit).observe(sheet, {attributes: true, attributeFilter: ['hidden']}); new MutationObserver(fit).observe(buys, {childList: true});
+      addEventListener('resize', fit); fit(); }
   }
 
   // ---------- burger menu: grouped into cards (views, wallet, sound, this spin, more games) ----------
@@ -2921,10 +2940,10 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
       world.style.transform = `translate(${(R.width - 2000*k)/2}px, ${R.height - 1125*k}px) scale(${k})`; };
     fit(); addEventListener('resize', fit);
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // a sea creature every 20-60 s: two dolphin jumps for every whale
+    // a dolphin jump every 20-60 s (the whale breach is retired)
     let n = 0;
     const creature = () => {
-      const whale = ++n % 3 === 0, x = SC.sea.x0 + Math.random()*(SC.sea.x1 - SC.sea.x0 - 260), el = document.createElement('div');
+      const whale = false, x = SC.sea.x0 + Math.random()*(SC.sea.x1 - SC.sea.x0 - 260), el = document.createElement('div');
       el.className = whale ? 'sc-whale' : 'sc-dolphin'; el.style.left = x + 'px';
       el.innerHTML = whale ? `<img src="img/sc-whale.webp" alt="">` : `<img src="img/sc-dolphin.webp" alt="">`;
       sea.appendChild(el);
