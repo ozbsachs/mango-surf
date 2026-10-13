@@ -449,7 +449,7 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
 <style>
 /* Mango Surf skin, loaded after the Sk8 Sesh styles */
 :root{--f-d:"Lilita One",system-ui,sans-serif;--f-n:"Lilita One",system-ui,sans-serif;--accent:#ff4f8b;--lime:#7dffb0;--outline:#2a0e12}
@@ -653,6 +653,15 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .machine .stage > .winrow > #totalbox[hidden]{display:flex!important}
 /* no strip above the reels (Oz): the mango mascot and the rules / bonus text bar are gone, the reels get the room */
 .machine .stage .stagetop{display:none!important}
+/* big win: the surfing wild doing tricks, big, above the title */
+#celebrate .celart{width:clamp(190px,42%,340px)!important;aspect-ratio:1/1;margin-bottom:-6%}
+#celebrate .celart img.msurf{width:100%;height:100%;display:block;filter:drop-shadow(0 10px 14px rgba(0,0,0,.35))}
+/* winning symbols grow, hop and lean; the reels normally clip to their box (for the spin strip), so while a win is
+   on show they let the symbols spill over, and the winning cells sit above their neighbours (Oz: no cut-off) */
+.grid:has(.c.hit) .reel,.grid:has(.c.hit),.gridbox:has(.c.hit){overflow:visible!important}
+.grid .c.hit{position:relative;z-index:3}
+.grid.focusing .c.focus{z-index:4}
+.grid:has(.c.hit) .reel:has(.c.hit){z-index:2}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -757,6 +766,37 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   .mhud #modebtn{font-size:11px!important}
   .mhud #spinbtn{width:60px;height:60px}
 }
+
+/* ---------- black and gold bar (Oz's reference): black body, gold rim, gold labels, white values and outlines.
+   The spin button is a black disc in a gold ring with Oz's cloud symbol in gold (img/spin-cloud.svg). ---------- */
+:root{--gold:#E6C46E;--gold2:#c9a24a}
+.ctrlbar.mhud{background:#000!important;border:5px solid var(--gold)!important;box-shadow:0 8px 22px rgba(0,0,0,.45)!important}
+.mhud .k{color:var(--gold)!important;text-shadow:none!important;font-family:"Montserrat",system-ui,sans-serif!important;font-weight:800!important;letter-spacing:.06em}
+.mhud b{color:#fff!important;text-shadow:none!important}
+.mhud .iconbtn{border:2px solid #fff!important;background:#000!important}
+.mhud .iconbtn:hover{background:#151515!important}
+.mhud .mbetbox{background:#000!important;border:2px solid #fff!important;box-shadow:none!important}
+.mhud .mbetstack .round{background:#000!important;border:2px solid #fff!important;box-shadow:none!important}
+.mhud #betplus::before{border-bottom-color:#fff!important}
+.mhud #betminus::before{border-top-color:#fff!important}
+.mhud #spinbtn{background:#000!important;border:6px solid var(--gold)!important;box-shadow:0 0 0 2px #000,0 6px 16px rgba(0,0,0,.5)!important}
+.mhud #spinbtn::before{background-image:url("img/spin-cloud.svg?v=f3353cca")!important;inset:14%!important;filter:none!important}
+.mhud #spinbtn:not(:disabled):hover::before{transform:scale(1.08)!important}
+.mhud #spinbtn:disabled::before{animation:cloudpuff .9s ease-in-out infinite!important}
+@keyframes cloudpuff{0%,100%{transform:scale(1) translateX(0)}50%{transform:scale(1.1) translateX(3px)}}
+.mhud #spinbtn[data-label]:not([data-label=""])::after{background:#000;color:var(--gold);border:2px solid var(--gold);box-shadow:none}
+/* autoplay / turbo / mode: black squares with a grey edge and gold icons; switched on, filled gold with a black icon */
+.mhud .tools .pill{background:#000!important;border:2px solid #777!important;color:var(--gold)!important}
+.mhud .tools .pill:not(:disabled):hover{background:#151515!important}
+.mhud #autobtn::before{background-image:url("img/icon-auto-gold.svg?v=0d8f814c")!important}
+.mhud #autobtn.on,.mhud #autobtn[aria-pressed="true"]{background:var(--gold)!important;border-color:var(--gold)!important}
+.mhud #autobtn.on::before,.mhud #autobtn[aria-pressed="true"]::before{background-image:url("img/icon-auto-dark.svg?v=420841ac")!important}
+.mhud #speedbtn::before{background-image:url("img/icon-bolt-gold.svg?v=369b15b5")!important}
+.mhud #speedbtn:not([data-level="0"]){background:var(--gold)!important;border-color:var(--gold)!important}
+.mhud #speedbtn[data-level="1"]::before{background-image:url("img/icon-bolt-dark.svg?v=34709c57")!important}
+.mhud #speedbtn[data-level="2"]::before{background-image:url("img/icon-bolt2-dark.svg?v=1976376e")!important}
+.mhud #modebtn{color:var(--gold)!important;font-family:"Montserrat",system-ui,sans-serif!important;font-weight:800!important}
+.mhud .mhb{border:2px solid #fff!important;background:#000!important}
 
 /* ---------- big slot on desktop (like Sweet Bonanza: the reels fill ~70% of the width and nearly all the height) ----------
    The stage takes the height between the top bar and the control bar, and up to 70% of the width; cells may be wider
@@ -1065,6 +1105,51 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 #mbetpick .bp-b.on{background:linear-gradient(#fff07a,#ffd21f);border-color:var(--outline);box-shadow:0 3px 0 #b8860b}
 #mbetpick .bp-b:disabled{opacity:.35;cursor:not-allowed}
 
+/* ---------- every popup and menu is a wooden sign (Oz): a driftwood frame with rope corners around dark boards.
+   One 9-slice image (img/wood-panel.webp): the frame sits in the outer 16%, `fill` paints the boards behind the
+   content. The bottom bar stays black and gold (hud.css). ---------- */
+.mp-box,.mconfirm > .win,.sheet.mbuy > .win,.drawer.mdrawer > .win,#modal > .win,#modal .win{
+  background:none!important;border-style:solid!important;border-color:transparent!important;border-width:clamp(26px,3.2vw,36px)!important;border-radius:0!important;
+  border-image:url("img/wood-panel.webp?v=3699864c") 16% fill / clamp(26px,3.2vw,36px) stretch!important;box-shadow:none!important;filter:drop-shadow(0 14px 22px rgba(0,0,0,.5))}
+.mp-head h2,.sheet.mbuy .bar,.drawer.mdrawer .bar,.mconfirm .bar #cf-t,#modal-t{color:#ffe7a8!important;text-shadow:0 3px 0 #2a1608!important}
+.sheet.mbuy .dh{color:#f3d58a!important}
+.mconfirm .cf-row{background:rgba(20,10,4,.35)!important}
+.mconfirm .cf-row .k,.mconfirm #cf-desc{color:#f6e6c4!important}
+/* inside the wooden signs: cards are darker boards with a cream rope-coloured edge, buttons are gold like the bar */
+:root{--wcard:rgba(28,14,5,.5);--wedge:#e6d3a8;--wgold:linear-gradient(#f6dc8f,#E6C46E 55%,#c9a24a)}
+.sheet.mbuy .modes .btn{background:var(--wcard)!important;border-color:var(--wedge)!important;color:#fff4dc!important;box-shadow:0 4px 0 rgba(20,10,3,.55)!important}
+.sheet.mbuy .modes .btn small{color:#f1e2bf!important}
+.sheet.mbuy .modes .btn.on{background:var(--wgold)!important;color:#2a1608!important;border-color:#fff4dc!important;box-shadow:0 0 0 3px #2a1608,0 4px 0 rgba(20,10,3,.55)!important}
+.sheet.mbuy .modes .btn.on small{color:#3b220d!important}
+.sheet.mbuy .modes .btn .mt-art.icon img{filter:sepia(1) saturate(2) hue-rotate(5deg) brightness(1.1)}
+.sheet.mbuy .modes .btn.on .mt-art.icon img{filter:brightness(0) saturate(100%)!important;opacity:.8}
+.sheet.mbuy .bc1,.sheet.mbuy .bc2,.sheet.mbuy .bc3{background:var(--wcard)!important}
+.sheet.mbuy .bc1{box-shadow:inset 0 6px 0 #4fc3f7,0 6px 0 rgba(20,10,3,.55)!important}
+.sheet.mbuy .bc2{box-shadow:inset 0 6px 0 #ff9a3d,0 6px 0 rgba(20,10,3,.55)!important}
+.sheet.mbuy .bc3{box-shadow:inset 0 6px 0 #c77dff,0 6px 0 rgba(20,10,3,.55)!important}
+.sheet.mbuy .buy.bc{border-color:var(--wedge)!important}
+.sheet.mbuy .buy.bc b{text-shadow:0 3px 0 #2a1608!important;color:#ffe7a8}
+.sheet.mbuy .buy.bc .p{color:#2a1608!important;background:var(--wgold)!important;box-shadow:0 3px 0 #6b4a1e!important}
+.bc-trig{background:rgba(255,231,168,.18)!important;color:#ffe7a8}
+.bc-cta,.mconfirm #cf-ok,#mbetpick .bp-b.on{background:var(--wgold)!important;color:#2a1608!important;border-color:#fff4dc!important;box-shadow:0 4px 0 #6b4a1e!important}
+.mconfirm #cf-cancel{border-color:var(--wedge)!important;color:#fff4dc!important}
+.mconfirm .betrow .round,.mconfirm .round{background:#fff4dc!important;color:#2a1608!important;border-color:#c9a24a!important}
+.mconfirm .cf-price{color:#ffd96b!important;text-shadow:0 3px 0 #2a1608!important}
+.mconfirm .cf-odds{background:rgba(255,244,220,.92)!important;color:#3b220d!important}
+.drawer.mdrawer .mclose,.mp-x{background:#fff4dc!important;border-color:#c9a24a!important}
+.drawer.mdrawer .mclose::before,.drawer.mdrawer .mclose::after{background:#2a1608!important}
+#mbetpick .bp-b{background:rgba(255,244,220,.94)!important;color:#2a1608!important;border-color:rgba(42,22,8,.3)!important}
+/* the remaining chips and buttons: cream wood-sign buttons with brown text, the main ones gold */
+.pill,.drawer.mdrawer .body button:not(.mclose),.drawer.mdrawer .body a.pill,#modal .btn,#modal button{background:#fff4dc!important;color:#2a1608!important;border:2px solid #c9a24a!important;box-shadow:0 3px 0 #6b4a1e!important;text-shadow:none!important}
+.pill.hot,.drawer.mdrawer .body a.pill.hot,#modal .btn.go,.drawer.mdrawer .body button.go{background:var(--wgold)!important;color:#2a1608!important}
+.drawer.mdrawer .body button img,.drawer.mdrawer .body button svg{filter:brightness(0) saturate(100%) opacity(.8)}
+.drawer.mdrawer .body > *{border-color:rgba(230,211,168,.45)!important;background-color:rgba(28,14,5,.38)!important}
+.drawer.mdrawer .body h3,.drawer.mdrawer .dh{color:#f3d58a!important}
+.mwallet #loadrow .pill{background:#fff4dc!important;color:#2a1608!important;border-color:#c9a24a!important}
+.msound input[type=range]::-webkit-slider-thumb{background:#fff4dc!important;border-color:#c9a24a!important}
+.msound input[type=range]::-moz-range-thumb{background:#fff4dc!important;border-color:#c9a24a!important}
+.msound input[type=range]::-moz-range-progress{background:#E6C46E!important}
+
 /* ---------- live beach (liveScene() in skin.js) ---------- */
 .slot .scene.live{background:#7fd6ff!important}
 .mscene{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -1117,7 +1202,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"ba362223","sc-palmL-trunk":"cc023e4e","sc-palmL":"dcb46604","sc-palmR-crown":"1607ce0d","sc-palmR-trunk":"f0ea716a","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","surf-tricks":"428d180b","W":"d1ec9fa7","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2365,11 +2450,17 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   window.MangoArt = {symbol, skater: () => `<img class="mg" src="${src('H3')}" alt="">`};
 
   // ---------- mascot and celebration art: the mango, moving to the old trick names ----------
+  // the big-win screen (#cel-art) plays the surfing wild doing tricks (img/surf-tricks.webp, an animated WebP made with
+  // HyperFrames: surf-clip/); it keeps looping through the win tiers instead of restarting on each one
+  const SURF = src('surf-tricks');
+  addEventListener('load', () => setTimeout(() => { const im = new Image(); im.src = SURF; }, 1500));   // fetched ahead of the first big win
   window.MangoAnim = {
-    play(node, pose){ if (!node) return; let im = node.querySelector('img.mg');
+    play(node, pose){ if (!node) return;
+      if (node.id === 'cel-art'){ if (!node.querySelector('img.msurf')) node.innerHTML = `<img class="msurf" src="${SURF}" alt="">`; return; }
+      let im = node.querySelector('img.mg');
       if (!im){ node.innerHTML = `<img class="mg" src="${src('H3')}" alt="">`; im = node.firstChild; }
       im.className = 'mg'; void im.offsetWidth; im.classList.add('p-' + (pose || 'idle')); },
-    stop(node){ const im = node && node.querySelector('img.mg'); if (im) im.className = 'mg'; },
+    stop(node){ if (node && node.id === 'cel-art'){ node.innerHTML = ''; return; } const im = node && node.querySelector('img.mg'); if (im) im.className = 'mg'; },
     tricks: ['idle','ollie','kickflip','treflip','grind','spin900','hype','bail']
   };
 
