@@ -677,6 +677,20 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .reel:has(.c.hit) .stackov .mstack.surf .mw-rider{animation:carve 1.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.mstack.surf .mw-wave,.mstack.surf .mw-rider,.mstack.surf .mw-trail{animation:none}}
 .reel:has(.c.hit) .stackov .mstack.surf .mw-wave{animation:wavebob 1.3s ease-in-out infinite}
+/* ---------- wilds are never cut off (Oz) ---------- */
+/* a reel clips only while its spin strip is in it; once it lands, a wild's tag, the tower's splash and the rider can spill over */
+.grid .reel:not(:has(> .strip)){overflow:visible}
+/* a wild cell draws above its neighbours, so its tag overlaps them instead of tucking under */
+.grid .c:has(> .ms-W){z-index:3}
+/* the tower hides the cells under it (no sliver at its rounded corners or during the splash or a pop); they show while it grows or folds */
+.reel:has(> .stackov:not(.building)) > .c{visibility:hidden}
+/* only the sea is clipped to the tower's rounded box (inside its 4px border); the rider leans past the sides uncut */
+.mstack.surf{overflow:visible}
+.mstack.surf .mw-sea{position:absolute;inset:0;overflow:hidden;border-radius:12px}
+/* the multiplier is a small driftwood tag with gold letters, centred under the wild (the art has no WILD lettering any more) */
+.ms > .mx,.mstack .mx.big{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;color:#ffd23f;background:linear-gradient(#7a4a22,#4a2a12 60%,#3a1f0c);
+  border:2px solid #ffd23f;border-radius:8px;box-shadow:0 0 0 2px var(--outline),0 3px 0 2px var(--outline);text-shadow:0 1px 0 #2a0e12}
+.ms > .mx{bottom:-8%;padding:2px 7px 3px;font-size:clamp(10px,1.9vw,17px)}
 /* the bonus buy sheet never scrolls: skin.js scales it to fit */
 .sheet.mbuy{overflow:hidden!important;max-height:none!important}
 /* the bottom bar sits a little higher off the screen's edge */
@@ -731,6 +745,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   filter:drop-shadow(0 0 0.6px #3a2410) drop-shadow(0 0 0.6px #3a2410)}
 .machine .stage > .winrow > #totalbox::after{content:"";position:absolute;left:-10px;top:-14px;width:26px;height:40px;pointer-events:none;
   background:url("img/seaweed.svg?v=2af73010") center/contain no-repeat;transform:rotate(-8deg)}
+/* the big-win screen owns the board while it shows: win-line labels step back */
+.stage:has(#celebrate:not([hidden])) .winpill,body:has(#celebrate:not([hidden])) .winpill{display:none!important}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -1249,6 +1265,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   background:url("img/close-x.svg?v=46a0a202") center/contain no-repeat!important;box-shadow:none!important;font-size:0!important;color:transparent!important;filter:drop-shadow(0 3px 2px rgba(20,10,3,.5));transition:transform .15s}
 .mp-x::before,.mp-x::after,.drawer.mdrawer .mclose::before,.drawer.mdrawer .mclose::after{display:none!important}
 .mp-x:hover,.drawer.mdrawer .mclose:hover,.sheet.mbuy .bar .pill:hover{transform:rotate(-8deg) scale(1.08)!important}
+/* the play-money / notice dialog's title bar sits on the wood too (no blue strip) */
+#modal .bar,#modal .win > .bar,.mconfirm .win > .bar{background:transparent!important;border:0!important;color:#ffe7a8!important;text-shadow:0 3px 0 #2a1608!important}
 
 /* ---------- live beach (liveScene() in skin.js) ---------- */
 .slot .scene.live{background:#7fd6ff!important}
@@ -1315,9 +1333,152 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
    mode) and every scene layer has an explicit order: water, sea creatures, palms, chair, bush */
 .sc-water .wv.b{mix-blend-mode:normal!important}
 .sc-water{z-index:1}.sc-sea{z-index:2}.sc-palm{z-index:3}.sc-chair{z-index:4}.sc-bush{z-index:5}
+/* Safari (WebKit) puts an animated layer (the water) above still siblings regardless of z-index; giving the palms,
+   chair and bush their own compositing layer keeps them in front, as on Chrome */
+.sc-palm,.sc-palm .trunk,.sc-chair,.sc-bush{will-change:transform;transform:translateZ(0)}
+.sc-water{will-change:transform;transform:translateZ(0)}
+
+/* ---------- layout fixes per screen shape (loaded last, so these win) ---------- */
+
+/* ===== every size ===== */
+/* nothing may be wider than the screen: the slot's one grid column never grows past the viewport (it was 398px at 390) */
+.slot{grid-template-columns:minmax(0,100%)!important}
+.slot > *{min-width:0;max-width:100vw}
+/* the status line under the board is gone (Oz): TOTAL WIN already shows wins */
+#msg,.machine .msg{display:none!important}
+/* the board never pushes its driftwood posts off-screen: the frame reaches .56*fw - 8px past each side, plus a few px air */
+.machine .stage{max-width:calc(100vw - var(--fw) * 1.12 - 4px)!important}
+
+/* title: top-left, with the surfing mango in a gold-ringed round badge in front of it; sound buttons stay top-right */
+.slotbar .barspacer{display:none!important}
+header.slotbar{justify-content:space-between!important;padding:6px 12px!important}
+.brand{display:flex!important;align-items:center;gap:10px;line-height:1}
+.brand::before{content:"";flex:0 0 auto;width:var(--badge,52px);height:var(--badge,52px);border-radius:50%;box-sizing:border-box;border:3px solid #E6C46E;
+  background:url("img/wild-rider.webp?v=c2212150") 50% 62%/84% no-repeat,radial-gradient(circle at 50% 38%,#5a361a,#2a1608 72%);box-shadow:0 0 0 2px #2a1608,0 3px 6px rgba(0,0,0,.35)}
+
+/* TOTAL WIN sign: 1.5x the label and value, roomier board; still on its two ropes under the bottom plank */
+.machine .stage > .winrow > #totalbox{padding:5px 22px!important;gap:10px!important}
+.machine .stage > .winrow > #totalbox .k{font-size:15px!important}
+.machine .stage > .winrow > #totalbox .v{font-size:26px!important}
+
+/* low-contrast small print on the wooden signs: lighter cream */
+#modal-b,#modal-b p{color:#fff1d6!important;text-shadow:0 1px 0 rgba(30,14,4,.7)}
+#modal .sub,#modal-b .sub{color:#f3dfb4!important;opacity:1!important}
+.mwallet #sidline,#sidline{color:#f3dfb4!important;opacity:.95!important}
+
+/* info panel: taller box (up to 640px, centred) so the slide text has room; the text fills what is left under the art */
+#minfo .mp-box{width:min(calc(100vw - 16px),820px)!important;height:min(calc(100dvh - 16px),640px)!important;left:50%!important;top:50%!important;translate:-50% -50%}
+.ss-text{flex:1;min-height:0;max-height:100%;align-self:stretch}
+.ss-slide:not(:has(.ss-art)) .ss-text,.ss-slide .ss-text{overflow:auto}
+
+/* bonus buy sheet: mode-tile pills sit beside the wild, not on it */
+.sheet.mbuy .mt-art{padding-right:14px}
+.sheet.mbuy .mt-n{right:-8px!important;bottom:auto!important;top:-2px}
+/* bonus cards (three side by side): fixed rows so name, trigger, price and BUY line up across the three cards */
+@media (min-width:761px),(max-width:640px) and (orientation:portrait){
+.sheet.mbuy .buy.bc{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto 2.6em auto 1fr auto;grid-template-areas:none!important;justify-items:center!important;text-align:center!important}
+.sheet.mbuy .buy.bc > *{grid-area:auto!important}
+.sheet.mbuy .bc-trig{align-self:center;line-height:1.15!important}
+}
+
+/* ===== desktop and wide (the big-slot layout, 900px+ and at least 4:3) ===== */
+@media (min-width:900px) and (min-aspect-ratio:4/3){
+  /* board a little shorter so the bigger sign and spin button clear each other; narrow enough to leave the plank room */
+  .machine .stagewrap{top:-24px!important}
+  .machine .stage{height:calc(100dvh - 392px)!important;width:min(70vw,calc((100dvh - 392px) * 1.62),1760px,calc(100vw - var(--fw) * 1.12 - 2 * var(--bw) - 40px))!important;max-width:none!important}
+  .machine .stagewrap{--bw:clamp(110px,11vw,180px)}
+  .machine .stagewrap > #buybtn{width:var(--bw)!important;padding-top:calc(var(--bw) * .05)!important;font-size:clamp(12px,1.15vw,18px)!important}
+  /* the plank stands just left of the left post, a third of the way down */
+  .machine .stagewrap > .sidebuy{right:calc(100% + var(--fw) * .56 - 2px)!important;top:32%!important;transform:translateY(-50%)!important}
+  .machine .stage > .winrow{top:calc(100% + var(--fw) * .30 + 6px)!important}
+}
+/* big spin button rising out of the one-row bar */
+@media (min-width:1001px){
+  .mhud .mspinwrap{margin:-50px 4px -10px!important}
+  .mhud #spinbtn{width:96px!important;height:96px!important}
+}
+
+/* ===== tablets (760-1000px wide, not short): one row like desktop, so the spin can be big and rise out of it ===== */
+@media (min-width:760px) and (max-width:1000px) and (min-height:501px){
+  .ctrlbar.mhud{flex-wrap:nowrap!important;gap:8px!important;padding:5px 10px!important;width:min(800px,calc(100% - 20px))!important}
+  .ctrlbar.mhud::after{display:none!important}
+  .mhud #menubtn,.mhud .mhb,.mhud .balctl,.mhud .betctl,.mhud .mspinwrap,.mhud #autobtn,.mhud #speedbtn,.mhud #modebtn{order:0!important}
+  .mhud .tools{display:flex!important;gap:6px!important}
+  .mhud .mhb{width:38px!important;height:38px!important}
+  .mhud .balctl{margin-right:auto!important}
+  .mhud .mspinwrap{margin:-50px 2px -10px!important}
+  .mhud #spinbtn{width:92px!important;height:92px!important}
+}
+
+/* ===== portrait phones: a slimmer frame so its posts fit inside the screen ===== */
+@media (max-width:640px) and (orientation:portrait){
+  .machine .stage,.machine .stagewrap{--fw:clamp(50px,15vw,64px)!important}
+  header.slotbar{--badge:42px;padding:6px 10px!important}
+  .brand{font-size:21px!important;gap:7px}
+  /* a slightly smaller plank, so the first crab's walk start stays clear of it */
+  .machine .stagewrap > #buybtn{width:106px!important;padding-top:5px!important;font-size:12px!important}
+  /* bonus cards: each fan of symbols fits inside its card (smaller, closer), so nothing is clipped by the card edge */
+  .sheet.mbuy .bc-art img{width:46px!important;height:46px!important;transform:translate(calc(-50% + (var(--k) - (var(--n) - 1)/2)*calc(44px/var(--n))),-50%) rotate(calc((var(--k) - (var(--n) - 1)/2)*10deg))!important}
+}
+@media (min-width:641px) and (max-width:1000px) and (orientation:portrait){ header.slotbar{--badge:50px} }
+
+/* ===== short landscape (phones on their side): board on the left/centre filling the height, a slim control column
+   on the right with the spin button big in the middle; title top-left, BONUS BUY and TOTAL WIN left of the frame ===== */
+@media (orientation:landscape) and (max-height:500px){
+  .slot{grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:minmax(0,1fr)!important}
+  header.slotbar{position:absolute!important;left:0;right:0;top:0;--badge:38px;padding:4px 10px!important;background:none!important;z-index:3}
+  .brand{font-size:20px!important;gap:7px}
+  .soundbtns{gap:5px!important}
+  .soundbtns .pill{font-size:9px!important;padding:5px 8px!important}
+  /* board: as tall as the screen allows under the crabs, pushed right so the title and the plank have the left side */
+  main.machine{grid-area:1/1!important;display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:flex-end!important;
+    padding:0 calc(var(--fw) * .56 + 4px) 0 0!important;gap:0!important;--fw:52px;min-height:0;overflow:visible}
+  .machine > .spinwrap:not(:has(#spinbtn)){display:none!important}
+  .machine .stagewrap{display:block!important;position:relative!important;top:0!important;margin-top:42px!important;--fw:52px}
+  .machine .stage{--fw:52px;padding:6px!important;width:min(calc((100dvh - 83px) * 1.25 + 12px),calc(100vw - 420px))!important;height:auto!important;max-width:none!important}
+  .machine .stage .gridbox{aspect-ratio:5/4!important;height:auto!important;flex:none!important}
+  /* BONUS BUY: left of the frame, upper half */
+  .machine .stagewrap > #buybtn{position:absolute!important;right:calc(100% + var(--fw) * .56 + 4px)!important;left:auto!important;top:24%!important;transform:translateY(-50%)!important;
+    width:120px!important;margin:0!important;padding-top:6px!important;font-size:12px!important}
+  /* TOTAL WIN: a sign left of the frame, lower half (no ropes: there is no plank above it here) */
+  .machine .stage > .winrow{top:auto!important;bottom:18%!important;left:auto!important;right:calc(100% + var(--fw) * .56 + 4px)!important;transform:none!important}
+  .machine .stage > .winrow > #totalbox{flex-direction:column!important;gap:3px!important;padding:4px 16px!important}
+  .machine .stage > .winrow > #totalbox::before{display:none!important}
+  /* the bar: a column on the right, under the sound buttons */
+  .ctrlbar.mhud{grid-area:1/2!important;display:grid!important;align-self:stretch;width:auto!important;margin:40px 8px 8px 0!important;padding:6px 8px!important;border-width:4px!important;border-radius:14px!important;
+    grid-template-columns:repeat(3,38px);grid-template-rows:auto auto auto minmax(0,1fr) auto auto;gap:6px!important;align-items:center;justify-items:center}
+  .ctrlbar.mhud::after{display:none!important}
+  .mhud .tools{display:contents!important}
+  .mhud #menubtn{grid-area:1/1!important;width:38px!important;height:38px!important;margin:0!important;padding:0 8px!important}
+  .mhud .minfo-btn{grid-area:1/2!important}
+  .mhud .mset-btn{grid-area:1/3!important}
+  .mhud .mhb,.mhud #autobtn,.mhud #speedbtn{width:38px!important;height:38px!important;min-width:0!important}
+  .mhud .balctl{grid-area:2/1/3/4!important;margin:0!important;justify-self:stretch;align-items:center!important}
+  .mhud .balctl b{font-size:16px!important;white-space:nowrap}
+  .mhud .betctl{grid-area:3/1/4/4!important;gap:6px!important}
+  .mhud .mbetbox{min-width:70px!important;padding:2px 6px!important}
+  .mhud .mbetbox b{font-size:14px!important}
+  .mhud .mspinwrap{grid-area:4/1/5/4!important;margin:0!important;align-self:center}
+  .mhud #spinbtn{width:min(88px,calc(100dvh - 300px))!important;height:min(88px,calc(100dvh - 300px))!important;min-width:64px;min-height:64px;border-width:5px!important}
+  .mhud #spinbtn[data-label]:not([data-label=""])::after{top:auto!important;bottom:calc(100% + 4px)!important}
+  .mhud #autobtn{grid-area:5/1!important}
+  .mhud #speedbtn{grid-area:5/2!important}
+  .mhud #modebtn{grid-area:6/1/7/4!important;justify-self:stretch;height:30px!important;font-size:10px!important;padding:0 6px!important}
+}
+
+/* ---------- spins left (extras.js): gold ring, dark wood, big number ---------- */
+#mspins{position:fixed;z-index:48;width:clamp(70px,9vw,96px);aspect-ratio:1/1;border-radius:50%;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 35%,#4a2c14,#21120a 70%);border:5px solid #E6C46E;box-shadow:0 0 0 3px #21120a,0 8px 16px rgba(0,0,0,.45);pointer-events:none;text-align:center}
+#mspins.on{display:flex}
+#mspins b{font:400 clamp(26px,3.4vw,38px)/1 "Lilita One",system-ui,sans-serif;color:#fff4dc;text-shadow:0 3px 0 #000}
+#mspins small{font:800 clamp(7px,.8vw,9px)/1.1 "Montserrat",system-ui,sans-serif;letter-spacing:.08em;color:#E6C46E;margin-top:2px}
+#mspins.pop{animation:spop .45s cubic-bezier(.2,1.7,.4,1)}
+#mspins b.bump{animation:sbump .35s cubic-bezier(.2,1.8,.4,1)}
+@keyframes spop{0%{transform:scale(0) rotate(-20deg)}100%{transform:none}}
+@keyframes sbump{0%{transform:scale(1.5)}100%{transform:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"76ee142b","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-bush-day":"cbded6bf","sc-bush-sunset":"81a88854","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"00880cf0","sc-palmL-trunk":"3bc60c90","sc-palmL":"dcb46604","sc-palmR-crown":"8b7e31b5","sc-palmR-trunk":"e3fd67fc","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"a91f85b4","sc-water-sunset":"86cba3e2","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"d1ec9fa7","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"76ee142b","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-bush-day":"cbded6bf","sc-bush-sunset":"81a88854","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"00880cf0","sc-palmL-trunk":"3bc60c90","sc-palmL":"dcb46604","sc-palmR-crown":"8b7e31b5","sc-palmR-trunk":"e3fd67fc","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"a91f85b4","sc-water-sunset":"86cba3e2","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"6c3e2365","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2582,9 +2743,10 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   // ---------- full-reel wild ----------
   function stack(M, sticky){
     const tier = M >= 200 ? 't4' : M >= 50 ? 't3' : M >= 10 ? 't2' : M ? 't1' : 't0';
-    // a full-reel wild is the mango surfing a tall wave: the wave fills the reel, the mango carves up and down its face
-    return `<div class="mstack surf ${tier}"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false"><i class="mw-trail"></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false">`
-      + `<b class="mx big">${M ? 'x' + fmtM(M) : 'WILD'}</b>${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
+    // a full-reel wild is the mango surfing a tall wave: the wave fills the reel, the mango carves up and down its face.
+    // The wave and trail sit in their own clipped box (.mw-sea) so the rider can lean past the tower's sides uncut
+    return `<div class="mstack surf ${tier}"><i class="mw-sea"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false"><i class="mw-trail"></i></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false">`
+      + (M ? `<b class="mx big">x${fmtM(M)}</b>` : '') + `${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
   }
 
   // ---------- after the game draws its win lines: wavy lines that draw themselves, popping symbols, splashes ----------
@@ -2680,7 +2842,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 
   // ---------- words: every skate name on screen becomes its surf name (text only, the game code is untouched) ----------
   const WORDS = [
-    [/\bSESH TAPES\b/g, 'SURF BADGES'], [/\bSESH TAPE\b/g, 'SURF BADGE'], [/\bSESH tapes\b/g, 'SURF badges'], [/\bSESH tape\b/g, 'SURF badge'],
+    [/\bSESSION\.\.\./g, "SURF'S UP..."], [/\bSESH TAPES\b/g, 'SURF BADGES'], [/\bSESH TAPE\b/g, 'SURF BADGE'], [/\bSESH tapes\b/g, 'SURF badges'], [/\bSESH tape\b/g, 'SURF badge'],
     [/\bTAPES\b/g, 'BADGES'], [/\bTAPE\b/g, 'BADGE'], [/\btapes\b/g, 'badges'], [/\btape\b/g, 'badge'],
     [/\bSESH\b/g, 'SURF'], [/\bSesh\b/g, 'Surf'], [/\bLEGEND\b/g, 'KAHUNA'], [/\bLegend\b/g, 'Kahuna'], [/\bCREW\b/g, 'SWELL'], [/\bCrew\b/g, 'Swell'],
     [/\bTRICK SPINS\b/g, 'WAVE SPINS'], [/\bTRICK SPIN\b/g, 'WAVE SPIN'], [/\bTrick Spins\b/g, 'Wave Spins'], [/\bTrick Spin\b/g, 'Wave Spin'],
@@ -2688,7 +2850,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     [/\bOLLIE\b/g, 'RIPPLE'], [/\bOllie\b/g, 'Ripple'], [/\bGRIND\b/g, 'CURL'], [/\bGrind\b/g, 'Curl'], [/\bKICKFLIP\b/g, 'BARREL'], [/\bKickflip\b/g, 'Barrel'],
     [/\bSK8 SESH\b/g, 'MANGO SURF'], [/\bSk8 Sesh\b/g, 'Mango Surf'], [/\bskaters?\b/g, 'surfer'], [/\bskate\b/g, 'surf']
   ];
-  const TEST = /SESH|Sesh|TAPE|[Tt]ape|LEGEND|Legend|CREW|Crew|TRICK|Trick|trick|OLLIE|Ollie|GRIND|Grind|KICKFLIP|Kickflip|SK8|Sk8|skate/;
+  const TEST = /SESSION|SESH|Sesh|TAPE|[Tt]ape|LEGEND|Legend|CREW|Crew|TRICK|Trick|trick|OLLIE|Ollie|GRIND|Grind|KICKFLIP|Kickflip|SK8|Sk8|skate/;
   function swap(node){
     const v = node.nodeValue; if (!v || !TEST.test(v)) return;
     let s = v; for (const [re, to] of WORDS) s = s.replace(re, to); if (s !== v) node.nodeValue = s;
@@ -3044,6 +3206,33 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   window.MangoSkin = {stack, afterLines, game, scene(){},
     init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} try { totalOnly(); } catch(e){} try { betPicker(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
+})();
+
+</script>
+<script>
+// Mango Surf extras: small pieces kept apart from skin.js. The game calls MangoExtras from build.js hooks.
+(function(){
+  // ---------- spins left: a gold-ringed circle that pops up under the BONUS BUY plank during a bonus ----------
+  let el = null;
+  const place = () => { if (!el || !el.classList.contains('on')) return;
+    const s = el.offsetWidth || 84;
+    // portrait phones: the BONUS BUY plank sits on the frame, so the circle goes beside the TOTAL WIN sign on the sand
+    // instead (under the plank it would cover the reels)
+    if (innerWidth <= 640 && innerHeight > innerWidth){ const t = document.getElementById('totalbox'), q = t && t.getBoundingClientRect();
+      if (q && q.width){ el.style.left = Math.max(6, q.left - s - 14) + 'px'; el.style.top = (q.top + q.height / 2 - s / 2) + 'px'; return; } }
+    const b = document.getElementById('buybtn'), r = b && !b.hidden ? b.getBoundingClientRect() : null;
+    if (r && r.width){ el.style.left = Math.max(6, Math.min(innerWidth - s - 6, r.left + r.width / 2 - s / 2)) + 'px'; el.style.top = Math.min(innerHeight - s - 6, r.bottom + 8) + 'px'; }
+    else { el.style.left = '10px'; el.style.top = '70px'; } };
+  function make(){ if (el) return el;
+    el = document.createElement('div'); el.id = 'mspins'; el.setAttribute('aria-live', 'polite');
+    el.innerHTML = '<b>0</b><small>SPINS LEFT</small>'; document.body.appendChild(el);
+    addEventListener('resize', place); return el; }
+  window.MangoExtras = {
+    spins(left){ make(); const b = el.querySelector('b'), was = el.classList.contains('on');
+      b.textContent = left; el.classList.add('on'); place();
+      if (was){ b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); } else { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } },
+    spinsDone(){ if (el) el.classList.remove('on', 'pop'); }
+  };
 })();
 
 </script>
@@ -5480,7 +5669,7 @@ async function playBonus(B, cost, startWin){
   await wait(T(1400));
   let run = 0;
   for (let i=0;i<B.spins.length;i++){
-    const sp = B.spins[i], prev = i ? B.spins[i-1] : null;
+    const sp = B.spins[i], prev = i ? B.spins[i-1] : null; try { MangoExtras.spins(B.spins.length - i - 1); } catch(e){}
     const hold = prev ? prev.stacks.map(x=>x>0) : [false,false,false,false,false];
     const st = new Array(CELLS).fill(0);
     if (prev){ for (let c=0;c<CELLS;c++) if (prev.g[c]===W && !prev.stacks[Math.floor(c/ROWS)] && B.tier === 0 && !B.plain) st[c] = 1; }
@@ -5498,7 +5687,7 @@ async function playBonus(B, cost, startWin){
   }
   if (B.topUp > 0){ run += B.topUp; $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     banner(`MIN WIN · TOPPED UP TO ${fmt$(B.total*roundBet)} (10% OF THE BONUS PRICE)`); await wait(T(1400)); }
-  sfx('bonusEnd', B.total*roundBet/cost); $('stage').classList.remove('bonus'); if (B.total*roundBet < cost){ mascot('bail'); sfx('bail'); }
+  sfx('bonusEnd', B.total*roundBet/cost); $('stage').classList.remove('bonus'); try { MangoExtras.spinsDone(); } catch(e){} if (B.total*roundBet < cost){ mascot('bail'); sfx('bail'); }
 }
 
 
