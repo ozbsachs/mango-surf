@@ -467,13 +467,17 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 .pill.hot{background:linear-gradient(#ffe066,#ffae1f);color:var(--outline)}
 .pill.on{background:#7dffb0;color:var(--outline)}
 .iconbtn{background:#0f5d82;border-color:var(--outline);box-shadow:0 4px 0 var(--outline)}
-/* the board: a washed-up driftwood frame (rope-lashed planks) around a see-through glass pane that blurs the beach behind it.
-   The planks sit just outside the stage edge (the frame image's inner plank edge is 72% into its 24% border slice). */
-.machine .stage{--fw:clamp(34px,4.2vw,66px);background:rgba(8,60,100,.16);border:0!important;border-radius:6px;box-shadow:none;
+/* the board: a thick washed-up driftwood frame (seaweed, barnacles, a starfish, wet sand) around a see-through glass pane
+   that blurs the beach behind it. 9-slice at 41% keeps the seaweed and rope corners unstretched; the frame image's inner
+   plank edge is 56% into that slice, and it laps 8px over the board's padding. ::before is the game's chase dim. */
+.machine .stage{--fw:clamp(72px,9vw,136px);background:rgba(8,60,100,.16);border:0!important;border-radius:6px;box-shadow:none;
   -webkit-backdrop-filter:blur(7px) saturate(1.1);backdrop-filter:blur(7px) saturate(1.1);overflow:visible}
 .machine .stage.bonus{background:rgba(110,35,70,.18)}
-.machine .stage::after{content:"";position:absolute;inset:calc(var(--fw) * -.72);pointer-events:none;z-index:40;
-  border:var(--fw) solid transparent;border-image:url("img/frame-driftwood.webp?v=978fb7b1") 24% stretch;filter:drop-shadow(0 10px 8px rgba(40,20,5,.45))}
+.machine .stage::after{content:"";position:absolute;inset:calc(var(--fw) * -.56 + 8px);pointer-events:none;z-index:40;
+  border:var(--fw) solid transparent;border-image:url("img/frame-driftwood.webp?v=56b4cd35") 41% stretch;filter:drop-shadow(0 12px 10px rgba(40,20,5,.5))}
+/* the slot sits a little higher */
+.machine .stagewrap{position:relative;top:-10px}
+@media (min-width:900px) and (min-aspect-ratio:4/3){ .machine .stagewrap{top:-26px} }
 .winarea{background:rgba(6,34,62,.82);border-color:var(--outline)}
 .winarea .k{color:#ffd23f;font-size:14px}
 .winarea .v{color:#fff7d6}
@@ -488,13 +492,12 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 .lk{position:absolute;left:2%;top:2%;width:22%;aspect-ratio:1;border-radius:50%;background:#ffd23f url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3' fill='none' stroke='%232a0e12' stroke-width='2.6'/%3E%3Crect x='5' y='11' width='14' height='9' rx='2' fill='%232a0e12'/%3E%3C/svg%3E") center/62% no-repeat;border:2px solid var(--outline);z-index:2}
 .grid .c{border-radius:18%}
 
-/* winning symbols pop, wobble and shine; the rest dim */
+/* winning symbols pop, wobble and shine; the rest stay as they are (no dimming, Oz) */
 .grid .c.hit{box-shadow:none}
 .grid .c.hit .ms{animation:mpop .55s cubic-bezier(.2,1.7,.4,1) both,mjelly 1.3s .55s ease-in-out infinite}
 .grid .c.hit .ms::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.85) 50%,transparent 62%) no-repeat;background-size:260% 100%;
   -webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat;animation:mshine 1.5s .25s ease-in-out infinite}
-.grid:has(.c.hit) .c:not(.hit) .ms{opacity:.45;filter:saturate(.55) brightness(.85);transition:opacity .25s,filter .25s}
 @keyframes mpop{0%{transform:scale(1)}45%{transform:scale(1.32) rotate(-4deg)}100%{transform:scale(1.14)}}
 @keyframes mjelly{0%,100%{transform:scale(1.14,1.14)}30%{transform:scale(1.2,1.07)}60%{transform:scale(1.09,1.19)}}
 @keyframes mshine{0%{background-position:130% 0}60%,100%{background-position:-60% 0}}
@@ -590,9 +593,11 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 /* win walkthrough: one win at a time, its line and symbols lit, its math in a label at the end of the run */
 /* no pay lines on screen (too busy): the winning symbols dance instead, one win at a time, biggest pay first */
 #lineov .wl{visibility:hidden}
-.grid.focusing .c.hit:not(.focus) .ms{opacity:.4;filter:saturate(.5) brightness(.85);animation:none}
+.grid.focusing .c.hit:not(.focus) .ms{animation:none}
 .grid.focusing .c.hit:not(.focus) .ms::after{animation:none;opacity:0}
-.grid.focusing .c.focus .ms{opacity:1;filter:none;animation:mdance .9s var(--d,0s) ease-in-out infinite both}
+/* the win on show: its symbols dance with a warm glow behind them and a golden halo around the art */
+.grid.focusing .c.focus{background:radial-gradient(circle at 50% 52%,rgba(255,236,140,.7),rgba(255,190,60,.28) 48%,rgba(255,190,60,0) 72%)}
+.grid.focusing .c.focus .ms{animation:mdance .9s var(--d,0s) ease-in-out infinite both;filter:drop-shadow(0 0 4px #fff6c4) drop-shadow(0 0 12px rgba(255,196,48,.95))}
 /* a little surf dance: hop, lean one way, lean the other, settle; each reel starts a beat after the one before */
 @keyframes mdance{0%,100%{transform:translateY(0) rotate(0) scale(1)}18%{transform:translateY(-14%) rotate(-7deg) scale(1.1)}
   40%{transform:translateY(0) rotate(0) scale(1.04,.94)}60%{transform:translateY(-9%) rotate(7deg) scale(1.08)}80%{transform:translateY(0) rotate(0) scale(.98,1.02)}}
@@ -612,6 +617,42 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .nuts .nut{position:fixed;display:none;padding:0;border:0;border-radius:50%;background:transparent;cursor:default;pointer-events:auto;-webkit-tap-highlight-color:transparent;outline:none}
 .nuts.live .nut:not([hidden]){display:block}
 #buybtn{position:relative;z-index:46}
+
+/* ---------- pay wheel (payWheel() in skin.js): a red and white life ring that turns through the symbols ---------- */
+@property --rot{syntax:'<angle>';inherits:true;initial-value:0deg}
+.mwheel{--sz:220px;position:fixed;z-index:30;width:var(--sz);height:var(--sz);transition:--rot .9s cubic-bezier(.3,1.35,.5,1),opacity .3s;font-family:var(--f-d)}
+.mw-disc{position:absolute;inset:0;border-radius:50%;border:4px solid var(--outline);
+  background:repeating-conic-gradient(from calc(var(--rot) + 22.5deg),#ff4b4b 0 45deg,#fffaf0 45deg 90deg);
+  box-shadow:0 8px 0 rgba(42,14,18,.35),inset 0 0 0 5px rgba(255,255,255,.35),inset 0 -10px 18px rgba(0,0,0,.18)}
+/* the symbols ride round the ring and stay upright */
+.mw-rot{position:absolute;inset:0}
+.mw-it{position:absolute;left:50%;top:50%;width:calc(var(--sz) * .15);height:calc(var(--sz) * .15);margin:calc(var(--sz) * -.075) 0 0 calc(var(--sz) * -.075);padding:0;border:0;background:none;cursor:pointer;
+  transform:rotate(calc(var(--a) + var(--rot))) translateY(calc(var(--sz) * -.375)) rotate(calc(-1 * (var(--a) + var(--rot))));transition:scale .3s}
+.mw-it img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 0 rgba(42,14,18,.6))}
+.mw-it.on{scale:1.2;z-index:2}
+.mw-it.on img{filter:drop-shadow(0 0 5px #fff6c4) drop-shadow(0 0 10px #ffc430)}
+/* the pointer at the top */
+.mw-ptr{position:absolute;left:50%;top:calc(var(--sz) * -.085);width:0;height:0;transform:translateX(-50%);z-index:3;
+  border-left:calc(var(--sz) * .07) solid transparent;border-right:calc(var(--sz) * .07) solid transparent;border-top:calc(var(--sz) * .1) solid #ffd23f;filter:drop-shadow(0 2px 0 var(--outline)) drop-shadow(0 -2px 0 var(--outline))}
+.mw-title{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);padding:2px 14px;border-radius:999px;background:var(--cy3);color:#fff;border:2px solid #fff;font-size:calc(var(--sz) * .075);letter-spacing:.06em;white-space:nowrap}
+/* the middle: the symbol under the pointer and its pays at the current bet */
+.mw-hub{position:absolute;left:50%;top:50%;width:54%;height:54%;box-sizing:border-box;border-radius:50%!important;background:radial-gradient(circle at 50% 35%,#fffdf6,#ffefc9)!important;border:3px solid var(--outline);box-shadow:inset 0 3px 0 rgba(255,255,255,.8),0 2px 0 rgba(42,14,18,.25);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--outline);text-align:center;line-height:1}
+.mw-hub img{width:32%;height:auto;margin-bottom:1px}
+.mw-hub .mw-nm{font-size:calc(var(--sz) * .062);font-weight:400;white-space:nowrap}
+.mw-hub .mw-row{font-size:calc(var(--sz) * .062);white-space:nowrap}
+.mw-hub .mw-row i{font-style:normal;display:inline-block;min-width:1.5em;margin-right:4px;padding:0 3px;border-radius:5px;background:var(--cy3);color:#fff;font-size:.85em}
+.mw-hub .mw-row i::after{content:"×"}
+.mw-hub .mw-note{font-size:calc(var(--sz) * .045);opacity:.8}
+.mw-hub.mw-pop{animation:mwin .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes mwin{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
+/* phones: hidden until the ring button is tapped, then it opens over the reels */
+.mw-btn{position:fixed;z-index:31;left:10px;top:64px;width:46px;height:46px;border-radius:50%;padding:0;cursor:pointer;border:3px solid var(--outline);
+  background:radial-gradient(circle,#0072b8 0 34%,transparent 35%),repeating-conic-gradient(from 22.5deg,#ff4b4b 0 45deg,#fffaf0 45deg 90deg);box-shadow:0 3px 0 rgba(42,14,18,.4)}
+.mw-btn::after{content:"PAYS";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font:400 9px/1 var(--f-d)}
+body:not(.mw-side) .mwheel{opacity:0;pointer-events:none;scale:.85;transition:--rot .9s cubic-bezier(.3,1.35,.5,1),opacity .25s,scale .25s}
+body:not(.mw-side) .mwheel.open{opacity:1;pointer-events:auto;scale:1;z-index:60}
+body.mw-side .mw-btn{display:none}
+@media (prefers-reduced-motion:reduce){.mwheel{transition:none}}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -696,7 +737,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
    than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
 @media (min-width:900px) and (min-aspect-ratio:4/3){
   .machine{padding:0 10px}
-  .machine .stage{width:min(70vw,calc((100dvh - 276px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 276px);display:flex;flex-direction:column}
+  .machine .stage{width:min(70vw,calc((100dvh - 316px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 316px);display:flex;flex-direction:column}
   .machine .stage .gridbox{flex:1 1 0;min-height:0;height:auto!important;aspect-ratio:auto!important;width:100%}
   .machine .stage .grid{height:100%}
   .stagetop{margin-bottom:6px}
@@ -1040,7 +1081,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","frame-driftwood":"978fb7b1","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"420a42b6","sc-palmL-trunk":"74a2414d","sc-palmL":"dcb46604","sc-palmR-crown":"986dfb35","sc-palmR-trunk":"09795acf","sc-palmR":"037041cd","sc-plate-day":"fef75a40","sc-plate-sunset":"03561971","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","frame-driftwood":"56b4cd35","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"420a42b6","sc-palmL-trunk":"74a2414d","sc-palmL":"dcb46604","sc-palmR-crown":"986dfb35","sc-palmR-trunk":"09795acf","sc-palmR":"037041cd","sc-plate-day":"fef75a40","sc-plate-sunset":"03561971","sc-splash":"fd32b9b1","sc-water-day":"5a4c116b","sc-water-sunset":"efa7bf7a","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2639,6 +2680,69 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 
   // ---------- the confirmation after picking a buy or a mode: bonus art on top, tinted per bonus ----------
   // The game fills #cf-t / #cf-desc / #cf-price itself; this adds the art and the colour from the title it wrote.
+  // ---------- pay wheel: a life ring beside the reels that turns through every symbol, biggest pay first ----------
+  // The symbol under the pointer shows in the middle with what 3, 4 and 5 in a line pay at the current bet. Pays are
+  // read from the game's own rules page (rendered from the live server math), so they follow any math change.
+  // Room beside the reels (desktop): the wheel stands there. No room (phones): a small ring button opens it over the reels.
+  function payWheel(){
+    if (document.getElementById('mwheel')) return;
+    const wrap = document.createElement('div'); wrap.id = 'mwheel'; wrap.className = 'mwheel'; wrap.setAttribute('aria-label', 'Pay wheel');
+    wrap.innerHTML = `<div class="mw-disc"><div class="mw-rot"></div><div class="mw-hub"></div></div><i class="mw-ptr"></i><div class="mw-title">PAYS</div>`;
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mw-btn'; btn.setAttribute('aria-label', 'Show what every symbol pays');
+    document.body.append(wrap, btn);
+    const rot = wrap.querySelector('.mw-rot'), hub = wrap.querySelector('.mw-hub');
+    let items = [], at = 0, angle = 0, hold = 0, timer = 0;
+    const betNow = () => { const b = document.querySelector('.mbetbox b') || document.querySelector('.mbetbox'); const v = parseFloat(((b && b.textContent) || '').replace(/[^0-9.]/g, '')); return v > 0 ? v : 1; };
+    const read = () => {
+      const R = document.getElementById('rules'); if (!R) return [];
+      const sec = Array.from(R.querySelectorAll(':scope > .win')).find(x => /PAYTABLE/i.test((x.querySelector('.bar span') || {}).textContent || ''));
+      if (!sec) return [];
+      const rows = Array.from(sec.querySelectorAll('tbody tr')).map(tr => { const c = Array.from(tr.children), im = c[0].querySelector('img');
+        const k = im ? (im.getAttribute('src').match(/img\/(\w+)\.webp/) || [])[1] : null, x = t => parseFloat(t) || 0;
+        return {k, name: c[0].textContent.trim().replace(/^x?\d+\s+/, ''), p: [x(c[1].textContent), x(c[2].textContent), x(c[3].textContent)], wild: k === 'W'}; }).filter(r => r.k);
+      // the wild first (it pays the most and multiplies), then every symbol from the biggest five-of-a-kind down
+      return rows.sort((a, b) => (b.wild - a.wild) || (b.p[2] - a.p[2]) || (b.p[1] - a.p[1]));
+    };
+    const draw = () => {
+      items = read(); if (!items.length) return false;
+      const n = items.length;
+      rot.innerHTML = items.map((r, i) => `<button type="button" class="mw-it" style="--a:${i * 360 / n}deg" data-i="${i}" aria-label="${r.wild ? 'Wild' : r.name}"><img src="${src(r.k)}" alt=""></button>`).join('');
+      rot.querySelectorAll('.mw-it').forEach(b => b.onclick = e => { e.stopPropagation(); go(+b.dataset.i, true); });
+      go(at, false); return true;
+    };
+    const hubHtml = r => { const bet = betNow(), m = v => money(v * bet);
+      if (r.wild) return `<img src="${src(r.k)}" alt=""><b class="mw-nm">Wild</b><span class="mw-row"><i>5</i>${m(r.p[2])}</span><span class="mw-note">× its multipliers</span>`;
+      return `<img src="${src(r.k)}" alt=""><b class="mw-nm">${r.name}</b>` + [2, 1, 0].map(j => `<span class="mw-row"><i>${j + 3}</i>${m(r.p[j])}</span>`).join(''); };
+    function go(i, byHand){
+      const n = items.length; if (!n) return; at = ((i % n) + n) % n;
+      // turn the short way round so the chosen symbol sits under the pointer at the top
+      const want = -at * 360 / n; let d = (want - angle) % 360; if (d > 180) d -= 360; if (d < -180) d += 360; angle += d;
+      wrap.style.setProperty('--rot', angle + 'deg');
+      rot.querySelectorAll('.mw-it').forEach((b, j) => b.classList.toggle('on', j === at));
+      hub.classList.remove('mw-pop'); void hub.offsetWidth; hub.innerHTML = hubHtml(items[at]); hub.classList.add('mw-pop');
+      if (byHand) hold = Date.now() + 9000;
+    }
+    const tick = () => { if (Date.now() > hold && !wrap.matches(':hover')) go(at + 1, false); };
+    // placement: in the gap left of the framed reels when it fits, else the button
+    const place = () => {
+      const st = document.querySelector('.machine .stage'); if (!st) return;
+      const r = st.getBoundingClientRect(), fw = Math.max(0, -parseFloat(getComputedStyle(st, '::after').left) || 0) + 10;   // how far the frame reaches out
+      const room = r.left - fw - 24, size = Math.min(290, room - 12, r.height * 0.62);
+      const side = size >= 150 && innerWidth >= 900;
+      document.body.classList.toggle('mw-side', side);
+      if (side){ wrap.style.setProperty('--sz', size + 'px'); wrap.style.left = Math.max(10, (r.left - fw - size) / 2) + 'px'; wrap.style.top = (r.top + r.height / 2 - size / 2) + 'px'; wrap.classList.remove('open'); }
+      else { const sz = Math.min(innerWidth * 0.8, 340); wrap.style.setProperty('--sz', sz + 'px'); wrap.style.left = (innerWidth - sz) / 2 + 'px'; wrap.style.top = Math.max(10, r.top + r.height / 2 - sz / 2) + 'px'; }
+    };
+    btn.onclick = () => { wrap.classList.toggle('open'); place(); };
+    wrap.onclick = e => { if (!document.body.classList.contains('mw-side') && e.target === wrap) wrap.classList.remove('open'); };
+    document.addEventListener('pointerdown', e => { if (wrap.classList.contains('open') && !wrap.contains(e.target) && e.target !== btn) wrap.classList.remove('open'); });
+    addEventListener('resize', place);
+    const boot = () => { if (!draw()) return setTimeout(boot, 800); place(); timer = setInterval(tick, 2600); setInterval(place, 1500);
+      // the bet changes: the middle shows the new amounts at once
+      const bb = document.querySelector('.mbetbox'); if (bb) new MutationObserver(() => { if (items[at]) hub.innerHTML = hubHtml(items[at]); }).observe(bb, {subtree: true, childList: true, characterData: true}); };
+    boot();
+  }
+
   function confirmSkin(){
     const cf = document.getElementById('confirm'), title = document.getElementById('cf-t'); if (!cf || !title) return;
     cf.classList.add('mconfirm');
@@ -2708,7 +2812,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { payWheel(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
