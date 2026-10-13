@@ -565,7 +565,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes fall{to{transform:translateY(125vh) rotate(var(--r))}}
 
 @media (prefers-reduced-motion:reduce){
-  .grid .c.hit .ms,.grid .c.hit .ms::after,.mstack img,.mstack .swell,.grid .c.tape,img.mg,#celebrate img.rain,.splash{animation:none!important}
+  .grid .c.hit .ms,.grid .c.hit .ms::after,.grid.focusing .c.focus .ms,.mstack img,.mstack .swell,.grid .c.tape,img.mg,#celebrate img.rain,.splash{animation:none!important}
   #lineov .wl{animation:none;stroke-dashoffset:0}
 }
 
@@ -588,11 +588,14 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes wildwin{0%{scale:1}50%{scale:1.15}100%{scale:1}}
 
 /* win walkthrough: one win at a time, its line and symbols lit, its math in a label at the end of the run */
-#lineov .wl{transition:opacity .25s}
-#lineov .wl.off{opacity:.1}
+/* no pay lines on screen (too busy): the winning symbols dance instead, one win at a time, biggest pay first */
+#lineov .wl{visibility:hidden}
 .grid.focusing .c.hit:not(.focus) .ms{opacity:.4;filter:saturate(.5) brightness(.85);animation:none}
 .grid.focusing .c.hit:not(.focus) .ms::after{animation:none;opacity:0}
-.grid.focusing .c.focus .ms{opacity:1;filter:none;animation:mpop .45s cubic-bezier(.2,1.7,.4,1) both,mjelly 1.3s .45s ease-in-out infinite}
+.grid.focusing .c.focus .ms{opacity:1;filter:none;animation:mdance .9s var(--d,0s) ease-in-out infinite both}
+/* a little surf dance: hop, lean one way, lean the other, settle; each reel starts a beat after the one before */
+@keyframes mdance{0%,100%{transform:translateY(0) rotate(0) scale(1)}18%{transform:translateY(-14%) rotate(-7deg) scale(1.1)}
+  40%{transform:translateY(0) rotate(0) scale(1.04,.94)}60%{transform:translateY(-9%) rotate(7deg) scale(1.08)}80%{transform:translateY(0) rotate(0) scale(.98,1.02)}}
 .winpill{position:absolute;z-index:9;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;white-space:nowrap;pointer-events:none;
   font:400 clamp(12px,1.9vw,18px)/1 "Lilita One",system-ui,sans-serif;color:var(--outline);background:linear-gradient(#fffaf0,#ffe8b0);
   border:3px solid var(--outline);box-shadow:0 0 0 3px var(--lc),0 4px 0 3px var(--outline);border-radius:999px;padding:5px 12px 5px 6px;animation:pillin .3s cubic-bezier(.2,1.6,.4,1) both}
@@ -2314,9 +2317,9 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   }
   // ---------- win lines ----------
   // The game draws every winning line at once (one shadow + one colour polyline per win, in win order) and up to 5
-  // amount labels stacked on the middle reel. Here: wavy lines, splashes, and then a walkthrough. All lines flash
-  // together, then each win gets its own turn: only its line and symbols lit, and a label at the end of its run with
-  // the exact math (count, symbol, base pay, multiplier, result). One win: its label just stays.
+  // amount labels stacked on the middle reel. Here the lines stay hidden (Oz: too busy). Every winning symbol pops once,
+  // then each win gets its own turn, biggest pay first: its symbols dance reel by reel, the rest dim, and a label at the
+  // end of its run shows the exact math (count, symbol, base pay, multiplier, result). One win: it just keeps dancing.
   // the game's own variables are private: it passes the bet and its money formatter in, and cells are found in the page
   let walkGen = 0, walkTimer = 0, BET = 1, FMT = null;
   const money = v => { try { if (FMT) return FMT(v); } catch(e){} return '$' + v.toFixed(2); };
@@ -2347,17 +2350,17 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     svg.querySelectorAll('.wl').forEach(p => p.classList.toggle('off', i >= 0 && +p.dataset.w !== i));
     grid.classList.toggle('focusing', i >= 0);
     if (i < 0) return;
-    const w = wins[i], ln = TT.LINES[w.li]; for (let r = 0; r < w.k; r++){ const c = cellAt(r, ln[r]); if (c) c.classList.add('focus'); }
+    const w = wins[i], ln = TT.LINES[w.li]; for (let r = 0; r < w.k; r++){ const c = cellAt(r, ln[r]); if (c){ c.style.setProperty('--d', (r*0.09) + 's'); c.classList.add('focus'); } }
     pill(w, colors[i]);
   }
   function walkWins(wins, colors){
     stopWalk(); if (!wins || !wins.length) return;
     const my = walkGen, alive = () => my === walkGen && document.querySelector('#lineov .wl');
-    if (wins.length === 1){ walkTimer = setTimeout(() => { if (alive()) pill(wins[0], colors[0]); }, 450); return; }
+    if (wins.length === 1){ walkTimer = setTimeout(() => { if (alive()) show(wins, 0, colors); }, 450); return; }
     const order = wins.map((w, i) => i).sort((a, b) => wins[b].win - wins[a].win);   // biggest first
-    const seq = order.concat([-1]); let n = 0;   // each win, biggest first, then all lines together, and round again
-    const step = () => { if (!alive()) return; const i = seq[n++ % seq.length]; show(wins, i, colors); walkTimer = setTimeout(step, i < 0 ? 900 : 1500); };
-    walkTimer = setTimeout(step, 1100);   // after every line has drawn together
+    let n = 0;   // each win dances in turn, biggest pay first, then round again
+    const step = () => { if (!alive()) return; const i = order[n++ % order.length]; show(wins, i, colors); walkTimer = setTimeout(step, 1600); };
+    walkTimer = setTimeout(step, 700);   // after the first pop of every winning symbol
   }
   function afterLines(wins, bet, fmt){
     if (bet) BET = bet; if (fmt) FMT = fmt;
