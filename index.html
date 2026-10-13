@@ -455,8 +455,8 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 :root{--f-d:"Lilita One",system-ui,sans-serif;--f-n:"Lilita One",system-ui,sans-serif;--accent:#ff4f8b;--lime:#7dffb0;--outline:#2a0e12}
 
 /* beach scene; sunset during bonuses */
-.slot .scene{background:#7fd6ff url("img/bg-day.webp?v=1ebec342") center bottom/cover no-repeat!important}
-.slot:has(.stage.bonus) .scene{background:#f58a5a url("img/bg-sunset.webp?v=b4d20a63") center bottom/cover no-repeat!important}
+.slot .scene{background:#7fd6ff url("img/bg-day.webp?v=d919a75b") center bottom/cover no-repeat!important}
+.slot:has(.stage.bonus) .scene{background:#f58a5a url("img/bg-sunset.webp?v=4de74376") center bottom/cover no-repeat!important}
 
 /* chrome in beach colours */
 .slotbar{background:linear-gradient(rgba(6,40,70,.55),rgba(6,40,70,0))}
@@ -664,7 +664,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .winarea .k{color:#e6f7ff}
 .winarea .v{color:#fff;text-shadow:0 2px 0 var(--cyd)}
 /* phones: two rows. Top: menu, balance, bet. Bottom: autoplay, turbo, the spin button centred, mode */
-@media (max-width:640px){
+@media (max-width:1000px){
   .ctrlbar.mhud{flex-wrap:wrap;gap:8px;padding:8px 10px;border-radius:16px}
   .ctrlbar.mhud::after{content:"";order:4;flex-basis:100%;height:0}
   .mhud .iconbtn{order:1;width:44px;height:44px;padding:0 9px;gap:5px}
@@ -682,14 +682,20 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 }
 @media (prefers-reduced-motion:reduce){.mhud #spinbtn::before{transition:none;animation:none!important}}
 
-/* ---------- bigger slot on desktop: the spin button now lives in the bar, so the reels get that height back ---------- */
-/* stage height is about 50px of banner + 0.8 x width of reels; the rest of the screen is top bar, win box and HUD */
-@media (min-width:900px){
-  .machine .stage{width:min(94vw,calc((100dvh - 280px)*1.25),1120px)}
-  .machine{padding-top:0}
-  .stagetop .banner{font-size:clamp(13px,1.3vw,18px)!important}
+/* ---------- big slot on desktop (like Sweet Bonanza: the reels fill ~70% of the width and nearly all the height) ----------
+   The stage takes the height between the top bar and the control bar, and up to 70% of the width; cells may be wider
+   than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
+@media (min-width:900px) and (min-aspect-ratio:4/3){
+  .machine{padding:0 10px}
+  .machine .stage{width:min(70vw,calc((100dvh - 196px)*1.62),1760px)!important;max-width:none!important;height:calc(100dvh - 196px);display:flex;flex-direction:column}
+  .machine .stage .gridbox{flex:1 1 0;min-height:0;height:auto!important;aspect-ratio:auto!important;width:100%}
+  .machine .stage .grid{height:100%}
+  .stagetop{margin-bottom:6px}
+  .stagetop .banner{font-size:clamp(14px,1.25vw,20px)!important}
+  .machine .stage > .winrow{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);z-index:45;flex-direction:row;width:auto;gap:10px}
+  .machine .stage > .winrow .winarea{padding:2px 26px}
+  #buybtn{transform:scale(1.25);transform-origin:right center}
 }
-
 /* ---------- bonus buy sheet: a centred cyan panel with mode tiles and bonus cards ---------- */
 .sheet.mbuy{top:50%;bottom:auto;transform:translate(-50%,-50%);width:min(940px,calc(100vw - 20px));max-height:92dvh}
 .sheet.mbuy > .win{background:linear-gradient(180deg,#0a4f86,#063a68);border:3px solid #fff!important;border-radius:22px;
@@ -808,7 +814,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .mhud .mset-btn::before{background-image:url("img/icon-cog.svg?v=3b8f5250");transition:transform .4s}
 .mhud .mset-btn:hover::before{transform:rotate(90deg)}
 .mhud .balctl{margin-left:6px}
-@media (max-width:640px){ .mhud .mhb{order:5;width:42px;height:42px} .mhud .mhb::before{inset:8px} .mhud .balctl{margin-left:0} }
+@media (max-width:1000px){ .mhud .mhb{order:5;width:42px;height:42px} .mhud .mhb::before{inset:8px} .mhud .balctl{margin-left:0} }
 
 /* ---------- panels: a box over the reels, slightly smaller than the slot screen ---------- */
 .mpanel{position:fixed;inset:0;z-index:75;background:rgba(0,20,45,.45);backdrop-filter:blur(2px)}
@@ -973,8 +979,51 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .mconfirm #cf-ok:disabled{background:#7c8a99!important;box-shadow:none!important}
 .mconfirm #cf-cancel{height:42px;border-radius:999px!important;background:transparent!important;border:2px solid rgba(255,255,255,.7)!important;color:#fff!important;font:400 15px/1 "Lilita One",system-ui,sans-serif!important}
 
+/* ---------- live beach (liveScene() in skin.js) ---------- */
+.slot .scene.live{background:#7fd6ff!important}
+.mscene{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.sc-world{position:absolute;left:0;top:0;width:2000px;height:1125px;transform-origin:0 0}
+.sc-plate{position:absolute;inset:0;width:2000px;height:1125px;display:block;transition:opacity 1.2s}
+.sc-plate.sunset{opacity:0}
+.slot:has(.stage.bonus) .sc-plate.sunset{opacity:1}
+/* at sunset the moving pieces take the warm light too */
+.slot:has(.stage.bonus) .sc-palm,.slot:has(.stage.bonus) .sc-crab img,.slot:has(.stage.bonus) .sc-sea img{filter:sepia(.35) saturate(1.25) hue-rotate(-12deg) brightness(.92)}
+
+/* palms bend in the wind from the trunk base, each at its own pace */
+.sc-palm{position:absolute;display:block;animation:sway 5.5s ease-in-out infinite;will-change:transform}
+.sc-palm.palmR{animation-duration:6.7s;animation-delay:-2s}
+@keyframes sway{0%,100%{transform:rotate(-1.4deg)}35%{transform:rotate(1.6deg)}60%{transform:rotate(.4deg)}80%{transform:rotate(1.2deg)}}
+
+/* crabs scuttle sideways along the sand, stop, then come back */
+.sc-crab{position:absolute;animation:scuttle var(--t) ease-in-out infinite;will-change:transform}
+.sc-crab img{width:100%;display:block;animation:legs .22s steps(2) infinite;transform-origin:50% 100%}
+.sc-crab.c1{animation-delay:-3s}
+@keyframes scuttle{0%,12%{transform:translateX(0)}45%,62%{transform:translateX(var(--dx))}95%,100%{transform:translateX(0)}}
+@keyframes legs{0%{transform:rotate(-3deg) translateY(0)}100%{transform:rotate(3deg) translateY(-3px)}}
+
+/* foam washes up the sand and drains back */
+.sc-wash{position:absolute;inset:0;width:2000px;height:1125px}
+.sc-wash path{fill:rgba(255,255,255,.75);transform-box:fill-box;transform-origin:50% 0}
+.sc-wash .w1{animation:wash 6s ease-in-out infinite}
+.sc-wash .w2{fill:rgba(220,248,255,.55);animation:wash 6s ease-in-out infinite;animation-delay:-3s}
+@keyframes wash{0%{transform:translateY(-34px) scaleY(.6);opacity:0}25%{opacity:1}55%{transform:translateY(18px) scaleY(1.05);opacity:.9}100%{transform:translateY(-34px) scaleY(.6);opacity:0}}
+
+/* the sea band: anything below the surface line is hidden, so creatures rise out of and dive back into the water */
+.sc-sea{position:absolute;overflow:hidden}
+.sc-dolphin,.sc-whale{position:absolute;bottom:0}
+.sc-dolphin img{width:190px;display:block}
+.sc-whale img{width:240px;display:block}
+.sc-dolphin{animation:jump 2.1s cubic-bezier(.3,0,.7,1) forwards}
+@keyframes jump{0%{transform:translate(0,190px) rotate(-35deg)}50%{transform:translate(110px,-70px) rotate(5deg)}100%{transform:translate(230px,200px) rotate(55deg)}}
+.sc-whale{animation:breach 4.1s ease-in-out forwards}
+@keyframes breach{0%{transform:translateY(250px) rotate(-8deg)}35%{transform:translateY(-40px) rotate(4deg)}55%{transform:translateY(-30px) rotate(10deg)}100%{transform:translateY(260px) rotate(30deg)}}
+.sc-splash{position:absolute;bottom:-20px;width:150px;animation:splash 1.1s ease-out forwards;transform-origin:50% 100%}
+@keyframes splash{0%{transform:scale(.2);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(1.15) translateY(10px);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){.sc-palm,.sc-crab,.sc-crab img,.sc-wash path{animation:none}}
+
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"1ebec342","bg-sunset":"b4d20a63","H1":"58b46fa8","H2":"a73fd484","H3":"a60279fa","H4":"c25d1d0e","L1":"33d05fb6","L2":"adf7375e","L3":"f895e1f1","L4":"576621a3","L5":"f5dfe0e3","S1":"5e91022a","W":"9fc226a9"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","H1":"02610a3c","H2":"9986ec72","H3":"dd03fec8","H4":"16055f06","L1":"79847f20","L2":"deade74a","L3":"dabb402b","L4":"ec24535d","L5":"ad8186b4","S1":"f0935078","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL":"dcb46604","sc-palmR":"037041cd","sc-plate-day":"fef75a40","sc-plate-sunset":"03561971","sc-splash":"fd32b9b1","sc-whale":"6d2091dd","W":"d1ec9fa7"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2373,7 +2422,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   // The palms are drawn in img/bg-day.webp (2000x1125, background-size cover, anchored centre bottom). These are its
   // coconut centres and radii in that box; invisible buttons sit exactly on top (a little larger, easier to hit).
   // Coconuts that are off screen or under the machine get no button.
-  const BG_W = 2000, BG_H = 1125, NUTS = [[120, 535, 58], [35, 531, 52], [92, 478, 40], [1680, 344, 55], [1750, 342, 45], [1710, 295, 40]];
+  const BG_W = 2000, BG_H = 1125, NUTS = [[62, 490, 45], [146, 497, 52], [114, 434, 34], [1700, 330, 36], [1757, 337, 40], [1735, 298, 28]];   // on the live palms (sc-palmL / sc-palmR)
   function coconuts(){
     const box = document.createElement('div'); box.className = 'nuts'; document.body.appendChild(box);
     const els = NUTS.map(() => { const b = document.createElement('button'); b.type = 'button'; b.className = 'nut'; b.setAttribute('aria-label', 'Coconut'); box.appendChild(b); return b; });
@@ -2404,6 +2453,9 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     box.className = 'mbetbox'; stack.className = 'mbetstack'; wrap.className = 'mspinwrap';
     box.append(bet.querySelector('.k'), $i('cost')); stack.append($i('betplus'), $i('betminus'));
     bet.textContent = ''; bet.append(box, stack); wrap.append(spin); bet.after(wrap);
+    // desktop: the win boxes become a tab on the stage's bottom edge (buy.css places it; phones keep the row)
+    const wr = document.querySelector('.winrow'), stg = document.querySelector('.machine .stage');
+    if (wr && stg && matchMedia('(min-width:900px) and (min-aspect-ratio:4/3)').matches) stg.appendChild(wr);
     const sync = () => { const t = spin.textContent.trim(); spin.dataset.label = t === 'SPIN' ? '' : t; spin.setAttribute('aria-label', t || 'Spin'); };
     new MutationObserver(sync).observe(spin, {childList: true, characterData: true, subtree: true}); sync();
     const sp = $i('speedbtn'), ap = $i('autobtn');
@@ -2587,11 +2639,54 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
     new MutationObserver(sync).observe(title, {childList: true, characterData: true, subtree: true}); sync();
   }
 
+  // ---------- live beach: palms sway, crabs scuttle, waves wash in, now and then a dolphin jumps or a whale breaches ----------
+  // Everything sits in the background's own 2000x1125 box (the art), scaled with background-size:cover anchored centre
+  // bottom like the old still image, so the pieces line up with the painted beach at every screen size. Day and sunset
+  // plates (the beach with the crabs and palms painted out) swap with the bonus; the moving pieces are separate images.
+  const SC = {
+    palmL: {x: -200, y: 280, w: 654, h: 700, ox: 346, oy: 686},   // ox/oy: the trunk base inside the image (pivot)
+    palmR: {x: 1511, y: 188, w: 449, h: 646, ox: 215, oy: 633},
+    crabs: [{x: 600, x2: 900, y: 560, w: 224, t: 9}, {x: 1060, x2: 760, y: 610, w: 144, t: 7}],
+    sea: {x0: 420, x1: 1380, y: 470}                              // where dolphins and whales show: the open water, its surface line
+  };
+  function liveScene(){
+    const host = document.querySelector('.scene'); if (!host || host.querySelector('.mscene')) return;
+    const box = document.createElement('div'); box.className = 'mscene'; box.setAttribute('aria-hidden', 'true');
+    const crabs = SC.crabs.map((c, i) => `<div class="sc-crab c${i}" style="left:${c.x}px;top:${c.y}px;width:${c.w}px;--dx:${c.x2 - c.x}px;--t:${c.t}s"><img src="img/sc-crab.webp" alt=""></div>`).join('');
+    const palm = (k, p) => `<img class="sc-palm ${k}" src="img/sc-${k}.webp" alt="" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px;transform-origin:${p.ox / p.w * 100}% ${p.oy / p.h * 100}%">`;
+    box.innerHTML = `<div class="sc-world">
+        <img class="sc-plate day" src="img/sc-plate-day.webp" alt=""><img class="sc-plate sunset" src="img/sc-plate-sunset.webp" alt="">
+        <div class="sc-sea" style="left:0;top:0;width:2000px;height:${SC.sea.y}px"></div>
+        <svg class="sc-wash" viewBox="0 0 2000 1125" preserveAspectRatio="none"><path class="w1" d="M0 642 C 220 610 420 668 640 630 S 1060 598 1280 590 S 1700 560 2000 552 L 2000 600 C 1700 612 1460 640 1280 642 S 860 682 640 690 S 220 666 0 700 Z"/><path class="w2" d="M0 652 C 260 628 460 676 700 640 S 1100 610 1320 600 S 1720 572 2000 566 L 2000 590 C 1740 600 1500 626 1320 630 S 900 668 700 676 S 260 664 0 690 Z"/></svg>
+        ${crabs}${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
+      </div>`;
+    host.appendChild(box); host.classList.add('live');
+    const world = box.firstElementChild, sea = box.querySelector('.sc-sea');
+    const fit = () => { const R = host.getBoundingClientRect(), k = Math.max(R.width / 2000, R.height / 1125);
+      world.style.transform = `translate(${(R.width - 2000*k)/2}px, ${R.height - 1125*k}px) scale(${k})`; };
+    fit(); addEventListener('resize', fit);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // a sea creature every 20-60 s: two dolphin jumps for every whale
+    let n = 0;
+    const creature = () => {
+      const whale = ++n % 3 === 0, x = SC.sea.x0 + Math.random()*(SC.sea.x1 - SC.sea.x0 - 260), el = document.createElement('div');
+      el.className = whale ? 'sc-whale' : 'sc-dolphin'; el.style.left = x + 'px';
+      el.innerHTML = whale ? `<img src="img/sc-whale.webp" alt="">` : `<img src="img/sc-dolphin.webp" alt="">`;
+      sea.appendChild(el);
+      const sp = (dx, delay) => setTimeout(() => { const s = document.createElement('img'); s.className = 'sc-splash'; s.src = 'img/sc-splash.webp'; s.alt = '';
+        s.style.left = (x + dx) + 'px'; sea.appendChild(s); setTimeout(() => s.remove(), 1200); }, delay);
+      if (whale){ sp(30, 300); sp(40, 2600); } else { sp(-10, 150); sp(190, 1500); }
+      setTimeout(() => el.remove(), whale ? 4200 : 2200);
+      setTimeout(creature, 20000 + Math.random()*40000);
+    };
+    setTimeout(creature, 6000 + Math.random()*8000);
+  }
+
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
