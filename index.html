@@ -621,49 +621,14 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 #buybtn{z-index:46}
 .machine .stagewrap{--fw:clamp(72px,9vw,136px)}
 .machine .stagewrap > .sidebuy{right:calc(100% + var(--fw) * .56 + 6px)}
-/* desktop: it sits at the bottom of the left column, under the win box */
-@media (min-width:900px) and (min-aspect-ratio:4/3){
-  .machine .stagewrap > #buybtn{position:absolute;top:auto;bottom:0;transform:none!important;width:var(--wl-w,150px);padding:14px 8px;font-size:12px}
-}
+
 
 /* ---------- crabs on the driftwood: they stand on the top plank (its top edge is about .3 of the frame width above the
    board) and walk back and forth on it, over the frame ---------- */
 .fcrabs{position:absolute;left:0;right:0;top:calc(var(--fw) * -.3 + 10px);height:0;z-index:41;pointer-events:none}
 .fcrabs .sc-crab{position:absolute;bottom:0;width:calc(var(--fw) * .62);margin-left:calc(var(--fw) * -.31)}
 
-/* ---------- win log (log in skin.js): what hit this spin, or the whole bonus ---------- */
-.mwins{position:fixed;z-index:30;width:260px;display:flex;flex-direction:column;font-family:var(--f-d);color:var(--outline);
-  background:linear-gradient(#fffaf0,#ffefc9);border:3px solid var(--outline);border-radius:16px;box-shadow:0 6px 0 rgba(42,14,18,.35);overflow:hidden}
-.mwl-head{padding:7px 12px 6px;background:var(--cy3);color:#fff;font-size:15px;letter-spacing:.05em;border-bottom:3px solid var(--outline);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mwl-list{flex:1 1 auto;min-height:60px;overflow-y:auto;padding:6px 8px;display:flex;flex-direction:column;gap:4px;scrollbar-width:thin}
-.mwl-empty{margin:8px 4px;font:600 13px/1.3 system-ui,sans-serif;opacity:.7}
-.mwl-sep{margin:4px 0 0;padding:4px 8px;border-radius:8px;background:#ff4f8b;color:#fff;font-size:12px;text-align:center}
-.mwl-spin{display:flex;flex-direction:column;gap:3px}
-.mwl-spin:empty{display:none}
-.mwl-sub{font-size:12px;opacity:.65;margin-top:3px}
-.mwl-spin.none .mwl-sub::after{content:" · no win"}
-.mwl-row{display:flex;align-items:center;gap:6px;padding:3px 8px 3px 4px;border-radius:10px;background:#fff;border:2px solid rgba(42,14,18,.18);font-size:14px;animation:mwlin .3s cubic-bezier(.2,1.5,.4,1)}
-.mwl-row img{width:28px;height:28px;object-fit:contain;flex:none}
-.mwl-k{min-width:24px}
-.mwl-n{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
-.mwl-x{font-style:normal;padding:1px 5px;border-radius:6px;background:#ffd23f;border:2px solid var(--outline);font-size:12px}
-.mwl-row b{font-weight:400;color:#0a7a3e}
-.mwl-l{font-size:11px;opacity:.65;white-space:nowrap}
-.mwl-row.top{background:#e9fbff}
-@keyframes mwlin{0%{transform:translateX(-12px);opacity:0}100%{transform:none;opacity:1}}
-.mwl-foot{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:7px 12px;border-top:3px solid var(--outline);background:#fff3d1;font-size:14px}
-.mwl-foot:empty{display:none}
-.mwl-foot b{margin-left:auto;font-weight:400;font-size:18px;color:#0a7a3e}
-.mwl-foot small{width:100%;text-align:right;font-size:11px;opacity:.7}
-/* phones: a WINS button (shows the total) opens the box over the reels */
-.mwl-btn{position:fixed;z-index:31;left:10px;top:64px;min-width:52px;padding:6px 10px;border-radius:12px;cursor:pointer;border:3px solid var(--outline);
-  background:#fffaf0;color:var(--outline);font:400 13px/1 var(--f-d);box-shadow:0 3px 0 rgba(42,14,18,.4);display:flex;flex-direction:column;align-items:center;gap:2px}
-.mwl-btn b{font-weight:400;font-size:11px;color:#0a7a3e}
-.mwl-btn b:empty{display:none}
-body:not(.mwl-side) .mwins{opacity:0;pointer-events:none;transform:scale(.92);transition:opacity .2s,transform .2s}
-body:not(.mwl-side) .mwins.open{opacity:1;pointer-events:auto;transform:none;z-index:60}
-body.mwl-side .mwl-btn{display:none}
-/* LAST WIN / TOTAL WIN: small tabs sitting on the frame's bottom plank (its middle is about .15 of the frame width
+/* TOTAL WIN only (Oz): a small tab sitting on the frame's bottom plank (its middle is about .15 of the frame width
    below the board's bottom edge), side by side, at every screen size */
 .machine .stage > .winrow{position:absolute!important;left:50%!important;top:auto!important;bottom:calc(var(--fw) * -.15 + 8px)!important;
   transform:translate(-50%,50%)!important;z-index:45!important;display:flex!important;flex-wrap:nowrap!important;white-space:nowrap;flex-direction:row!important;align-items:center!important;gap:8px!important;width:auto!important;margin:0!important}
@@ -671,6 +636,9 @@ body.mwl-side .mwl-btn{display:none}
 .machine .stage > .winrow .winarea .k{font-size:10px!important;line-height:1!important}
 .machine .stage > .winrow .winarea .v{min-width:0!important}
 .machine .stage > .winrow .winarea .v{font-size:16px!important;line-height:1!important}
+/* no LAST WIN: TOTAL WIN is always there and shows the round's win (skin.js mirrors it outside bonuses) */
+.machine .stage > .winrow > .winarea:not(#totalbox){display:none!important}
+.machine .stage > .winrow > #totalbox[hidden]{display:flex!important}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -1071,6 +1039,17 @@ body.mwl-side .mwl-btn{display:none}
 .mconfirm #cf-ok:not(:disabled):hover{transform:translateY(-2px) scale(1.02)}
 .mconfirm #cf-ok:disabled{background:#7c8a99!important;box-shadow:none!important}
 .mconfirm #cf-cancel{height:42px;border-radius:999px!important;background:transparent!important;border:2px solid rgba(255,255,255,.7)!important;color:#fff!important;font:400 15px/1 "Lilita One",system-ui,sans-serif!important}
+
+/* ---------- bet picker ---------- */
+.mhud .mbetbox.pickable{cursor:pointer}
+.mhud .mbetbox.pickable:hover{filter:brightness(1.1)}
+#mbetpick .mp-body{overflow-y:auto}
+#mbetpick .bp-sub{margin:0 0 10px;font:600 13px/1 system-ui,sans-serif;letter-spacing:.06em;opacity:.7}
+#mbetpick .bp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#mbetpick .bp-b{padding:12px 4px;border-radius:12px;border:2px solid rgba(42,14,18,.25);background:#fff;color:var(--outline);font:400 17px/1 "Lilita One",system-ui,sans-serif;cursor:pointer}
+#mbetpick .bp-b:hover:not(:disabled){border-color:var(--cy2)}
+#mbetpick .bp-b.on{background:linear-gradient(#fff07a,#ffd21f);border-color:var(--outline);box-shadow:0 3px 0 #b8860b}
+#mbetpick .bp-b:disabled{opacity:.35;cursor:not-allowed}
 
 /* ---------- live beach (liveScene() in skin.js) ---------- */
 .slot .scene.live{background:#7fd6ff!important}
@@ -2464,7 +2443,6 @@ body.mwl-side .mwl-btn{display:none}
     }
     svg.querySelectorAll('text').forEach(t => t.remove());   // the stacked middle-reel labels; the walkthrough labels every win instead
     try { walkWins(wins, colors); } catch(e){}
-    try { log.wins(wins); } catch(e){}
     const hits = document.querySelectorAll('.grid .c.hit'); if (!hits.length) return;
     const stage = document.querySelector('.grid').parentElement, sb = stage.getBoundingClientRect();
     const nd = hits.length > 8 ? 4 : 7;
@@ -2724,61 +2702,6 @@ body.mwl-side .mwl-btn{display:none}
 
   // ---------- the confirmation after picking a buy or a mode: bonus art on top, tinted per bonus ----------
   // The game fills #cf-t / #cf-desc / #cf-price itself; this adds the art and the colour from the title it wrote.
-  // ---------- win log: a little box that lists what hit in this spin (in a bonus: the free spin on screen) ----------
-  // The game tells the skin when a round starts (log.start), when each free spin lands (log.spin), every set of line
-  // wins (afterLines -> log.wins), a minimum-win top-up and the round total (log.end). Biggest hit first in each spin.
-  // Desktop: the box stands left of the reels. Phones: a WINS button opens it. LAST WIN / TOTAL WIN sit on the frame.
-  // The bonus total lives in TOTAL WIN; the box only ever shows the spin on screen.
-  const log = (() => {
-    let box, list, head, foot, btn, total = 0, cost = 0, bonusName = '', isBuy = false, cur = null;
-    const NAMES_ON = ['10','J','Q','K','A','Coconut','Beach ball','Mango','Surfboard','Wild','SURF badge','KAHUNA badge'];
-    const build = () => {
-      if (box) return;
-      box = document.createElement('div'); box.id = 'mwins'; box.className = 'mwins'; box.setAttribute('aria-live', 'polite');
-      box.innerHTML = `<div class="mwl-head"></div><div class="mwl-list"></div><div class="mwl-foot"></div>`;
-      btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mwl-btn'; btn.innerHTML = 'WINS<b></b>'; btn.setAttribute('aria-label', 'What hit this spin');
-      document.body.append(box, btn);
-      head = box.querySelector('.mwl-head'); list = box.querySelector('.mwl-list'); foot = box.querySelector('.mwl-foot');
-      btn.onclick = e => { e.stopPropagation(); box.classList.toggle('open'); place(); };
-      document.addEventListener('pointerdown', e => { if (box.classList.contains('open') && !box.contains(e.target) && e.target !== btn) box.classList.remove('open'); });
-      addEventListener('resize', place); setInterval(place, 1500);
-      head.textContent = 'WHAT HIT'; list.innerHTML = `<p class="mwl-empty">Spin, and every hit shows up here.</p>`; foot.innerHTML = ''; place();
-    };
-    function place(){
-      if (!box) return; const st = document.querySelector('.machine .stage'); if (!st) return;
-      const r = st.getBoundingClientRect(), out = Math.max(0, -parseFloat(getComputedStyle(st, '::after').left) || 0) + 14;
-      const room = r.left - out - 16, w = Math.min(300, room), side = w >= 170 && innerWidth >= 900;
-      document.body.classList.toggle('mwl-side', side);
-      // the bonus buy button shares the column: it sits at the bottom, the box above it, both the same width
-      const bb = document.getElementById('buybtn'), bh = side && bb && !bb.hidden ? bb.getBoundingClientRect().height + 14 : 0, wrapEl = st.parentElement;
-      if (wrapEl){ wrapEl.style.setProperty('--wl-w', w + 'px'); }
-      if (side){ box.style.width = w + 'px'; box.style.left = Math.max(8, r.left - out - w) + 'px'; box.style.top = r.top + 'px'; box.style.maxHeight = (r.height - bh) + 'px'; box.classList.remove('open'); }
-      else { const bw = Math.min(innerWidth - 24, 360); box.style.width = bw + 'px'; box.style.left = (innerWidth - bw) / 2 + 'px'; box.style.top = Math.max(8, r.top) + 'px'; box.style.maxHeight = Math.max(220, r.height) + 'px'; }
-    }
-    const fmtM = v => money(v * BET);
-    const setFoot = () => { foot.innerHTML = `<span>SPIN WIN</span><b>${fmtM(total)}</b>`;
-      if (btn) btn.querySelector('b').textContent = total > 0 ? fmtM(total) : ''; };
-    const add = html => { const d = document.createElement('div'); d.innerHTML = html; const el = d.firstElementChild; list.appendChild(el); list.scrollTop = list.scrollHeight; return el; };
-    return {
-      init(){ build(); },
-      start(res, c){ build(); total = 0; cost = c || 0; isBuy = res && res.kind === 'buy'; cur = null; bonusName = '';
-        head.textContent = 'THIS SPIN'; list.innerHTML = isBuy ? `<p class="mwl-empty">Free spins coming up...</p>` : ''; setFoot(); if (!isBuy) cur = add(`<div class="mwl-spin"></div>`); place(); },
-      spin(i, n, name){ build(); bonusName = name; total = 0; head.textContent = `SPIN ${i} OF ${n} · ${name}`; list.innerHTML = ''; setFoot();
-        cur = add(`<div class="mwl-spin"></div>`); place(); },
-      wins(wins){ if (!box || !cur) return;
-        // the same symbol, count and multiplier on several lines shows once, with how many lines
-        const grp = new Map(); (wins || []).forEach(w => { const key = w.s + '|' + w.k + '|' + w.mult, g = grp.get(key);
-          if (g){ g.win += w.win; g.n++; } else grp.set(key, {s: w.s, k: w.k, mult: w.mult, win: w.win, n: 1}); });
-        const ws = Array.from(grp.values()).sort((a, b) => b.win - a.win);
-        if (!ws.length){ cur.innerHTML = `<p class="mwl-empty">No win this spin.</p>`; return; }
-        cur.insertAdjacentHTML('beforeend', ws.map(w => { const k = SYM[w.s] || 'W';
-          return `<div class="mwl-row"><img src="${src(k)}" alt=""><span class="mwl-k">${w.k}×</span><span class="mwl-n">${NAMES_ON[w.s] || 'Wild'}</span>` +
-            (w.mult > 1 ? `<i class="mwl-x">x${num(w.mult)}</i>` : '') + (w.n > 1 ? `<small class="mwl-l">${w.n} lines</small>` : '') + `<b>${fmtM(w.win)}</b></div>`; }).join(''));
-        total += ws.reduce((t, w) => t + w.win, 0); setFoot(); list.scrollTop = list.scrollHeight; },
-      topUp(v){ if (!box) return; add(`<div class="mwl-row top"><span class="mwl-n">Minimum win top-up</span><b>+${fmtM(v)}</b></div>`); total += v; setFoot(); },
-      end(t){ if (!box) return; if (!bonusName && Math.abs(t - total) > 1e-9){ total = t; setFoot(); } }
-    };
-  })();
 
   // ---------- crabs on the frame: two small crabs walk back and forth along the top plank of the driftwood ----------
   // x/x2: where each walk starts and turns, as a share of the board width; t: seconds for a full there-and-back
@@ -2791,6 +2714,31 @@ body.mwl-side .mwl-btn{display:none}
     // the walk is a sideways slide in pixels: set it from the board width, and again when the board resizes
     const fit = () => { const w = st.getBoundingClientRect().width; box.querySelectorAll('.sc-crab').forEach((el, i) => el.style.setProperty('--dx', ((FRAME_CRABS[i].x2 - FRAME_CRABS[i].x) * w) + 'px')); };
     fit(); new ResizeObserver(fit).observe(st);
+  }
+
+  // ---------- TOTAL WIN only: outside a bonus it shows the round's win (the game only fills it during bonuses) ----------
+  function totalOnly(){
+    const last = document.getElementById('lastwin'), tot = document.getElementById('totalwin'); if (!last || !tot) return;
+    const sync = () => { if (!document.querySelector('.machine .stage.bonus')) tot.textContent = last.textContent; };
+    new MutationObserver(sync).observe(last, {childList: true, characterData: true, subtree: true}); sync();
+  }
+
+  // ---------- bet picker: tap the bet box for every bet size in a grid; bets the balance can't cover are greyed ----------
+  // MangoBet (put in the game's scope by build.js) gives the ladder, the chosen bet, the balance and the current mode's cost.
+  function betPicker(){
+    const boxEl = document.querySelector('.mhud .mbetbox'), sel = document.getElementById('bet'); if (!boxEl || !sel || !window.MangoBet) return;
+    boxEl.setAttribute('role', 'button'); boxEl.tabIndex = 0; boxEl.setAttribute('aria-label', 'Choose your bet'); boxEl.classList.add('pickable');
+    const p = panel('mbetpick', 'Bet'); p.classList.add('betpick');
+    const draw = () => { const g = MangoBet.get(), body = p.querySelector('.mp-body');
+      body.innerHTML = `<p class="bp-sub">SELECT YOUR BET</p><div class="bp-grid">${g.levels.map((l, i) => { const v = l / g.API, can = l * g.cost <= g.balance;
+        return `<button type="button" class="bp-b${i === g.betIdx ? ' on' : ''}" data-i="${i}" ${can && !g.busy ? '' : 'disabled'}>$${v.toFixed(2)}</button>`; }).join('')}</div>`;
+      body.querySelectorAll('.bp-b').forEach(b => b.onclick = () => { sel.selectedIndex = +b.dataset.i; sel.dispatchEvent(new Event('change')); closePanel(p); });
+      const on = body.querySelector('.bp-b.on'); if (on) on.scrollIntoView({block: 'center'}); };
+    const open = () => { if (MangoBet.get().busy) return; openPanel(p); draw();
+      // a narrower box than the rules panel, centred on the reels
+      const st = document.querySelector('.machine .stage').getBoundingClientRect(), bx = p.querySelector('.mp-box'), w = Math.min(420, innerWidth - 16), h = Math.min(Math.max(st.height, 420), innerHeight - 16);
+      bx.style.width = w + 'px'; bx.style.height = h + 'px'; bx.style.left = Math.max(8, st.left + (st.width - w) / 2) + 'px'; bx.style.top = Math.max(8, Math.min(innerHeight - h - 8, st.top + (st.height - h) / 2)) + 'px'; };
+    boxEl.onclick = open; boxEl.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } };
   }
 
   function confirmSkin(){
@@ -2859,8 +2807,8 @@ body.mwl-side .mwl-btn{display:none}
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
-  window.MangoSkin = {stack, afterLines, game, log, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} try { log.init(); } catch(e){} }};
+  window.MangoSkin = {stack, afterLines, game, scene(){},
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} try { totalOnly(); } catch(e){} try { betPicker(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
@@ -5016,6 +4964,7 @@ const fmtBal = units => money(units/API, false);
 
 /* ---------- state ---------- */
 let balance = 0, levels = [], betIdx = 0, bet = 1, roundBet = 1, mode = 'BASE', busy = false, autoLeft = 0;
+window.MangoBet = {get: () => ({levels, betIdx, balance, API, cost: (() => { try { return costOf(mode); } catch(e){ return 1; } })(), busy: busy || autoLeft > 0})};
 let flags = {}, social = q.get('social') === 'true', replay = q.get('replay') === 'true';
 const sess = {spins: 0, wag: 0, won: 0, t0: Date.now()};
 let speed = 0; try { speed = Math.min(2, Math.max(0, +localStorage.getItem('mango.speed2') || 0)); } catch(e) {}
@@ -5306,7 +5255,6 @@ async function playBonus(B, cost, startWin){
     const pins = sp.merged.filter(mg=>mg.anchor).map(mg=>mg.anchor);
     if (pins.length){ pins.forEach(a=>{ st[a.c] = 1; hold[Math.floor(a.c/ROWS)] = false; }); await shrinkStacks(pins, speed === 2); }
     await spinAnim(sp.g, sp.mults, st, false, true, {merged: sp.merged, hold, lock: B.tier === 2});
-    try { MangoSkin.log.spin(i+1, N, name); } catch(e){}
     drawLines(sp.wins, sp.ramps); run += sp.win; if (sp.win > 0) sfx('bonusSpinWin', sp.win*roundBet/Math.max(cost,1e-9));
     $('lastwin').textContent = fmt$(sp.win*roundBet); $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     const steps = comboSteps(sp.wins);
@@ -5314,7 +5262,7 @@ async function playBonus(B, cost, startWin){
     if (sp.win >= 5) await plainCount(sp.win*roundBet, bigHitTitle(sp.win), T(1300));   // 5x the bet or more
     await wait(T(sp.win > 0 ? 1200 : 750));
   }
-  if (B.topUp > 0){ try { MangoSkin.log.topUp(B.topUp); } catch(e){} run += B.topUp; $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
+  if (B.topUp > 0){ run += B.topUp; $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     banner(`MIN WIN · TOPPED UP TO ${fmt$(B.total*roundBet)} (10% OF THE BONUS PRICE)`); await wait(T(1400)); }
   sfx('bonusEnd', B.total*roundBet/cost); $('stage').classList.remove('bonus'); if (B.total*roundBet < cost){ mascot('bail'); sfx('bail'); }
 }
@@ -5397,14 +5345,14 @@ function modal(title, html, actions){
 const costOf = name => MODE(name).cost;
 const bookEvents = round => Array.isArray(round.state) ? round.state : (round.state && round.state.events) || [];
 async function animateRound(res, cost){
-  let antOn = false; try { MangoSkin.log.start(res, cost); } catch(e){}
+  let antOn = false;
   if (res.kind === 'buy'){ if (res.g){ await spinAnim(res.g, res.mults, null, false, false, {}); await wait(T(500)); } await playBonus(res.bonus, cost, 0); }
   else {
     antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged});
     drawLines(res.wins, res.ramps); $('lastwin').textContent = fmt$(res.lineWin*roundBet); await showTopUp(res);
     if (res.bonus){ autoLeft = 0; await wait(T(700)); await playBonus(res.bonus, cost, res.lineWin); }
   }
-  const win = res.total*roundBet; $('lastwin').textContent = fmt$(win); try { MangoSkin.log.end(res.total); } catch(e){}
+  const win = res.total*roundBet; $('lastwin').textContent = fmt$(win);
   if (win <= 0){ $('msg').textContent = 'No win.'; mascot(antOn ? 'bail' : 'idle'); if (antOn) sfx('bail'); }
   await finishRound(res, win, cost);
   renderSpinCard(res);
