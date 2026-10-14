@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="reels-sand">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -448,7 +448,7 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 })();
 
 </script>
-<link rel="preload" as="image" href="img/sc-plate-day.webp?v=6a3c3539" fetchpriority="high"><link rel="preload" as="image" href="img/frame-driftwood.webp?v=76ee142b" fetchpriority="high"><link rel="preload" as="font" type="font/woff2" href="fonts/LilitaOne-latin.woff2" crossorigin><link rel="preload" as="font" type="font/woff2" href="fonts/Montserrat-latin.woff2" crossorigin>
+<link rel="preload" as="image" href="img/sc-plate-day.webp?v=6a3c3539" fetchpriority="high"><link rel="preload" as="image" href="img/frame-beams.svg?v=3e14f13e" fetchpriority="high"><link rel="preload" as="font" type="font/woff2" href="fonts/LilitaOne-latin.woff2" crossorigin><link rel="preload" as="font" type="font/woff2" href="fonts/Montserrat-latin.woff2" crossorigin>
 <style>
 @font-face{font-family:"Lilita One";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/LilitaOne-latin.woff2") format("woff2");
   unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
@@ -476,14 +476,10 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 .pill.hot{background:linear-gradient(#ffe066,#ffae1f);color:var(--outline)}
 .pill.on{background:#7dffb0;color:var(--outline)}
 .iconbtn{background:#0f5d82;border-color:var(--outline);box-shadow:0 4px 0 var(--outline)}
-/* the board: a thick washed-up driftwood frame (seaweed, barnacles, a starfish, wet sand) around a see-through glass pane
-   that blurs the beach behind it. 9-slice at 41% keeps the seaweed and rope corners unstretched; the frame image's inner
-   plank edge is 56% into that slice, and it laps 8px over the board's padding. ::before is the game's chase dim. */
-.machine .stage{--fw:clamp(72px,9vw,136px);background:rgba(8,60,100,.16);border:0!important;border-radius:6px;box-shadow:none;
-  -webkit-backdrop-filter:blur(7px) saturate(1.1);backdrop-filter:blur(7px) saturate(1.1);overflow:visible}
-.machine .stage.bonus{background:rgba(110,35,70,.18)}
-.machine .stage::after{content:"";position:absolute;inset:calc(var(--fw) * -.56 + 8px);pointer-events:none;z-index:40;
-  border:var(--fw) solid transparent;border-image:url("img/frame-driftwood.webp?v=76ee142b") 41% stretch;filter:drop-shadow(0 12px 10px rgba(40,20,5,.5))}
+/* the board: its frame (driftwood beams, posts, the title sign) and the reels' background live in frame.css (frame v2).
+   --fw is the old frame's width, still the unit some older layout rules start from. ::before is the game's chase dim. */
+.machine .stage{--fw:clamp(72px,9vw,136px);border:0!important;overflow:visible}
+.machine .stage::after{content:"";position:absolute;pointer-events:none}
 /* the slot sits a little higher */
 .machine .stagewrap{position:relative;top:-10px}
 @media (min-width:900px) and (min-aspect-ratio:4/3){ .machine .stagewrap{top:-26px} }
@@ -1764,6 +1760,106 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 /* phones: "MODE: NORMAL" spilled out of its square button (text 53px in a 45px box) — tighter padding and size so every mode name fits */
 @media (max-width:640px) and (orientation:portrait){ html body .mhud #modebtn.pill{padding:0 2px!important;font-size:8.5px!important;letter-spacing:-.01em!important;overflow:hidden} }
 @media (max-width:380px) and (orientation:portrait){ html body .mhud #modebtn.pill{font-size:calc((10vw - 4px) / 4.9)!important} }
+
+/* ---------- frame v2 (loaded after layout.css): chunky driftwood beams and posts, the MANGO SURF sign on the top beam,
+   rope dividers between the reels, and the reel background (option B sand panel by default, A frosted glass).
+   Art: img/frame-beams.svg, title-sign.svg, post-lash.svg, divider-rope.svg, wood-knot.svg, wood-crack.svg, drawn by
+   anim-v2/frame/tools/gen-frame.py (prototype + checks in anim-v2/frame/). The sign, coils, knots and cracks are added by
+   skin.js frameCrabs().
+   --fu is one pixel of the frame art on screen; every frame size is a multiple of it, so beams, posts and sign grow together.
+   frame-beams.svg is a 9-slice of a 1000x800 canvas: top 210 (posts rise 60 above a 150 beam), sides 200 (150 post + 50
+   beam end), bottom 190 (150 beam + 40 post below). --lap: how far the wood laps over the board's 10px padding.
+   So, from the board's edge: top beam outer edge 150fu - lap above, posts 200fu - lap out, bottom beam 150fu - lap below. ---------- */
+.machine{--fu:clamp(.18px, calc(.021vw + .03px), .46px);--lap:5px;--dw:clamp(5px, .42vw, 9px)}
+@media (min-width:900px) and (min-aspect-ratio:4/3){ .machine{--fu:clamp(.3px, calc(min(100dvh - 325px, max(660px, 61dvh)) * .00064), .5px)} }
+@media (min-width:641px) and (max-width:1000px) and (orientation:portrait){ .machine{--fu:.3px} }   /* tablets: a frame in proportion to their wide board */
+@media (orientation:landscape) and (max-height:500px){ .machine,main.machine{--fu:clamp(.1px, calc(100dvh * .00042), .18px)} }
+
+/* the frame itself (replaces the old frame-driftwood ring): posts in front of the beams, rope at each crossing.
+   z 39: the decorations on the wood sit at 40, a popping or towering reel (41) still draws over all the wood */
+.machine .stage::after{z-index:39!important;inset:calc(var(--fu) * -210 + var(--lap)) calc(var(--fu) * -200 + var(--lap)) calc(var(--fu) * -190 + var(--lap))!important;
+  border-style:solid!important;border-color:transparent!important;border-width:calc(var(--fu) * 210) calc(var(--fu) * 200) calc(var(--fu) * 190)!important;
+  border-image:url("img/frame-beams.svg?v=3e14f13e") 210 200 190 stretch!important;filter:drop-shadow(0 10px 8px rgba(40,20,5,.45))!important}
+
+/* decorations: no stacking context of their own, so each piece sits at its own level in the board's */
+.mf-deco{position:absolute;inset:0;pointer-events:none}
+.mf-deco > *{position:absolute;z-index:40}
+.mf-lash{top:50%;width:calc(var(--fu) * 190);aspect-ratio:190/120;translate:0 -50%;background:url("img/post-lash.svg?v=3cd0ef09") center/100% 100% no-repeat}
+.mf-lash.l{left:calc(var(--fu) * -170 + var(--lap))}
+.mf-lash.r{right:calc(var(--fu) * -170 + var(--lap));scale:-1 1}
+.mf-knot,.mf-crack{translate:-50% -50%;background:center/100% 100% no-repeat}
+.mf-knot{width:calc(var(--fu) * 92);aspect-ratio:2;background-image:url("img/wood-knot.svg?v=b68dcf45")}
+.mf-crack{width:calc(var(--fu) * 120);aspect-ratio:140/30;background-image:url("img/wood-crack.svg?v=250e678d")}
+.mf-deco .tb{top:calc(var(--lap) - var(--fu) * 72)}
+.mf-deco .bb{top:calc(100% - var(--lap) + var(--fu) * 78)}
+.mf-deco .lp,.mf-deco .rp{rotate:90deg}
+.mf-deco .lp{left:calc(var(--lap) - var(--fu) * 75)}
+.mf-deco .rp{left:calc(100% - var(--lap) + var(--fu) * 75)}
+/* the title sign: centred on the top beam, its lower edge on the beam's inner edge, so the top row is never covered.
+   z 41, after the reels in the page: over a popping top-row symbol, under the win pills (42). On a small board it is never
+   wider than 55% of it (--stw, the board's width, set by skin.js), so the crabs keep their stretch of beam either side */
+.mf-deco > .mf-sign{z-index:41;--sh:min(calc(var(--fu) * 300), calc(var(--stw, 9999px) * .155));left:50%;bottom:calc(100% - var(--lap) - 2px);translate:-50% 0;height:var(--sh);aspect-ratio:880/250;
+  background:url("img/title-sign.svg?v=8f857f14") center/100% 100% no-repeat;filter:drop-shadow(0 6px 5px rgba(40,20,5,.45));
+  display:flex;align-items:center;justify-content:center;padding:0 calc(var(--sh) * .32) 0 calc(var(--sh) * .85);box-sizing:border-box}
+.mf-sign b{font:400 calc(var(--sh) * .355)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.02em;white-space:nowrap;
+  background:linear-gradient(#fff3a6,#ffc21f 45%,#ff7a1f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  -webkit-text-stroke:calc(var(--sh) * .022) #2a0e12;filter:drop-shadow(0 calc(var(--sh) * .025) 0 #2a0e12);paint-order:stroke fill;translate:0 calc(var(--sh) * -.02)}
+/* the surfing mango (the old corner badge's art) rides off the sign's left end */
+.mf-sign i{position:absolute;left:calc(var(--sh) * -.12);bottom:calc(var(--sh) * .02);height:calc(var(--sh) * 1.05);aspect-ratio:242/260;
+  background:url("img/wild-rider.webp?v=c2212150") center/contain no-repeat;rotate:-8deg;filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+/* the title is on the board now: the corner title goes (short landscape phones keep it, see below); sound planks stay right */
+.brand{display:none!important}
+header.slotbar{justify-content:flex-end!important}
+
+/* reel dividers: a slim rope in the middle of each gap between the five reels, beam to beam (the ends run under the wood) */
+.machine .stage .gridbox::before{content:"";position:absolute;left:0;right:0;top:-12px;bottom:-26px;z-index:1;pointer-events:none;
+  --o1:calc((var(--gap) + var(--dw)) * .3);--o2:calc((var(--gap) + var(--dw)) * .1);
+  background:url("img/divider-rope.svg?v=7112d93b") calc(20% - var(--o1)) 0/var(--dw) auto repeat-y,url("img/divider-rope.svg?v=7112d93b") calc(40% - var(--o2)) 0/var(--dw) auto repeat-y,
+    url("img/divider-rope.svg?v=7112d93b") calc(60% + var(--o2)) 0/var(--dw) auto repeat-y,url("img/divider-rope.svg?v=7112d93b") calc(80% + var(--o1)) 0/var(--dw) auto repeat-y;
+  filter:drop-shadow(1px 2px 1px rgba(40,20,5,.35))}
+
+/* crabs: feet on the top beam's upper edge, sized to the beam */
+.fcrabs{top:calc(var(--lap) - var(--fu) * 128)!important}
+.fcrabs .sc-crab{width:calc(var(--fu) * 120)!important;margin-left:calc(var(--fu) * -60)!important}
+
+/* ----- the reels' background. B (sand panel) is the default; A (frosted glass) is html.reels-glass, set by REELS in build.js ----- */
+.machine .stage{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:4px!important;
+  background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(255,248,226,.55),rgba(255,248,226,0) 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .16 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(#e9d3a3,#f1e0b9 30%,#efdcb2 70%,#e3c893)!important;
+  box-shadow:inset 0 10px 14px -6px rgba(70,40,10,.45),inset 0 -8px 12px -6px rgba(70,40,10,.35),inset 10px 0 12px -8px rgba(70,40,10,.35),inset -10px 0 12px -8px rgba(70,40,10,.35)!important}
+.machine .stage.bonus{background-color:#f3c9a6!important}
+.reels-glass .machine .stage{background:rgba(8,60,100,.16)!important;box-shadow:none!important;-webkit-backdrop-filter:blur(7px) saturate(1.1)!important;backdrop-filter:blur(7px) saturate(1.1)!important}
+.reels-glass .machine .stage.bonus{background:rgba(110,35,70,.18)!important}
+
+/* ----- the board's room on screen, for the new frame (was --fw * .56 - 8px each side) ----- */
+.machine .stage{max-width:calc(100vw - 2 * (var(--fu) * 200 - var(--lap)) - 8px)!important}
+/* TOTAL WIN (and the SPINS LEFT sign beside it, extras.css) hangs under the bottom beam on its ropes */
+.machine .stage > .winrow{top:calc(100% + var(--fu) * 150 - var(--lap) + 12px)!important}
+@media (min-width:900px) and (min-aspect-ratio:4/3){
+  /* the thicker frame needs room below for TOTAL WIN and the tall SPINS LEFT sign over the bar: the board sits 10px higher */
+  .machine .stagewrap{top:-32px!important}
+  .machine .stage{width:min(70vw,calc(min(100dvh - 325px, max(660px, 61dvh)) * 1.62),1760px,calc(100vw - 2 * (var(--fu) * 200 - var(--lap)) - 2 * var(--bw) - 40px))!important}
+  /* 900-1100px wide the game stacks the plank above the board, where the sign is now: it stands left of the post there too */
+  .machine .stagewrap > .sidebuy{position:absolute!important;right:calc(100% + var(--fu) * 200 - var(--lap) + 10px)!important}
+  .machine .stage > .winrow{top:calc(100% + var(--fu) * 150 - var(--lap) + 9px)!important}
+}
+/* portrait phones: the BONUS BUY plank moves up to the top-left corner (the title used to be there; the sign on the board
+   would cover it where it stood); the MUSIC / SFX planks stay top-right. Tablets in portrait too. */
+@media (max-width:1000px) and (orientation:portrait){
+  .machine .stagewrap > #buybtn{position:fixed!important;left:10px!important;top:calc(8px + env(safe-area-inset-top))!important;right:auto!important;margin:0!important;transform:none!important}
+}
+/* short landscape phones: no room above the board for the sign, so the corner title stays and the sign goes */
+@media (orientation:landscape) and (max-height:500px){
+  .brand{display:flex!important}
+  header.slotbar{justify-content:space-between!important}
+  .mf-deco > .mf-sign{display:none}
+  main.machine{padding-right:calc(var(--fu) * 200 - var(--lap) + 4px)!important}
+  .machine .stagewrap{margin-top:calc(var(--fu) * 210 + 22px)!important}
+  .machine .stage{width:min(calc((100dvh - var(--fu) * 400 - 46px) * 1.25 + 12px),calc(100vw - 420px))!important}
+  .machine .stagewrap > #buybtn{right:calc(100% + var(--fu) * 200 - var(--lap) + 6px)!important}
+  .machine .stage > .winrow{top:auto!important;right:calc(100% + var(--fu) * 200 - var(--lap) + 6px)!important}
+}
 
 /* ---------- SPINS LEFT sign (extras.js; design + prototype in anim-v2/sign/): a chunky driftwood sign hung on two ropes
    from the frame's bottom plank, beside TOTAL WIN, in the same wood (wood-panel), rope and seaweed. It sits inside .winrow,
@@ -3735,16 +3831,25 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 
   // ---------- crabs on the frame: two small crabs walk back and forth along the top plank of the driftwood ----------
   // x/x2: where each walk starts and turns, as a share of the board width; t: seconds for a full there-and-back
-  const FRAME_CRABS = [{x: .42, x2: .62, t: 8}, {x: .9, x2: .7, t: 7.5, d: -3}];
+  // (frame v2: they walk either side of the title sign, which takes the middle of the top beam)
+  const FRAME_CRABS = [{x: .05, x2: .13, t: 8}, {x: .95, x2: .87, t: 7.5, d: -3}];
   function frameCrabs(){
     const st = document.querySelector('.machine .stage'); if (!st || st.querySelector('.fcrabs')) return;
+    // frame v2 (frame.css, art from anim-v2/frame/): the pieces the 9-slice frame image can't hold without stretching them:
+    // the MANGO SURF sign on the top beam, a rope coil half-way down each post, knots and cracks on the wood
+    const deco = document.createElement('div'); deco.className = 'mf-deco'; deco.setAttribute('aria-hidden', 'true');
+    deco.innerHTML = '<div class="mf-sign"><i></i><b>MANGO SURF</b></div><i class="mf-lash l"></i><i class="mf-lash r"></i>' +
+      '<i class="mf-knot tb" style="left:14%"></i><i class="mf-crack tb" style="left:22%"></i><i class="mf-knot tb" style="left:84%;scale:-1 1"></i>' +
+      '<i class="mf-crack bb" style="left:12%"></i><i class="mf-knot bb" style="left:38%"></i><i class="mf-crack bb" style="left:66%;scale:-1 1"></i><i class="mf-knot bb" style="left:90%"></i>' +
+      '<i class="mf-knot lp" style="top:24%"></i><i class="mf-crack lp" style="top:76%"></i><i class="mf-crack rp" style="top:20%"></i><i class="mf-knot rp" style="top:78%"></i>';
+    st.appendChild(deco);
     const box = document.createElement('div'); box.className = 'fcrabs'; box.setAttribute('aria-hidden', 'true');
     box.innerHTML = FRAME_CRABS.map((c, i) => `<div class="sc-crab fc${i}" style="left:${c.x * 100}%;--t:${c.t}s;animation-delay:${c.d || 0}s"><img src="${src(`sc-crab`)}" alt=""></div>`).join('');
     st.appendChild(box);
     // the walk is a sideways slide in pixels: set it from the board width, and again when the board resizes
     // the walk runs through the Web Animations API with plain pixel values: Safari does not animate a CSS variable inside
     // @keyframes reliably, so the old var(--dx) walk stood still there
-    const fit = () => { const w = st.getBoundingClientRect().width;
+    const fit = () => { const w = st.getBoundingClientRect().width; st.style.setProperty('--stw', w + 'px');   // the sign's size cap (frame.css)
       box.querySelectorAll('.sc-crab').forEach((el, i) => { const c = FRAME_CRABS[i], dx = (c.x2 - c.x) * w, at = x => `translateX(${x}px)`;
         if (el._walk) el._walk.cancel();
         el._walk = el.animate([{transform: at(0), offset: 0}, {transform: at(0), offset: .12}, {transform: at(dx), offset: .45}, {transform: at(dx), offset: .62}, {transform: at(0), offset: .95}, {transform: at(0), offset: 1}],
@@ -5032,7 +5137,7 @@ window.MangoPreview = {ready: () => !busy && mode === 'SPECIAL3', play: mangoMax
 
 async function playRound(name){
   const amount = levels[betIdx], cost = amount/API*costOf(name);
-  if (busy) return;
+  if (busy || !levels.length) return;
   if (balance < amount*costOf(name)){ autoLeft = 0; $('msg').textContent = ERRORS.ERR_IPB; meta(); return; }
   busy = true; roundBet = amount/API; $('msg').textContent = ''; clearStacks(); resetWinBoxes(); meta();
   banner(name === 'BASE' ? '3 WILDS OR 3 SESH TAPES START A BONUS · 4 TAPES = LEGEND' : name === 'ANTE' ? 'BONUS BOOST' : name.startsWith('SPECIAL') ? `${TRICK[+name.slice(-1)-1]} · TRICK SPIN` : `${BONUS[+name.slice(-1)-1].name.toUpperCase()} BONUS`);
