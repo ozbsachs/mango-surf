@@ -1,19 +1,15 @@
 /*
- * Mango Surf audio - synthesized Web Audio module (play money learning project).
- * Fork of sk8-audio.js: same engine and public API, surf musical content.
- * Plain browser JS, no imports, no files, no network. Defines exactly one global: window.MangoAudio.
+ * Mango Surf audio - Web Audio module (play money learning project).
+ * Fork of sk8-audio.js: same public API. Defines exactly one global: window.MangoAudio.
  *
- * Key: G major everywhere.
- *   Base loop  104 BPM, light swing: G | Em | C | D (I-vi-IV-V) x2, 60s beach surf groove.
- *   Bonus loop 160 BPM straight:     G | C | D | C | G | Em | C | D, tremolo-picked surf rock.
- *   Win stingers, chimes, plops and ticks all use G major / G major pentatonic.
+ * Music: one recorded loop, Sunlit Lagoon (audio/sunlit-lagoon-v1.m4a / .webm, 68.571 s, gapless; see "music" below).
+ *   It is the only file this module loads, after the loading screen, at low priority. Base game: as mastered. Bonus:
+ *   it dips under the trigger's wave, then swells +2 dB for the free spins and settles back after the bonus-end stinger.
+ * Effects: synthesized, G major / G major pentatonic (win stingers, chimes, plops, ticks, the bonus tension loop).
  *
  * Graph:
- *   seq drums  -> shaper -> trim --\
- *   seq guitar -> tremolo ---------+-> seq.gain -> musicBus -> duck -> musicLP -> musicVol --\
- *                   \-> spring ----/                                                           |
- *   seq pad (organ/uke) -----------/  (+ small spring send)                                    |
- *   sfx voices ------------------------------------------> sfxBus -> sfxVol ------------------+-> compressor -> master -> destination
+ *   music loop (AudioBufferSource, loop points) -> fade -> musicMode -> musicBus -> duck -> musicLP -> musicVol --\
+ *   sfx voices ------------------------------------------> sfxBus -> sfxVol ----------------------------------+-> compressor -> master -> destination
  *        \-> sfx spring (send) --------------------------/
  */
 (function (root) {
@@ -24,12 +20,10 @@
 
   // ---------- config ----------
   var MASTER = 0.9;          // master gain when unmuted
-  var MUSIC_LEVEL = 0.16;    // music bus scaler; with musicVolume 0.8 music peaks ~ -18 dBFS
-  var LOOKAHEAD = 0.12;      // seconds scheduled ahead
-  var TICK_MS = 25;          // scheduler interval
+  var MUSIC_LEVEL = 0.42;    // music bus scaler: the track sits as loud (RMS) as the old synth music did, peaks ~ -17 dBFS at 0.8
+  var TICK_MS = 25;          // count-up tick scheduler interval
   var CAP = { sfx: 40, music: 96 };  // max simultaneous voices per pool (oldest is stolen)
-  var LP_BASE = 5200, LP_BONUS = 11000, LP_OPEN = 16000;
-  var BASE_BPM = 104, BONUS_BPM = 160;
+  var LP_OPEN = 20000, LP_DUCK = 4500;   // music low-pass: open (the track is mixed and mastered), muffled under a win
 
   // ---------- state ----------
   var ctx = null;
@@ -38,7 +32,6 @@
   var sfxVolume = 1;
   var N = {};                // graph nodes
   var noiseBuf = null, curveSoft = null, curveHard = null;
-  var seqs = {};
   var curMode = 'base';
   var musicOn = false;
   var duckCount = 0;
@@ -162,6 +155,10 @@
     var v = new Voice(pool, dest);
     list.push(v);
     stats.created++;
+    if (!stats.leakWarned && list.length > CAP[pool] * 3) {
+      stats.leakWarned = true;
+      if (root.console) root.console.warn('[MangoAudio] voice list growing: ' + pool + '=' + list.length);
+    }
     return v;
   }
   function sfxVoice() { return newVoice('sfx', N.sfxBus); }
@@ -357,13 +354,14 @@
   }
 
   // ---------- music ducking (sidechain dip + low-pass opening) ----------
-  function lpBase() { return curMode === 'bonus' ? LP_BONUS : LP_BASE; }
+  // the track dips and goes a little muffled while a win, a count-up or the bonus tension plays, so the stinger sits on top
+  function lpBase() { return Math.min(LP_OPEN, ctx ? ctx.sampleRate * 0.45 : LP_OPEN); }
   function applyDuck(on) {
     var now = ctx.currentTime, g = N.duck.gain, f = N.musicLP.frequency;
     holdAt(g, now); holdAt(f, now);
     if (on) {
       g.linearRampToValueAtTime(0.45, now + 0.08);
-      f.exponentialRampToValueAtTime(LP_OPEN, now + 0.35);
+      f.exponentialRampToValueAtTime(LP_DUCK, now + 0.35);
     } else {
       g.linearRampToValueAtTime(1, now + 0.6);
       f.exponentialRampToValueAtTime(lpBase(), now + 0.8);
@@ -388,391 +386,132 @@
     f.exponentialRampToValueAtTime(lpBase(), when + 0.5);
   }
 
-  // ---------- music instruments ----------
-  function kick(s, t, vel) {
-    var v = newVoice('music', s.drums);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.002, 0.46 * vel, 0.26);
-    osc(v, 'sine', 120, t, t + 0.32, g, 48, 0.1);
-    var cg = gn(v, v.out); envAD(cg.gain, t, 0.001, 0.07 * vel, 0.01);
-    noise(v, t, t + 0.03, filt(v, 'lowpass', 2200, 0.7, cg));
+  // ---------- music: one recorded loop, gapless ----------
+  // Sunlit Lagoon (audio/sunlit-lagoon-v1.m4a AAC 128k for every browser, .webm Opus 80k where Opus decodes; made from
+  // audio-src/*.wav). Each file holds the 68.571 s loop with PAD samples of wrap-around on both sides (the loop's own tail
+  // before it, its head after it), and it plays from one AudioBufferSourceNode with loop points on the original sample
+  // range. Encoder priming and end padding sit outside the loop points, and a decoder that trims a few samples more or
+  // less only shifts where the loop starts, never the seam: there is real music on both sides of it.
+  // Bytes: fetched at low priority a few seconds after the loading screen has gone ('mango:shown' from loader.js), or at
+  // once when the music is switched on first. Decoded on first need (the first MUSIC: ON); if that is before the file is
+  // in, the music fades in as soon as it decodes.
+  var MUSIC = { url: 'audio/sunlit-lagoon-v1', rate: 48000, pad: 24000, len: 3291429, prime: { m4a: 1024, webm: 312 } };
+  var BONUS_LIFT = 1.26;     // bonus (sunset): the track swells +2 dB, after dipping under the trigger's wave
+  var mus = { fmts: null, bytes: null, decoding: null, buf: null, fmt: '', off: 0, loopStart: 0, loopEnd: 0,
+              src: null, srcGain: null, startedAt: 0, startPos: 0, pos: 0, fetched: false, err: '' };
+
+  function musicFormats() {
+    var a = null, cp = function (type) { try { return a && a.canPlayType ? a.canPlayType(type) : ''; } catch (e) { return ''; } };
+    try { a = root.document.createElement('audio'); } catch (e) { /* no DOM */ }
+    var aac = cp('audio/mp4; codecs="mp4a.40.2"'), opus = cp('audio/webm; codecs="opus"');
+    var apple = /Apple/.test((root.navigator && root.navigator.vendor) || '');   // Safari: AAC first, its Opus is newer
+    var list = [];
+    if (opus === 'probably' && !apple) list.push('webm');
+    list.push('m4a');                                                              // AAC decodes everywhere, iOS included
+    if (opus && list[0] !== 'webm') list.push('webm');
+    return list;
   }
-  function snare(s, t, vel, bright) {
-    var v = newVoice('music', s.drums), d = bright ? 0.13 : 0.16;
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.28 * vel, d);
-    noise(v, t, t + d + 0.03, filt(v, 'bandpass', bright ? 2800 : 2000, 0.8, g));
-    var bg = gn(v, v.out); envAD(bg.gain, t, 0.001, 0.2 * vel, 0.07);
-    osc(v, 'triangle', bright ? 230 : 200, t, t + 0.1, bg, 150, 0.07);
+  // the bytes of format i (or the next one that loads); remembered, so they are fetched once
+  function musicBytes(i) {
+    if (!mus.fmts) mus.fmts = musicFormats();
+    var f = mus.fmts[i];
+    if (!f) return Promise.reject(new Error('music: no format loaded'));
+    if (!root.fetch) return Promise.reject(new Error('music: no fetch'));
+    return root.fetch(MUSIC.url + '.' + f, { priority: 'low', credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error('music: HTTP ' + r.status);
+      return r.arrayBuffer();
+    }).then(function (ab) { mus.fetched = true; return { i: i, fmt: f, ab: ab }; },
+            function () { return musicBytes(i + 1); });
   }
-  function rim(s, t, vel) {   // cross-stick for the laid-back breakdown loops
-    var v = newVoice('music', s.drums);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.16 * vel, 0.04);
-    noise(v, t, t + 0.06, filt(v, 'bandpass', 1900, 3, g));
-    var tg = gn(v, v.out); envAD(tg.gain, t, 0.001, 0.12 * vel, 0.03);
-    osc(v, 'triangle', 880, t, t + 0.05, tg);
-  }
-  function hat(s, t, vel, open) {
-    var v = newVoice('music', s.drums), d = open ? 0.24 : 0.035;
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.09 * vel, d);
-    noise(v, t, t + d + 0.03, filt(v, 'highpass', 7500, 0.7, g));
-  }
-  var TOMS = [196, 147, 110, 82];   // hi, mid, low, floor
-  function tom(s, t, which, vel) {
-    var v = newVoice('music', s.drums), f = TOMS[which];
-    var g = gn(v, v.out); envAD(g.gain, t, 0.002, 0.34 * vel, 0.26 + which * 0.04);
-    osc(v, 'sine', f * 1.6, t, t + 0.36 + which * 0.04, g, f, 0.06);
-    var ng = gn(v, v.out); envAD(ng.gain, t, 0.001, 0.05 * vel, 0.02);
-    noise(v, t, t + 0.04, filt(v, 'bandpass', f * 5, 1.5, ng));
-  }
-  function crash(s, t, vel) {
-    var v = newVoice('music', s.drums);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.003, 0.12 * vel, 1.6);
-    noise(v, t, t + 1.65, filt(v, 'highpass', 5200, 0.7, g));
-  }
-  function wash(s, t, len) {   // distant shore wave under the base groove
-    var v = newVoice('music', s.gain);
-    var g = gn(v, v.out);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.026, t + len * 0.4);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    var lp = filt(v, 'lowpass', 600, 0.5, g);
-    lp.frequency.setValueAtTime(600, t);
-    lp.frequency.exponentialRampToValueAtTime(1700, t + len * 0.4);
-    lp.frequency.exponentialRampToValueAtTime(450, t + len);
-    noise(v, t, t + len + 0.05, lp);
-  }
-  function bass(s, t, f, len, vel, picked) {
-    var v = newVoice('music', picked ? s.drums : s.gain);
-    var g = gn(v, v.out);
-    var p = (picked ? 0.19 : 0.22) * vel;
-    envAHR(g.gain, t, 0.008, p, Math.max(len, 0.03), 0.45, 0.08);
-    var end = t + Math.max(len, 0.03) + 0.12;
-    if (picked) {
-      var lp = filt(v, 'lowpass', 1800, 1.5, g);
-      lp.frequency.setValueAtTime(1800, t);
-      lp.frequency.exponentialRampToValueAtTime(600, t + Math.max(len, 0.03));
-      osc(v, 'sawtooth', f, t, end, lp);
-      osc(v, 'sine', f, t, end, gc(v, 0.6, g));
-    } else {
-      osc(v, 'sine', f * 1.015, t, end, g, f, 0.03);           // tiny pitch settle = round thump
-      osc(v, 'triangle', f, t, end, filt(v, 'lowpass', 650, 0.7, gc(v, 0.5, g)));
+  function fetchMusic() {
+    if (!mus.bytes) {
+      mus.bytes = musicBytes(0);
+      mus.bytes.catch(function (e) { mus.err = String(e && e.message || e); mus.bytes = null; });   // a later switch-on retries
     }
+    return mus.bytes;
   }
-  function lead(s, t, midi, len, vel, bright) {   // single twangy reverb-guitar note
-    var v = newVoice('music', s.gtr), f = mf(midi);
-    var slide = (len > 0.4 && rnd() < 0.18) ? f * Math.pow(2, -2 / 12) : 0;   // occasional slide into the note
-    pluck(v, v.out, t, f, len, 0.075 * vel, { bright: bright, from: slide, glide: 0.07, sus: 0.35 });
+  function decodeBuf(ab) {
+    return new Promise(function (res, rej) {
+      var p = ctx.decodeAudioData(ab, res, rej);       // callback form for older Safari, promise form elsewhere
+      if (p && p.then) p.then(res, rej);
+    });
   }
-  function tremLead(s, t, midi, len, vel, rate) {  // tremolo-picked note: one voice, picks re-trigger the gain
-    var v = newVoice('music', s.gtr), f = mf(midi), end = t + len + 0.15;
-    var g = gn(v, v.out);
-    var pk = v.add(ctx.createBiquadFilter());
-    pk.type = 'peaking'; pk.frequency.value = 1500; pk.Q.value = 1.2; pk.gain.value = 5; pk.connect(g);
-    var lp = filt(v, 'lowpass', 3000, 1.2, pk);
-    osc(v, 'sawtooth', f, t, end, lp);
-    osc(v, 'square', f, t, end, gc(v, 0.3, lp), 0, 0, 6);
-    var k = 0, tp = t, peak = 0.06 * vel;
-    while (tp < t + len - 0.01) {
-      envAD(g.gain, tp, 0.002, peak * ((k & 1) ? 0.78 : 1), rate * 0.92);
-      tp += rate; k++;
-    }
+  function setLoop(buf, fmt) {
+    var k = buf.sampleRate / MUSIC.rate;                // the context may run at 44.1 kHz: decodeAudioData resampled
+    var extra = buf.length / k - (MUSIC.len + 2 * MUSIC.pad), prime = MUSIC.prime[fmt] || 0;
+    // samples left in beyond the encoded ones: the priming was not trimmed (AAC: plus up to one frame of end padding)
+    mus.off = prime && extra >= prime - 4 ? prime : 0;
+    mus.buf = buf; mus.fmt = fmt;
+    mus.loopStart = (MUSIC.pad + mus.off) / MUSIC.rate;
+    mus.loopEnd = mus.loopStart + MUSIC.len / MUSIC.rate;
   }
-  function strum(s, t, notes, len, vel, up) {   // rhythm guitar chord
-    var v = newVoice('music', s.gtr), n = notes.length;
-    for (var i = 0; i < n; i++) {
-      var m = up ? notes[n - 1 - i] : notes[i];
-      pluck(v, v.out, t + i * 0.011, mf(m), len, 0.028 * vel * (up ? 0.8 : 1), { sus: 0.4 });
+  function decodeMusic() {
+    if (mus.buf) return Promise.resolve(mus.buf);
+    if (mus.decoding) return mus.decoding;
+    function attempt(p) {
+      return p.then(function (b) {
+        return decodeBuf(b.ab).then(function (buf) { setLoop(buf, b.fmt); mus.bytes = null; return buf; }, function (e) {
+          if (b.i + 1 < mus.fmts.length) { mus.bytes = musicBytes(b.i + 1); return attempt(mus.bytes); }
+          throw e;
+        });
+      });
     }
+    mus.decoding = attempt(fetchMusic());
+    mus.decoding.catch(function (e) {
+      mus.decoding = null; mus.bytes = null; mus.err = String(e && e.message || e);
+      if (root.console) root.console.warn('[MangoAudio] music did not load', e);
+    });
+    return mus.decoding;
   }
-  function organ(s, t, notes, len, vel) {   // soft combo-organ pad (drawbars 8', 4', 2 2/3')
-    var v = newVoice('music', s.pad);
-    var lp = filt(v, 'lowpass', 2200, 0.5, v.out);
-    var g = gn(v, lp);
-    envAHR(g.gain, t, 0.09, 0.016 * vel, len, 0.85, 0.35);
-    var end = t + len + 0.4, h2 = gc(v, 0.5, g), h3 = gc(v, 0.22, g);
-    for (var i = 0; i < notes.length; i++) {
-      var f = mf(notes[i]);
-      osc(v, 'sine', f, t, end, g);
-      osc(v, 'sine', f * 2, t, end, h2, 0, 0, 3);
-      osc(v, 'sine', f * 3, t, end, h3);
-    }
+  // prefetch: a few seconds after the loading screen has gone, when the browser is idle (never before it closes)
+  function prefetchSoon() {
+    setTimeout(function () {
+      var get = function () { fetchMusic().catch(noop); };
+      if (root.requestIdleCallback) root.requestIdleCallback(get, { timeout: 2000 }); else get();
+    }, 2500);
   }
-  function uke(s, t, notes, len, vel, up) {   // ukulele strum, nylon-soft
-    var v = newVoice('music', s.pad), n = notes.length, d = Math.min(len, 0.4);
-    var lp = filt(v, 'lowpass', 3000, 0.7, v.out);
-    for (var i = 0; i < n; i++) {
-      var m = up ? notes[n - 1 - i] : notes[i], tk = t + i * 0.016;
-      var g = gn(v, lp); envAD(g.gain, tk, 0.002, 0.03 * vel * (up ? 0.7 : 1), d);
-      osc(v, 'triangle', mf(m), tk, tk + d + 0.05, g);
-    }
+  (function () {
+    if (!root.addEventListener || !AC) return;          // no Web Audio here: never fetched
+    var once = false, go = function () { if (!once) { once = true; prefetchSoon(); } };
+    root.addEventListener('mango:shown', go);
+    // no loading screen on this page (the sounds preview), or it is already gone: after the page's own load
+    var noLoader = function () {
+      var L = root.MangoLoader, st = null;
+      try { st = L && L.state && L.state(); } catch (e) { /* ignore */ }
+      if (!L || (st && st.gone)) go();
+    };
+    if (root.document && root.document.readyState === 'complete') noLoader();
+    else root.addEventListener('load', noLoader);
+  })();
+
+  function loopLen() { return mus.loopEnd - mus.loopStart; }
+  function playLoop(at, fadeIn) {
+    var s = ctx.createBufferSource();
+    s.buffer = mus.buf; s.loop = true; s.loopStart = mus.loopStart; s.loopEnd = mus.loopEnd;
+    var g = ctx.createGain(); g.gain.value = 0.0001;
+    s.connect(g); g.connect(N.musicMode);
+    var pos = mus.pos % loopLen();                     // pick up where it stopped last time
+    s.start(at, mus.loopStart + pos);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.linearRampToValueAtTime(1, at + Math.max(fadeIn, 0.01));
+    mus.src = s; mus.srcGain = g; mus.startedAt = at; mus.startPos = pos;
   }
-
-  // ---------- patterns (16 steps per bar, 8 bars = 128 steps) ----------
-  var BASE = {
-    roots: [43, 40, 36, 38],                                                  // G2 E2 C2 D2
-    third: [4, 3, 4, 4],
-    gtr:   [[55, 59, 62, 67], [52, 55, 59, 64], [48, 55, 60, 64], [50, 57, 62, 66]],  // G Em C D
-    org:   [[59, 62, 67], [59, 64, 67], [60, 64, 67], [57, 62, 66]],
-    uke:   [[62, 67, 71, 74], [64, 67, 71, 76], [64, 67, 72, 76], [62, 66, 69, 74]]
-  };
-  var KA = [1, 0, 0, 0, 0, 0, 0, 0, 0.9, 0, 0.5, 0, 0, 0, 0, 0];
-  var KB = [1, 0, 0, 0, 0, 0, 0.45, 0, 0.9, 0, 0, 0, 0, 0, 0, 0];
-  // root-fifth bass: [step, interval, length in steps, velocity]; fifth sits below the root
-  var BASSRF = [[0, 0, 4, 1], [6, 0, 2, 0.6], [8, -5, 4, 0.9], [14, -5, 2, 0.55]];
-  // two lead melodies over G Em C D x2, G major pentatonic + chord tones: [step, midi, length in steps]
-  var M1 = [
-    [[0, 71, 3], [3, 74, 3], [6, 76, 2], [8, 74, 6]],
-    [[0, 71, 2], [2, 67, 2], [4, 64, 8]],
-    [[0, 64, 2], [2, 67, 2], [4, 72, 4], [8, 71, 2], [10, 69, 6]],
-    [[0, 66, 4], [4, 69, 4], [8, 74, 6]],
-    [[0, 79, 4], [4, 76, 2], [6, 74, 2], [8, 71, 8]],
-    [[0, 76, 3], [3, 74, 3], [6, 71, 2], [8, 67, 8]],
-    [[0, 72, 2], [2, 76, 2], [4, 79, 4], [8, 76, 2], [10, 72, 6]],
-    [[0, 74, 4], [4, 72, 2], [6, 69, 2], [8, 66, 4]]
-  ];
-  var M2 = [
-    [[2, 62, 2], [4, 67, 2], [6, 71, 4], [10, 69, 2], [12, 67, 4]],
-    [[0, 64, 6]],
-    [[2, 64, 2], [4, 67, 2], [6, 72, 4], [10, 71, 2], [12, 69, 4]],
-    [[0, 66, 6], [8, 69, 2], [10, 66, 2]],
-    [[0, 67, 2], [2, 71, 2], [4, 74, 4], [8, 79, 4], [12, 76, 4]],
-    [[0, 74, 8], [8, 71, 4], [12, 67, 4]],
-    [[0, 72, 4], [4, 71, 2], [6, 69, 2], [8, 67, 4], [12, 64, 4]],
-    [[0, 66, 4], [4, 69, 4], [8, 72, 2], [10, 71, 2]]
-  ];
-  var LEADS = [M1, M2];
-  var UKE = [[0, 0], [4, 0], [6, 1], [10, 1], [12, 0], [14, 1]];   // island strum: [step, up?]
-  // bar-7 tom fills: [step, drum ('s' snare or tom index), velocity]
-  var FILLS = [
-    [[12, 0, 0.8], [13, 0, 0.6], [14, 1, 0.8], [15, 2, 0.9]],
-    [[12, 's', 0.8], [13, 's', 0.45], [14, 2, 0.8], [15, 3, 0.95]],
-    [[8, 0, 0.55], [9, 0, 0.45], [10, 1, 0.6], [11, 1, 0.5], [12, 2, 0.7], [13, 2, 0.6], [14, 3, 0.85], [15, 's', 0.9]],
-    [[12, 's', 0.55], [14, 's', 0.75], [15, 2, 0.85]]
-  ];
-
-  // Re-roll the arrangement every 8 bars so the loop never repeats exactly:
-  // lead melody A / B / none, organ, ukulele, breakdown (cross-stick, root-fifth only), fill choice, shore wash.
-  function arrange(s) {
-    var L = s.loops, a = {};
-    if (L === 0) {
-      a.lead = M1; a.organ = false; a.uke = false; a.drop = false; a.fill = 0; a.fill3 = false; a.wash = true;
-    } else {
-      a.lead = (L % 3 === 2) ? null : LEADS[(L + (rnd() < 0.3 ? 1 : 0)) & 1];
-      if (a.lead && rnd() < 0.15) a.lead = null;
-      a.organ = !a.lead || rnd() < 0.35;
-      a.uke = !a.lead || rnd() < 0.35;
-      a.drop = (L % 4 === 3);
-      a.fill = Math.floor(rnd() * FILLS.length);
-      a.fill3 = rnd() < 0.5;
-      a.wash = rnd() < 0.5;
-    }
-    s.arr = a;
+  function stopLoop(fade) {
+    if (!mus.src) return;
+    var s = mus.src, g = mus.srcGain, t = ctx.currentTime;
+    mus.pos = (mus.startPos + Math.max(0, t - mus.startedAt)) % loopLen();
+    mus.src = null; mus.srcGain = null;
+    holdAt(g.gain, t);
+    g.gain.linearRampToValueAtTime(0.0001, t + fade);
+    s.onended = function () { try { s.disconnect(); g.disconnect(); } catch (e) { /* ignore */ } };
+    try { s.stop(t + fade + 0.02); } catch (e) { /* ignore */ }
   }
-
-  function stepBase(s, step, t) {
-    if (step === 0 || !s.arr) arrange(s);
-    var a = s.arr, bar = step >> 4, i = step & 15, sd = s.sd, ci = bar & 3, k;
-    var tt = t + ((i & 3) === 2 ? sd * 0.16 : ((i & 1) ? sd * 0.08 : 0));   // light swing
-    var fl = FILLS[a.fill];
-    var late7 = (bar === 7) && i >= fl[0][0];
-    var late3 = (bar === 3) && a.fill3 && i >= 14;
-
-    // drums: clean surf beat
-    var kv = ((bar & 1) ? KB : KA)[i];
-    if (a.drop) kv = (i === 0 || i === 8) ? 0.8 : 0;
-    if (late7 || late3) kv = (late7 && i === 12 && a.fill !== 1) ? 0.6 : 0;
-    if (kv) kick(s, tt, kv);
-
-    var sv = (i === 4 || i === 12) ? 1 : 0;
-    if (!a.drop && (bar & 1) && i === 14) sv = 0.12;   // ghost
-    if (late7 || late3) sv = 0;
-    if (sv) { if (a.drop) rim(s, tt, sv); else snare(s, tt, sv, false); }
-
-    if (late7) {
-      for (k = 0; k < fl.length; k++) {
-        if (fl[k][0] !== i) continue;
-        if (fl[k][1] === 's') snare(s, tt, fl[k][2], false); else tom(s, tt, fl[k][1], fl[k][2]);
-      }
-    }
-    if (late3) tom(s, tt, i === 14 ? 0 : 1, i === 14 ? 0.55 : 0.7);
-
-    if (!late7 && (i & 1) === 0) {
-      var open = !a.drop && bar === 5 && i === 14;
-      hat(s, tt, open ? 0.5 : (a.drop ? 0.3 : (i % 4 === 0 ? 0.6 : 0.42)), open);
-    }
-    if (step === 0 && s.loops > 0) crash(s, t, a.drop ? 0.25 : 0.4);
-
-    // bass: root-fifth in the first half (and breakdowns), walking in the second half
-    var r = BASE.roots[ci];
-    if (bar < 4 || a.drop) {
-      for (k = 0; k < BASSRF.length; k++) {
-        if (BASSRF[k][0] === i) bass(s, tt, mf(r + BASSRF[k][1]), BASSRF[k][2] * sd * 0.92, BASSRF[k][3], false);
-      }
-    } else if ((i & 3) === 0) {
-      var b = i >> 2, nr = BASE.roots[(ci + 1) & 3];
-      var n = b === 0 ? r : b === 1 ? r + BASE.third[ci] : b === 2 ? r + 7 : nr + (nr > r ? -1 : 1);
-      bass(s, tt, mf(n), 3.4 * sd, b === 0 ? 1 : 0.8, false);
-    }
-
-    // rhythm guitar
-    var ch = BASE.gtr[ci];
-    if (a.uke) {
-      if (i === 0) strum(s, t, ch, 6 * sd, 0.75, false);
-    } else if (bar < 4) {
-      if (i === 0) strum(s, t, ch, 7 * sd, 1, false);
-      else if (i === 10) strum(s, tt, ch, 3 * sd, 0.6, true);
-    } else {
-      if (i === 0) strum(s, t, ch, 3 * sd, 0.9, false);
-      else if (i === 6) strum(s, tt, ch, 2 * sd, 0.5, true);
-      else if (i === 10) strum(s, tt, ch, 5 * sd, 0.75, false);
-    }
-
-    if (a.uke) {
-      for (k = 0; k < UKE.length; k++) {
-        if (UKE[k][0] === i) uke(s, tt, BASE.uke[ci], 2 * sd, (i === 0 ? 1 : 0.75), !!UKE[k][1]);
-      }
-    }
-    if (a.organ && i === 0) organ(s, t, BASE.org[ci], 15.6 * sd, 1);
-
-    if (a.lead) {
-      var ph = a.lead[bar];
-      for (k = 0; k < ph.length; k++) {
-        if (ph[k][0] === i) lead(s, tt, ph[k][1], ph[k][2] * sd * 0.95, 1, false);
-      }
-    }
-
-    if (a.wash && (step === 0 || step === 64)) wash(s, t + 0.2, 4.5);
-  }
-
-  var BON = {
-    roots: [43, 48, 50, 48, 43, 40, 48, 50],                            // G C D C | G Em C D
-    chop:  [[55, 62, 67], [60, 67, 72], [62, 69, 74], [60, 67, 72], [55, 62, 67], [52, 59, 64], [60, 67, 72], [62, 69, 74]]
-  };
-  var BPAT = [0, 0, 12, 0, 7, 0, 12, 7];   // driving eighth-note bass, per eighth
-  // tremolo-picked lead: [step, midi, length in steps]; length 1 = single fast pick (runs)
-  var BLEAD = [
-    [[0, 67, 4], [4, 71, 4], [8, 74, 6], [14, 76, 2]],
-    [[0, 79, 6], [6, 76, 2], [8, 72, 8]],
-    [[0, 74, 4], [4, 78, 4], [8, 81, 6], [14, 79, 2]],
-    [[0, 76, 8], [8, 79, 1], [9, 76, 1], [10, 74, 1], [11, 72, 1], [12, 71, 1], [13, 69, 1], [14, 67, 1], [15, 64, 1]],
-    [[0, 79, 2], [2, 79, 2], [4, 83, 4], [8, 81, 4], [12, 79, 4]],
-    [[0, 76, 4], [4, 79, 4], [8, 83, 8]],
-    [[0, 84, 4], [4, 83, 2], [6, 81, 2], [8, 79, 4], [12, 76, 4]],
-    [[0, 78, 4], [4, 81, 4], [8, 74, 1], [9, 76, 1], [10, 78, 1], [11, 79, 1], [12, 81, 1], [13, 83, 1], [14, 84, 1], [15, 86, 1]]
-  ];
-  var BFILL7 = [0, 0, 1, 1, 2, 2, 3, 3];
-
-  function stepBonus(s, step, t) {
-    var bar = step >> 4, i = step & 15, sd = s.sd, k;
-    var fill = (bar === 3 || bar === 7);
-    var roll = (bar === 7 && i >= 8) || (bar === 3 && i >= 12);
-    var rhythmOnly = (s.loops & 1) && bar < 4;   // odd loops: first half is a rhythm-guitar feature
-
-    var kv = (i === 0 || i === 8) ? 1 : (i === 6) ? 0.55 : ((bar & 1) && i === 10) ? 0.5 : 0;
-    if (roll) kv = (i === 8 || i === 12) ? 0.8 : 0;
-    if (kv) kick(s, t, kv);
-
-    var sv = (i === 4 || i === 12) ? 1 : (i === 7) ? 0.18 : (i === 15 && !fill) ? 0.15 : 0;
-    if (roll) sv = 0;
-    if (sv) snare(s, t, sv, true);
-    if (roll) {
-      if (bar === 7) tom(s, t, BFILL7[i - 8], 0.5 + 0.5 * (i - 8) / 7);
-      else if (i === 12 || i === 13) snare(s, t, i === 12 ? 0.9 : 0.6, true);
-      else tom(s, t, i === 14 ? 2 : 3, i === 14 ? 0.8 : 1);
-    }
-
-    if (!roll) {
-      if ((i & 3) === 2) hat(s, t, 0.55, true);          // open hats on the off-beats
-      else hat(s, t, (i & 1) ? 0.15 : 0.4, false);
-    }
-    if (i === 0 && (bar === 0 || bar === 4)) crash(s, t, bar === 0 ? 0.55 : 0.35);
-
-    if ((i & 1) === 0) bass(s, t, mf(BON.roots[bar] + BPAT[i >> 1]), sd * 1.6, i % 4 === 0 ? 1 : 0.8, true);
-
-    var ch = BON.chop[bar];
-    if (rhythmOnly) {
-      if (i === 0) strum(s, t, ch, 3 * sd, 1, false);
-      else if ((i & 3) === 2) strum(s, t, ch, 0.8 * sd, 0.8, (i & 4) !== 0);
-    } else if ((i & 3) === 2 && !roll) {
-      strum(s, t, ch, 0.6 * sd, 0.45, false);
-    }
-
-    if (!rhythmOnly) {
-      var ph = BLEAD[bar];
-      for (k = 0; k < ph.length; k++) {
-        if (ph[k][0] !== i) continue;
-        if (ph[k][2] === 1) lead(s, t, ph[k][1], sd * 0.9, 0.85, true);
-        else tremLead(s, t, ph[k][1], ph[k][2] * sd * 0.97, 1, sd / 2);
-      }
-    }
-  }
-
-  // ---------- sequencer ----------
-  function makeSeq(mode, bpm, tremHz) {
-    var g = ctx.createGain(); g.gain.value = 0.0001; g.connect(N.musicBus);
-    var trim = ctx.createGain(); trim.gain.value = 0.7; trim.connect(g);
-    var sh = ctx.createWaveShaper(); sh.curve = curveSoft; sh.oversample = '2x'; sh.connect(trim);
-    var spring = makeSpring(g, 1, [0.72, 0.7, 0.68]);
-    // guitar bus: tremolo (gain wobble) then dry + spring
-    var gtr = ctx.createGain(); gtr.gain.value = 1;
-    var trem = ctx.createGain(); trem.gain.value = 0.84;
-    gtr.connect(trem); trem.connect(g); trem.connect(spring);
-    var lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = tremHz;
-    var depth = ctx.createGain(); depth.gain.value = 0.14;
-    lfo.connect(depth); depth.connect(trem.gain); lfo.start();
-    // pad bus (organ, ukulele): dry + a little spring
-    var pad = ctx.createGain(); pad.gain.value = 1; pad.connect(g);
-    var ps = ctx.createGain(); ps.gain.value = 0.35; pad.connect(ps); ps.connect(spring);
-    return { mode: mode, bpm: bpm, sd: 60 / bpm / 4, gain: g, drums: sh, gtr: gtr, pad: pad, arr: null,
-             active: false, step: 0, nextTime: 0, stopAt: 0, loops: 0 };
-  }
-
-  function tick() {
-    if (!ctx) return;
-    var t = ctx.currentTime;
-    for (var key in seqs) {
-      var s = seqs[key];
-      if (!s.active) continue;
-      if (s.stopAt && t > s.stopAt + 0.1) { s.active = false; s.stopAt = 0; continue; }
-      if (s.nextTime < t - 0.2) s.nextTime = t + 0.03;   // resync after tab throttling
-      var guard = 0;
-      while (s.nextTime < t + LOOKAHEAD && guard++ < 64) {
-        if ((!s.stopAt || s.nextTime < s.stopAt) && !muted && ctx.state === 'running') {
-          try { (s.mode === 'base' ? stepBase : stepBonus)(s, s.step, s.nextTime); }
-          catch (e) { if (root.console) root.console.warn('[MangoAudio] step', e); }
-        }
-        s.nextTime += s.sd;
-        s.step = (s.step + 1) % 128;
-        if (s.step === 0) s.loops++;
-      }
-    }
-    if (!stats.leakWarned && (voices.sfx.length > CAP.sfx * 3 || voices.music.length > CAP.music * 3)) {
-      stats.leakWarned = true;
-      if (root.console) root.console.warn('[MangoAudio] voice list growing: sfx=' + voices.sfx.length + ' music=' + voices.music.length);
-    }
-  }
-
-  function startSeq(s, at, fadeIn) {
-    if (!s.active) { s.active = true; s.step = 0; s.loops = 0; s.arr = null; s.nextTime = at; }
-    s.stopAt = 0;
-    var h = s.gain.gain;
-    holdAt(h, at);
-    h.linearRampToValueAtTime(1, at + Math.max(fadeIn, 0.01));
-  }
-  function fadeSeq(s, from, to) {
-    var g = s.gain.gain;
-    holdAt(g, from);
-    g.linearRampToValueAtTime(0.0001, to);
-    s.stopAt = to;
-  }
-  // from-seq fades over [fadeStart, fadeEnd]; to-seq starts at step 0 at startAt.
-  function switchMode(mode, fadeStart, fadeEnd, startAt, fadeIn) {
-    if (mode === curMode) return;
-    var from = seqs[curMode], to = seqs[mode];
-    curMode = mode;
-    lpTo(startAt);
-    if (!musicOn) return;
-    if (from.active) fadeSeq(from, fadeStart, fadeEnd);
-    startSeq(to, startAt, fadeIn);
+  // the mode level (base 1, bonus BONUS_LIFT) rides on N.musicMode, between the track and the musicBus
+  function modeLevel() { return curMode === 'bonus' ? BONUS_LIFT : 1; }
+  function modeTo(at, level, ramp) {
+    var g = N.musicMode.gain;
+    holdAt(g, at);
+    g.linearRampToValueAtTime(level, at + Math.max(ramp, 0.01));
   }
 
   // ---------- public: control ----------
@@ -795,6 +534,7 @@
     N.musicLP.connect(N.musicVol);
     N.duck = ctx.createGain(); N.duck.gain.value = 1; N.duck.connect(N.musicLP);
     N.musicBus = ctx.createGain(); N.musicBus.gain.value = 1; N.musicBus.connect(N.duck);
+    N.musicMode = ctx.createGain(); N.musicMode.gain.value = modeLevel(); N.musicMode.connect(N.musicBus);
     N.sfxVol = ctx.createGain(); N.sfxVol.gain.value = sfxVolume; N.sfxVol.connect(N.comp);
     N.sfxBus = ctx.createGain(); N.sfxBus.gain.value = 1; N.sfxBus.connect(N.sfxVol);
     N.sfxSpring = makeSpring(N.sfxBus, 0.8, [0.7, 0.68, 0.66]);
@@ -805,33 +545,33 @@
     for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
     curveSoft = makeCurve(1.1);
     curveHard = makeCurve(4);
-
-    seqs.base = makeSeq('base', BASE_BPM, 5.2);
-    seqs.bonus = makeSeq('bonus', BONUS_BPM, 7);
-    setInterval(tick, TICK_MS);
     return true;
   }
 
   function startMusic() {
     if (!ctx || musicOn) return;
     musicOn = true;
-    var t = tNow(0.06), other = seqs[curMode === 'base' ? 'bonus' : 'base'];
-    if (other.active && !other.stopAt) fadeSeq(other, t, t + 0.3);
-    startSeq(seqs[curMode], t, 0.25);
+    if (mus.buf) { if (!mus.src) playLoop(tNow(0.06), 0.25); return; }
+    var asked = ctx.currentTime;
+    decodeMusic().then(function () {
+      if (!musicOn || mus.src || !ctx) return;
+      playLoop(tNow(0.03), ctx.currentTime - asked > 0.5 ? 1.2 : 0.25);   // came in late: a slower fade in
+    }, noop);
   }
 
   function stopMusic() {
     if (!ctx || !musicOn) return;
     musicOn = false;
-    var t = ctx.currentTime;
-    for (var key in seqs) if (seqs[key].active) fadeSeq(seqs[key], t, t + 0.4);
+    stopLoop(0.4);
   }
 
   function setMode(mode) {
     if (mode !== 'base' && mode !== 'bonus') return;
-    if (!ctx) { curMode = mode; return; }
-    var t = tNow(0.03), beat = 60 / seqs[curMode].bpm;
-    switchMode(mode, t, t + beat, t, beat);
+    curMode = mode;
+    if (!ctx) return;
+    var t = tNow(0.03);
+    modeTo(t, modeLevel(), 0.6);
+    lpTo(t);
   }
 
   function stopAntic(fade) {
@@ -1126,8 +866,10 @@
     var dr = gc(sv, 0.4, shaper(sv, curveHard, slp));
     var power = [43, 50, 55, 62, 67];                        // G5 power chord
     for (var i = 0; i < power.length; i++) osc(sv, 'sawtooth', mf(power[i]), h, h + 1.3, dr);
-    if (musicOn) switchMode('bonus', t, h, h, 0.01);
-    else curMode = 'bonus';
+    // the music dips while the wave builds, then swells back up (+2 dB) on the crash and stays there for the bonus
+    curMode = 'bonus';
+    modeTo(t, 0.35, T);
+    modeTo(h, BONUS_LIFT, 0.9);
   }
 
   function bonusSpinWin(x) {
@@ -1178,11 +920,9 @@
       }
       duckFor(L);
     }
-    if (musicOn && curMode === 'bonus') {
-      var fs = t + L * 0.7, beat = 60 / seqs.base.bpm;
-      switchMode('base', fs, fs + beat, fs, beat);
-    } else if (!musicOn) {
+    if (curMode === 'bonus') {                              // back to the base level as the stinger tails off
       curMode = 'base';
+      modeTo(t + L * 0.7, 1, 0.6);
     }
   }
 
@@ -1195,7 +935,10 @@
   function debug() {
     return {
       state: ctx ? ctx.state : 'none', mode: curMode, musicOn: musicOn, muted: muted,
-      sfxVoices: voices.sfx.length, musicVoices: voices.music.length,
+      sfxVoices: voices.sfx.length, musicVoices: mus.src ? 1 : 0,
+      music: { fmt: mus.fmt, fetched: mus.fetched, decoded: !!mus.buf, playing: !!mus.src, loopStart: mus.loopStart,
+               loopEnd: mus.loopEnd, primingSkipped: mus.off, bufferLength: mus.buf ? mus.buf.length : 0,
+               rate: mus.buf ? mus.buf.sampleRate : 0, level: N.musicMode ? N.musicMode.gain.value : 1, error: mus.err },
       created: stats.created, stolen: stats.stolen, ducking: duckCount
     };
   }
