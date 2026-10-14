@@ -448,9 +448,18 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 })();
 
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="img/sc-plate-day.webp?v=6a3c3539" fetchpriority="high"><link rel="preload" as="image" href="img/frame-driftwood.webp?v=76ee142b" fetchpriority="high"><link rel="preload" as="font" type="font/woff2" href="fonts/LilitaOne-latin.woff2" crossorigin><link rel="preload" as="font" type="font/woff2" href="fonts/Montserrat-latin.woff2" crossorigin>
 <style>
+@font-face{font-family:"Lilita One";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/LilitaOne-latin.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Lilita One";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/LilitaOne-latin-ext.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:700 800;font-display:swap;src:url("fonts/Montserrat-latin.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Montserrat";font-style:normal;font-weight:700 800;font-display:swap;src:url("fonts/Montserrat-latin-ext.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
+
 /* Mango Surf skin, loaded after the Sk8 Sesh styles */
 :root{--f-d:"Lilita One",system-ui,sans-serif;--f-n:"Lilita One",system-ui,sans-serif;--accent:#ff4f8b;--lime:#7dffb0;--outline:#2a0e12}
 
@@ -494,12 +503,15 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 
 /* winning symbols pop, wobble and shine; the rest stay as they are (no dimming, Oz) */
 .grid .c.hit{box-shadow:none}
-.grid .c.hit .ms{animation:mpop .55s cubic-bezier(.2,1.7,.4,1) both,mjelly 1.3s .55s ease-in-out infinite}
-.grid .c.hit .ms::after{content:"";position:absolute;inset:0;pointer-events:none;
+/* the pop starts and ends at the symbol's own size, so nothing snaps when it lands, when the win walk takes over or on the next spin */
+.grid .c.hit .ms{animation:mpop .55s ease-in-out both}
+/* the shine layer is always there, paused and invisible; a win fades it in and runs it, and when the win ends it fades out
+   from where it was (it used to vanish mid-sweep) */
+.grid .c .ms::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;
   background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.85) 50%,transparent 62%) no-repeat;background-size:260% 100%;
-  -webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat;animation:mshine 1.5s .25s ease-in-out infinite}
-@keyframes mpop{0%{transform:scale(1)}45%{transform:scale(1.32) rotate(-4deg)}100%{transform:scale(1.14)}}
-@keyframes mjelly{0%,100%{transform:scale(1.14,1.14)}30%{transform:scale(1.2,1.07)}60%{transform:scale(1.09,1.19)}}
+  -webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat;animation:mshine 1.5s .25s ease-in-out infinite paused}
+.grid .c.hit .ms::after{opacity:1;animation-play-state:running}
+@keyframes mpop{0%,100%{transform:scale(1) rotate(0deg)}38%{transform:scale(1.2) rotate(-4deg)}72%{transform:scale(.97) rotate(1deg)}}
 @keyframes mshine{0%{background-position:130% 0}60%,100%{background-position:-60% 0}}
 
 /* water splash out of each winning cell */
@@ -530,13 +542,23 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 .mstack .mx.big{left:50%;right:auto;bottom:6px;transform:translateX(-50%);font-size:clamp(14px,2.8vw,26px);padding:4px 12px 6px}
 @keyframes swell{to{transform:translateY(68px)}}
 @keyframes ride{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-6%) rotate(3deg)}}
-.stackov.settle{animation:stacksplash .45s cubic-bezier(.2,1.6,.4,1)}
-@keyframes stacksplash{0%{transform:scaleY(.86)}60%{transform:scaleY(1.05)}100%{transform:scaleY(1)}}
+/* expanding wilds end clean: no squash after the tower has opened (it read as a second scale), no board shake (it
+   jolted the neighbouring reels) */
+.stackov.settle{animation:none}
+.grid.shake{animation:none!important}
+/* the splash squashes from the tower's full height and springs back to it: it used to start at 86% (a one-frame drop) and
+   stretch to 105%, which pushed the tower and its lock under the top plank */
+@keyframes stacksplash{0%,100%{transform:scaleY(1)}40%{transform:scaleY(.9)}}
 .mergetag{font-family:"Lilita One",system-ui,sans-serif;color:#fff7d6;background:rgba(42,14,18,.82);border-color:#ffd23f;border-radius:12px}
 
 /* SURF badges glow gold and wiggle; the chase glow is sea blue */
-.grid .c.tape{filter:drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 12px #ff9a1f);animation:badge .7s ease-in-out infinite alternate}
-@keyframes badge{from{transform:rotate(-6deg) scale(1)}to{transform:rotate(6deg) scale(1.08)}}
+/* the wiggle starts upright at its own size and the glow fades in, so a badge lands without a jump */
+/* the wiggle moves the picture, never the cell: the game measures cell 1 to size the next spin's strip, and a tilted badge there made
+   every symbol of the next spin too big until it landed */
+.grid .c.tape{filter:drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 12px #ff9a1f);animation:badgein .3s ease-out}
+.grid .c.tape .ms > img{animation:badge 1.4s ease-in-out infinite}
+@keyframes badge{0%,100%{transform:rotate(0deg) scale(1)}25%{transform:rotate(-5deg) scale(1.03)}75%{transform:rotate(5deg) scale(1.06)}}   /* small enough to stay clear of the planks at the board edge */
+@keyframes badgein{from{filter:drop-shadow(0 0 0 rgba(255,210,63,0)) drop-shadow(0 0 0 rgba(255,154,31,0))}}
 .reel.tease{--gl:#3be3ff}
 
 /* the mango mascot and celebration art */
@@ -568,7 +590,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes fall{to{transform:translateY(125vh) rotate(var(--r))}}
 
 @media (prefers-reduced-motion:reduce){
-  .grid .c.hit .ms,.grid .c.hit .ms::after,.grid.focusing .c.focus .ms,.mstack img,.mstack .swell,.grid .c.tape,img.mg,#celebrate img.rain,.splash{animation:none!important}
+  .grid .c.hit .ms,.grid .c .ms::after,.grid.focusing .c.focus .ms,.mstack img,.mstack .swell,.grid .c.tape,.grid .c.tape .ms > img,img.mg,#celebrate img.rain,.splash{animation:none!important}
   #lineov .wl{animation:none;stroke-dashoffset:0}
 }
 
@@ -594,9 +616,15 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 /* no pay lines on screen (too busy): the winning symbols dance instead, one win at a time, biggest pay first */
 #lineov .wl{visibility:hidden}
 .grid.focusing .c.hit:not(.focus) .ms{animation:none}
-.grid.focusing .c.hit:not(.focus) .ms::after{animation:none;opacity:0}
+.grid.focusing .c.hit:not(.focus) .ms::after{opacity:0}
 /* the win on show: its symbols dance with a warm glow behind them and a golden halo around the art */
-.grid.focusing .c.focus{background:radial-gradient(circle at 50% 52%,rgba(255,236,140,.7),rgba(255,190,60,.28) 48%,rgba(255,190,60,0) 72%)}
+/* the warm glow sits on a layer under the symbol and fades in and out, so the spotlight moving on never blinks */
+.grid .c::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .25s;
+  background:radial-gradient(circle at 50% 52%,rgba(255,236,140,.7),rgba(255,190,60,.28) 48%,rgba(255,190,60,0) 72%)}
+.grid.focusing .c.focus:not(.leaving)::before{opacity:1}
+/* a symbol leaving the spotlight finishes its hop first (skin.js), and the halo fades instead of blinking */
+.grid .c .ms{transition:filter .25s}
+.grid.focusing .c.focus.leaving .ms{filter:none}
 .grid.focusing .c.focus .ms{animation:mdance .9s var(--d,0s) ease-in-out infinite both;filter:drop-shadow(0 0 4px #fff6c4) drop-shadow(0 0 12px rgba(255,196,48,.95))}
 /* a little surf dance: hop, lean one way, lean the other, settle; each reel starts a beat after the one before */
 @keyframes mdance{0%,100%{transform:translateY(0) rotate(0) scale(1)}18%{transform:translateY(-14%) rotate(-7deg) scale(1.1)}
@@ -609,6 +637,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .winpill img{width:1.7em;height:1.7em;object-fit:contain;margin:-4px -2px}
 .winpill .mp-mth i{font-style:normal;opacity:.6;margin:0 1px}
 .winpill .mp-mth b{font-weight:400;color:#c4301c;font-size:1.12em}
+.winpill.out{animation:pillout .22s ease-in forwards}
+@keyframes pillout{to{opacity:0;transform:translate(-50%,-90%) scale(.85)}}
 @keyframes pillin{from{transform:translate(-50%,-80%) scale(.4);opacity:0}to{transform:translate(-50%,-100%) scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.winpill{animation:none}}
 
@@ -662,6 +692,18 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .grid .c.hit{position:relative;z-index:3}
 .grid.focusing .c.focus{z-index:4}
 .grid:has(.c.hit) .reel:has(.c.hit){z-index:2}
+/* ...and a reel with a win on show, or a wiggling badge, draws in front of the driftwood frame (z 40), so a pop or a hop
+   at the board's edge passes over a plank instead of being cut by it. The big-win
+   overlay and the win labels stay on top. During the chase the reel still dims itself (its own layer, below) */
+.grid .reel:has(> .c.hit),.grid .reel:has(> .c.tape),.grid .reel:has(> .stackov){z-index:41!important;transition-delay:0s!important}   /* at once (the chase-end delay is only for the fade) */
+#celebrate{z-index:46!important}
+.winpill,.mergetag{z-index:42!important}
+/* the big-win overlay fades in and out instead of cutting (display waits for the fade: allow-discrete) */
+#celebrate{transition:opacity .3s ease-out,display .3s allow-discrete}
+#celebrate[hidden]{opacity:0}
+@starting-style{#celebrate:not([hidden]){opacity:0}}
+/* the shine on a winning symbol fades out and in as the spotlight moves, instead of blinking */
+/* (the shine fades: see .grid .c .ms::after) */
 /* ---------- full-reel wild: the mango surfing a tall wave (no foam dots, no stripes) ---------- */
 .mstack.surf .swell,.mstack.surf .foam{display:none}
 .mstack.surf .mw-wave{position:absolute;left:50%;top:50%;width:auto;height:118%;max-width:none;transform:translate(-50%,-50%);opacity:.95;
@@ -746,7 +788,55 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .machine .stage > .winrow > #totalbox::after{content:"";position:absolute;left:-10px;top:-14px;width:26px;height:40px;pointer-events:none;
   background:url("img/seaweed.svg?v=2af73010") center/contain no-repeat;transform:rotate(-8deg)}
 /* the big-win screen owns the board while it shows: win-line labels step back */
-.stage:has(#celebrate:not([hidden])) .winpill,body:has(#celebrate:not([hidden])) .winpill{display:none!important}
+/* hidden, not removed from layout, so a label made during the big win is measured and kept inside the board */
+.stage:has(#celebrate:not([hidden])) .winpill,body:has(#celebrate:not([hidden])) .winpill{visibility:hidden!important}
+
+/* chase dim, one reel at a time: the game dims the board with one layer under the reels still spinning, so a reel that
+   stopped dropped under it in a single frame. Every reel sits above that layer during the chase and dims itself, fading in
+   as it lands */
+body.chase .grid .reel{z-index:6}
+/* ...and stays there while its own layer and the board layer fade out together when the chase ends */
+.grid .reel{transition:z-index 0s linear .36s,--gl .3s ease-out 0s;transition-behavior:allow-discrete}
+body.chase .grid .reel{transition-delay:0s}
+.grid .reel::after{content:"";position:absolute;inset:0;z-index:10;border-radius:12px;pointer-events:none;background:rgba(18,18,22,.55);opacity:0;transition:opacity .35s}
+body.chase .grid .reel:not(.tease)::after{opacity:1}
+/* when the chase ends, the board stays above the page dim until that dim has faded (.35s), instead of dropping under it
+   and going dark for a moment */
+.machine .stage{transition:z-index 0s linear .36s;transition-behavior:allow-discrete}
+body.chase .machine .stage{transition-delay:0s}
+/* big win: the "next trick" bar and its two small lines in the beach look (the Sk8 white box and pink stripes read as an
+   empty, unstyled bar), and big enough to read on a phone */
+#celebrate .celbar{height:12px;border:2px solid var(--outline)!important;border-radius:999px;background:rgba(42,22,8,.6)!important;box-shadow:0 0 0 2px #E6C46E;overflow:hidden}
+#celebrate .celbar > div{border-radius:999px;background:linear-gradient(#fff3b0,#ffd23f 55%,#ff9a1f)!important}
+#celebrate #cel-x{font:400 clamp(12px,1.7vw,16px)/1.1 "Lilita One",system-ui,sans-serif;color:#ffe7a8;letter-spacing:.03em}
+#celebrate #cel-next{font:400 clamp(12px,1.6vw,15px)/1.2 "Lilita One",system-ui,sans-serif;color:#fff4dc;text-shadow:0 2px 0 var(--outline)}
+/* a reel that stops after the chase lets its blue glow fade instead of switching it off. The glow stays the game's own
+   looping box-shadow on the reel (a layer inside the reel was clipped while it spun); every reel keeps it, paused (no
+   repaints) and in a fully transparent colour, so stopping just fades the colour out from wherever the pulse was */
+@property --gl{syntax:"<color>";inherits:true;initial-value:rgba(59,227,255,0)}
+@media (prefers-reduced-motion:no-preference){
+  .grid .reel{--gl:rgba(59,227,255,0);animation:tease .42s ease-in-out infinite alternate paused}
+  .grid .reel.tease{--gl:#3be3ff;animation-play-state:running}
+  .grid .reel.tease.legend{--gl:#b56bff}
+}
+/* the STACK tag pops in and fades out, and a growing tower fades in over the wild it grows from, instead of either
+   switching in a single frame */
+.mergetag{animation:mtin .25s cubic-bezier(.2,1.4,.4,1) both}
+.mergetag.out{animation:mtout .22s ease-in forwards}
+@keyframes mtin{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}}
+@keyframes mtout{to{opacity:0;transform:translate(-50%,-50%) scale(.85)}}
+.stackov{transition:opacity .2s ease-out}
+.stackov.building{transition:clip-path .13s cubic-bezier(.3,1.4,.5,1),opacity .2s ease-out}   /* the game sets the clip transition here; keep the fade too */
+@starting-style{.stackov{opacity:0}}   /* only when a tower is first drawn, not when it folds or settles */
+@media (prefers-reduced-motion:reduce){.mergetag,.mergetag.out{animation:none}.stackov,.stackov.building{transition:none}}
+/* menus, panels, the bonus sheet and confirm boxes fade in and out with their dark backdrop, instead of cutting in and
+   out in one frame (display waits for the fade: allow-discrete; the boxes inside keep their own pop) */
+#backdrop,#drawer,.mpanel,#buysheet,#confirm,#modal{transition:opacity .2s ease-out,display .2s allow-discrete}
+#backdrop[hidden],#drawer[hidden],.mpanel[hidden],#buysheet[hidden],#confirm[hidden],#modal[hidden]{opacity:0}
+@starting-style{#backdrop:not([hidden]),#drawer:not([hidden]),.mpanel:not([hidden]),#buysheet:not([hidden]),#confirm:not([hidden]),#modal:not([hidden]){opacity:0}}
+@media (prefers-reduced-motion:reduce){#backdrop,#drawer,.mpanel,#buysheet,#confirm,#modal{transition:none}}
+/* a wild reel's tag fits inside a phone-width tower (it was wider than the reel and ran under the side plank) */
+@media (max-width:640px){.mstack .mx.big{font-size:12px!important;padding:3px 6px 4px!important}}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -1337,6 +1427,9 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
    chair and bush their own compositing layer keeps them in front, as on Chrome */
 .sc-palm,.sc-palm .trunk,.sc-chair,.sc-bush{will-change:transform;transform:translateZ(0)}
 .sc-water{will-change:transform;transform:translateZ(0)}
+/* the bonus sunset under a live beach: the sunset plate covers the scene, so the old full-scene bg-sunset.webp is never
+   fetched (load speed); the colour shows only while the plate itself loads */
+.slot:has(.stage.bonus) .scene.live{background:#f58a5a!important}
 
 /* ---------- layout fixes per screen shape (loaded last, so these win) ---------- */
 
@@ -1481,6 +1574,13 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
    and the reels get a little more room above the plank */
 .grid .ms > .mx{bottom:4%!important}
 .machine .stage{padding-bottom:calc(10px + 1.2%)!important}
+/* TOTAL WIN keeps its size while the amount changes ("-" to "$0.00", count-ups): equal-width digits and room for "$99.99";
+   only a bigger amount widens the sign */
+.machine .stage > .winrow > #totalbox .v{font-variant-numeric:tabular-nums;text-align:center;min-width:3.4em!important}
+
+/* phones: "MODE: NORMAL" spilled out of its square button (text 53px in a 45px box) — tighter padding and size so every mode name fits */
+@media (max-width:640px) and (orientation:portrait){ html body .mhud #modebtn.pill{padding:0 2px!important;font-size:8.5px!important;letter-spacing:-.01em!important;overflow:hidden} }
+@media (max-width:380px) and (orientation:portrait){ html body .mhud #modebtn.pill{font-size:calc((10vw - 4px) / 4.9)!important} }
 
 /* ---------- spins left (extras.js): gold ring, dark wood, big number ---------- */
 #mspins{position:fixed;z-index:48;width:clamp(70px,9vw,96px);aspect-ratio:1/1;border-radius:50%;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -2736,16 +2836,26 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   // ---------- symbols ----------
   function symbol(id, o){
     o = o || {}; const k = IMG[id] || 'L1';
-    return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})"><img src="${src(k)}" alt="" draggable="false">`
-      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : k === 'W' ? '<b class="mx plain">WILD</b>' : '') + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';   // a plain wild says WILD
+    return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})"><img src="${src(k)}" alt="" draggable="false" decoding="sync">`
+      // a plain wild says WILD. The closing </div> matters: without it every symbol in the spin strip nested inside the one
+      // before, the strip lost its gaps, and the lower rows jumped down by a gap per row the moment a reel landed
+      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : k === 'W' ? '<b class="mx plain">WILD</b>' : '')
+      + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';
   }
   window.MangoArt = {symbol, skater: () => `<img class="mg" src="${src('H3')}" alt="">`};
+  // every symbol picture stays loaded and decoded for the whole visit: a reel that lands swaps in new <img> tags, and one
+  // whose picture had to be fetched or decoded again drew as an empty cell for a frame (the board blinked on landing)
+  const KEEP = window.MangoKeep = [...new Set(Object.values(IMG).concat(['wild-wave', 'wild-rider']))].map(k => { const im = new Image(); im.src = src(k); if (im.decode) im.decode().catch(() => {}); return im; });
 
   // ---------- mascot and celebration art: the mango, moving to the old trick names ----------
   // the big-win screen (#cel-art) plays the surfing wild doing tricks (img/surf-tricks.webp, an animated WebP made with
   // HyperFrames: surf-clip/); it keeps looping through the win tiers instead of restarting on each one
   const SURF = src('surf-tricks');
-  addEventListener('load', () => setTimeout(() => { const im = new Image(); im.src = SURF; }, 1500));   // fetched ahead of the first big win
+  // fetched ahead of the first big win, once the page has loaded and the sunset scene (skin: liveScene) is in, at low
+  // priority so it never holds up a spin or the first paint
+  const afterLoad = fn => { const go = () => setTimeout(() => (window.requestIdleCallback || setTimeout)(fn, {timeout: 2000}), 1500);
+    if (document.readyState === 'complete') go(); else addEventListener('load', go); };
+  afterLoad(() => setTimeout(() => { const im = new Image(); im.fetchPriority = 'low'; im.decoding = 'async'; im.src = SURF; }, 1000));
   window.MangoAnim = {
     play(node, pose){ if (!node) return;
       if (node.id === 'cel-art'){ if (!node.querySelector('img.msurf')) node.innerHTML = `<img class="msurf" src="${SURF}" alt="">`; return; }
@@ -2762,7 +2872,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     const tier = M >= 200 ? 't4' : M >= 50 ? 't3' : M >= 10 ? 't2' : M > 1 ? 't1' : 't0';
     // a full-reel wild is the mango surfing a tall wave: the wave fills the reel, the mango carves up and down its face.
     // The wave and trail sit in their own clipped box (.mw-sea) so the rider can lean past the tower's sides uncut
-    return `<div class="mstack surf ${tier}"><i class="mw-sea"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false"><i class="mw-trail"></i></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false">`
+    return `<div class="mstack surf ${tier}"><i class="mw-sea"><img class="mw-wave" src="${src('wild-wave')}" alt="" draggable="false" decoding="sync"><i class="mw-trail"></i></i><img class="mw-rider" src="${src('wild-rider')}" alt="" draggable="false" decoding="sync">`
       + (M > 1 ? `<b class="mx big">x${fmtM(M)}</b>` : '<b class="mx big plain">WILD</b>') + `${sticky ? '<i class="lk" aria-hidden="true"></i>' : ''}</div>`;
   }
 
@@ -2789,8 +2899,10 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   const cellAt = (r, row) => { const reel = document.querySelectorAll('.grid .reel')[r]; return reel ? reel.querySelectorAll('.c')[row] : null; };
   const num = x => (Math.round(x*100)/100).toLocaleString('en-US', {maximumFractionDigits: 2});
   const SYM = ['L1','L2','L3','L4','L5','H1','H2','H3','H4','W','S1','S1'];
+  // a win label leaving fades out (CSS .winpill.out) instead of vanishing between one frame and the next
+  const fadePills = () => document.querySelectorAll('.winpill:not(.out)').forEach(e => { e.classList.add('out'); setTimeout(() => e.remove(), 260); });
   function stopWalk(){ walkGen++; clearTimeout(walkTimer);
-    document.querySelectorAll('.winpill').forEach(e => e.remove());
+    fadePills();
     document.querySelectorAll('.grid .c.focus').forEach(c => c.classList.remove('focus'));
     const g = document.querySelector('.grid'); if (g) g.classList.remove('focusing');
     document.querySelectorAll('#lineov .wl.off').forEach(p => p.classList.remove('off')); }
@@ -2804,22 +2916,37 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     stage.appendChild(el);
     // above the last symbol of the run, kept inside the machine
     const x = b.left - sb.left + b.width/2, y = b.top - sb.top + b.height*0.12, half = el.offsetWidth/2;
-    el.style.left = Math.max(half + 4, Math.min(sb.width - half - 4, x)) + 'px'; el.style.top = Math.max(el.offsetHeight + 2, y) + 'px';
+    // clear of the frame: its planks lap 8px over the machine's edge
+    el.style.left = Math.max(half + 10, Math.min(sb.width - half - 10, x)) + 'px'; el.style.top = Math.max(el.offsetHeight + 10, y) + 'px';
   }
   function show(wins, i, colors){
     const svg = document.getElementById('lineov'), grid = document.querySelector('.grid');
-    document.querySelectorAll('.winpill').forEach(e => e.remove());
-    document.querySelectorAll('.grid .c.focus').forEach(c => c.classList.remove('focus'));
+    fadePills();
+    const next = new Set();
+    if (i >= 0){ const w = wins[i], ln = TT.LINES[w.li]; for (let r = 0; r < w.k; r++){ const c = cellAt(r, ln[r]); if (c) next.add(c); } }
+    document.querySelectorAll('.grid .c.focus').forEach(c => { if (!next.has(c)) leave(c); });
     svg.querySelectorAll('.wl').forEach(p => p.classList.toggle('off', i >= 0 && +p.dataset.w !== i));
     grid.classList.toggle('focusing', i >= 0);
     if (i < 0) return;
-    const w = wins[i], ln = TT.LINES[w.li]; for (let r = 0; r < w.k; r++){ const c = cellAt(r, ln[r]); if (c){ c.style.setProperty('--d', (r*0.09) + 's'); c.classList.add('focus'); } }
-    pill(w, colors[i]);
+    // a symbol already dancing keeps its beat (a new delay would make it jump); the others start upright
+    [...next].forEach((c, r) => { if (c.classList.contains('focus')){ c.classList.remove('leaving'); return; } c.style.setProperty('--d', (r*0.09) + 's'); c.classList.add('focus'); });
+    pill(wins[i], colors[i]);
+  }
+  // the spotlight moves on: the symbol finishes the hop it is in (back upright at its own size), then stops, so it never snaps
+  function leave(c){
+    const ms = c.querySelector('.ms'), a = ms && ms.getAnimations().find(x => x.animationName === 'mdance');
+    const done = () => { if (c.classList.contains('leaving')) c.classList.remove('focus', 'leaving'); };
+    c.classList.add('leaving');
+    const P = 900, t = a ? (a.currentTime || 0) - (parseFloat(getComputedStyle(ms).animationDelay) || 0)*1000 : 0;
+    if (!a || t <= 0){ done(); return; }
+    let fired = false; const fin = () => { if (fired) return; fired = true; ms.removeEventListener('animationiteration', on); done(); };
+    const on = e => { if (e.animationName === 'mdance' && !e.pseudoElement) fin(); };
+    ms.addEventListener('animationiteration', on); setTimeout(fin, P - (t % P) + 80);
   }
   function walkWins(wins, colors){
     stopWalk(); if (!wins || !wins.length) return;
     const my = walkGen, alive = () => my === walkGen && document.querySelector('#lineov .wl');
-    if (wins.length === 1){ walkTimer = setTimeout(() => { if (alive()) show(wins, 0, colors); }, 450); return; }
+    if (wins.length === 1){ walkTimer = setTimeout(() => { if (alive()) show(wins, 0, colors); }, 600); return; }   // once the pop is over (.55s)
     const order = wins.map((w, i) => i).sort((a, b) => wins[b].win - wins[a].win);   // biggest first
     let n = 0;   // each win dances in turn, biggest pay first, then round again
     const step = () => { if (!alive()) return; const i = order[n++ % order.length]; show(wins, i, colors); walkTimer = setTimeout(step, 1600); };
@@ -2917,7 +3044,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
         el.hidden = off; if (off) return; shown++;
         el.style.left = (cx - rr) + 'px'; el.style.top = (cy - rr) + 'px'; el.style.width = el.style.height = (2*rr) + 'px'; });
     }
-    function tick(){ const live = !!(window.MangoPreview && MangoPreview.ready()); box.classList.toggle('live', live); if (live) place(); }
+    function tick(){ if (document.hidden) return; const live = !!(window.MangoPreview && MangoPreview.ready()); box.classList.toggle('live', live); if (live) place(); }
     addEventListener('resize', place); place(); setInterval(tick, 400);
   }
 
@@ -3187,17 +3314,23 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     const palm = (k, p) => { const f = p.w / p.iw;
       // only the leaves sway (behind); the trunk and coconuts are one still piece drawn in front of them
       return `<div class="sc-palm ${k}" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;height:${p.h}px">` +
-        `<img class="crown" src="${src(`sc-${k}-crown`)}" alt="" style="height:${p.ch * f}px;transform-origin:${p.cx * f}px ${p.cy * f}px">` +
-        `<img class="trunk" src="${src(`sc-${k}-trunk`)}" alt=""></div>`; };
-    const water = k => `<div class="sc-water ${k}" style="top:${SC.water.y}px;height:${SC.water.h}px"><img class="wv a" src="${src(`sc-water-${k}`)}" alt=""><img class="wv b" src="${src(`sc-water-${k}`)}" alt=""></div>`;
+        `<img class="crown" src="${src(`sc-${k}-crown`)}" alt="" decoding="async" style="height:${p.ch * f}px;transform-origin:${p.cx * f}px ${p.cy * f}px">` +
+        `<img class="trunk" src="${src(`sc-${k}-trunk`)}" alt="" decoding="async"></div>`; };
+    // the sunset set (bonus only, hidden until then) waits: its pictures load after the page, or at once when a bonus starts
+    const im = (cls, k) => /sunset/.test(k) ? `<img class="${cls}" data-src="${src(k)}" alt="" decoding="async">` : `<img class="${cls}" src="${src(k)}" alt="" decoding="async">`;
+    const water = k => `<div class="sc-water ${k}" style="top:${SC.water.y}px;height:${SC.water.h}px">${im('wv a', `sc-water-${k}`)}${im('wv b', `sc-water-${k}`)}</div>`;
     box.innerHTML = `<div class="sc-world">
-        <img class="sc-plate day" src="${src(`sc-plate-day`)}" alt=""><img class="sc-plate sunset" src="${src(`sc-plate-sunset`)}" alt="">
+        <img class="sc-plate day" src="${src(`sc-plate-day`)}" alt="" fetchpriority="high">${im('sc-plate sunset', 'sc-plate-sunset')}
         ${water('day')}${water('sunset')}
         <div class="sc-sea" style="left:0;top:0;width:2000px;height:${SC.sea.y}px"></div>
         ${palm('palmL', SC.palmL)}${palm('palmR', SC.palmR)}
-        <img class="sc-chair day" src="${src(`sc-chair-day`)}" alt=""><img class="sc-chair sunset" src="${src(`sc-chair-sunset`)}" alt=""><img class="sc-bush day" src="${src(`sc-bush-day`)}" alt=""><img class="sc-bush sunset" src="${src(`sc-bush-sunset`)}" alt="">
+        ${im('sc-chair day', 'sc-chair-day')}${im('sc-chair sunset', 'sc-chair-sunset')}${im('sc-bush day', 'sc-bush-day')}${im('sc-bush sunset', 'sc-bush-sunset')}
       </div>`;
     host.appendChild(box); host.classList.add('live');
+    const sunset = () => box.querySelectorAll('img[data-src]').forEach(i => { i.src = i.dataset.src; i.removeAttribute('data-src'); });
+    afterLoad(sunset);
+    const stg = document.getElementById('stage');
+    if (stg) new MutationObserver((ms, o) => { if (stg.classList.contains('bonus')){ sunset(); o.disconnect(); } }).observe(stg, {attributes: true, attributeFilter: ['class']});
     const world = box.firstElementChild, sea = box.querySelector('.sc-sea');
     const fit = () => { const R = host.getBoundingClientRect(), k = Math.max(R.width / 2000, R.height / 1125);
       world.style.transform = `translate(${(R.width - 2000*k)/2}px, ${R.height - 1125*k}px) scale(${k})`; };
@@ -3259,7 +3392,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 <body>
 <div class="wrap">
   <section id="tab-play" role="tabpanel" class="slot">
-    <div class="scene" aria-hidden="true"></div>
+    <div class="scene live" aria-hidden="true"></div>
     <header class="slotbar">
       <span class="barspacer" aria-hidden="true"></span>
       <div class="brand">MANGO SURF</div>
@@ -3357,1483 +3490,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 </div>
 
 <script>
-/* Sk8 Sesh art module. Plain browser JS, defines window.Sk8Art only.
-   MS-Paint doodle style: thick black outlines, flat fills, baked-in wobble
-   (deterministic hash, no runtime randomness). No ids inside the SVGs. */
-(function () {
-  'use strict';
-  var K = '#141414';
-  var FONT = "Consolas,'Lucida Console',Menlo,monospace";
-  var IDS = ['cassette', 'sneaker', 'spray', 'lighter', 'wheels', 'trucks', 'face', 'board', 'wild', 'scatter'];
-  var POSES = ['idle', 'ollie', 'kickflip', 'grind', 'bail', 'hype'];
-  var TILE = {
-    cassette: '#8ea4ba', sneaker: '#bba98c', spray: '#9dbb9a', lighter: '#bb9db0',
-    wheels: '#54b8ff', trucks: '#b48cff', face: '#b8f03c', board: '#ffcc1f',
-    wild: '#6b2cff', scatter: '#ff2d8f'
-  };
-  var C = {
-    red: '#e8312f', dred: '#b01f1c', orange: '#ff8a1e', yellow: '#ffe14a', cream: '#fff4d6',
-    white: '#ffffff', blue: '#2d6cdf', cyan: '#2ff3ff', lime: '#8ee32b', green: '#3cc24a',
-    dgreen: '#1f7a2e', magenta: '#ff2fb0', steel: '#b9bec6', dsteel: '#8d939b', dark: '#2a2730'
-  };
-
-  /* ---------- drawing helpers ---------- */
-  function r(v) { return Math.round(v * 10) / 10; }
-  function pt(x, y) { return r(x) + ' ' + r(y); }
-  // deterministic hash in [-0.5, 0.5)
-  function hs(x, y, i) {
-    var h = (Math.round(x * 7) * 374761393 + Math.round(y * 7) * 668265263 + i * 1442695041) | 0;
-    h = Math.imul(h ^ (h >>> 13), 1274126177);
-    h ^= h >>> 16;
-    return ((h >>> 0) % 1000) / 1000 - 0.5;
-  }
-  // wobbly path through points: each segment bows a little (quadratic)
-  function wp(pts, closed, amt) {
-    if (amt == null) amt = 1.8;
-    var d = 'M' + pt(pts[0][0], pts[0][1]), n = pts.length, m = closed ? n : n - 1, i;
-    for (i = 0; i < m; i++) {
-      var a = pts[i], b = pts[(i + 1) % n], dx = b[0] - a[0], dy = b[1] - a[1];
-      var len = Math.sqrt(dx * dx + dy * dy) || 1;
-      var o = hs(a[0] + b[0], a[1] + b[1], i) * amt * Math.min(1, len / 12);
-      d += 'Q' + pt((a[0] + b[0]) / 2 - dy / len * o, (a[1] + b[1]) / 2 + dx / len * o) + ' ' + pt(b[0], b[1]);
-    }
-    return closed ? d + 'Z' : d;
-  }
-  function poly(pts, fill, extra, amt) {
-    return '<path d="' + wp(pts, 1, amt) + '" fill="' + fill + '"' + (extra || '') + '/>';
-  }
-  function line(pts, col, w, extra) {
-    return '<path d="' + wp(pts, 0) + '" fill="none"' + (col ? ' stroke="' + col + '"' : '') +
-      (w ? ' stroke-width="' + w + '"' : '') + (extra || '') + '/>';
-  }
-  function raw(d, fill, extra) { return '<path d="' + d + '" fill="' + fill + '"' + (extra || '') + '/>'; }
-  // octagon "rounded" rect; the bowed segments read as hand-drawn corners
-  function rr(x1, y1, x2, y2, c, fill, extra) {
-    return poly([[x1 + c, y1], [x2 - c, y1], [x2, y1 + c], [x2, y2 - c], [x2 - c, y2], [x1 + c, y2], [x1, y2 - c], [x1, y1 + c]], fill, extra);
-  }
-  // wobbly ellipse (Catmull-Rom through 10 jittered points)
-  function blob(cx, cy, rx, ry, fill, extra) {
-    var n = 10, p = [], i;
-    for (i = 0; i < n; i++) {
-      var a = i / n * 6.28318, j = 1 + hs(cx, cy, i) * 0.09;
-      p.push([cx + Math.cos(a) * rx * j, cy + Math.sin(a) * ry * j]);
-    }
-    var d = 'M' + pt(p[0][0], p[0][1]);
-    for (i = 0; i < n; i++) {
-      var p0 = p[(i + n - 1) % n], p1 = p[i], p2 = p[(i + 1) % n], p3 = p[(i + 2) % n];
-      d += 'C' + pt(p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6) + ' ' +
-        pt(p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6) + ' ' + pt(p2[0], p2[1]);
-    }
-    return '<path d="' + d + 'Z" fill="' + fill + '"' + (extra || '') + '/>';
-  }
-  function dot(x, y, rad, fill) { return blob(x, y, rad, rad, fill || K, ' stroke="none"'); }
-  function star(cx, cy, R, ri, n, rot, fill, extra) {
-    var p = [], i;
-    for (i = 0; i < n * 2; i++) {
-      var a = (rot || 0) * Math.PI / 180 - Math.PI / 2 + i * Math.PI / n, rad = i % 2 ? ri : R;
-      p.push([cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]);
-    }
-    return poly(p, fill, extra, 1);
-  }
-  function sparkle(x, y, s, fill) { return star(x, y, s, s * 0.32, 4, 0, fill || C.white, ' stroke-width="2"'); }
-  function tx(x, y, size, fill, str, sc, sw) {
-    return '<text x="' + r(x) + '" y="' + r(y) + '" font-family="' + FONT + '" font-weight="bold" font-size="' + size +
-      '" text-anchor="middle" fill="' + fill + '"' +
-      (sc ? ' stroke="' + sc + '" stroke-width="' + sw + '" paint-order="stroke"' : ' stroke="none"') + '>' + str + '</text>';
-  }
-  function grp(tr, inner) { return '<g transform="' + tr + '">' + inner + '</g>'; }
-  function wrap(inner, style) {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%"' +
-      (style ? ' style="' + style + '"' : '') +
-      '><g stroke="' + K + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">' + inner + '</g></svg>';
-  }
-  function tile(col) {
-    return '<rect x="2" y="2" width="96" height="96" rx="16" fill="' + col + '"/>' +
-      '<path d="M9 32Q9 9 32 9" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3.5"/>';
-  }
-  function tileEdge() { return '<rect x="2" y="2" width="96" height="96" rx="16" fill="none"/>'; }
-
-  /* ---------- boards ---------- */
-  // side view, centered, plank top at local y=1, wheels at y=9
-  function boardSide(cx, cy, ang, deck) {
-    var s = '';
-    s += rr(-17, 3.5, -9, 7, 1, C.dsteel, ' stroke-width="2.2"') + rr(9, 3.5, 17, 7, 1, C.dsteel, ' stroke-width="2.2"');
-    s += blob(-13, 9, 3.6, 3.6, C.cream, ' stroke-width="2.2"') + blob(13, 9, 3.6, 3.6, C.cream, ' stroke-width="2.2"');
-    s += raw('M-26 -5Q-23 1 -17 1L17 1Q23 1 26 -5L28 -3Q25 4.5 17 4.5L-17 4.5Q-25 4.5 -28 -3Z', deck || C.red);
-    s += line([[-16, 1.2], [16, 1.2]], K, 2);
-    return grp('translate(' + cx + ' ' + cy + ') rotate(' + ang + ')', s);
-  }
-  // top/under view with griptape edge, flame graphic, trucks, wheels
-  function boardTop(L, W, detail) {
-    var hl = L / 2, hw = W / 2, s = '';
-    function deck(dy) {
-      return 'M' + pt(-hl + hw, -hw + dy) + 'L' + pt(hl - hw, -hw + dy) + 'Q' + pt(hl, -hw + dy) + ' ' + pt(hl, dy) +
-        'Q' + pt(hl, hw + dy) + ' ' + pt(hl - hw, hw + dy) + 'L' + pt(-hl + hw, hw + dy) + 'Q' + pt(-hl, hw + dy) + ' ' +
-        pt(-hl, dy) + 'Q' + pt(-hl, -hw + dy) + ' ' + pt(-hl + hw, -hw + dy) + 'Z';
-    }
-    function uv(list, sc, ox) {
-      return list.map(function (q) { return [(ox + (q[0] - ox) * sc) * hl, q[1] * sc * hw]; });
-    }
-    var flame = [[-0.62, 0], [-0.22, -0.5], [-0.08, -0.16], [0.16, -0.68], [0.3, -0.2], [0.55, -0.6], [0.66, 0],
-      [0.55, 0.6], [0.3, 0.2], [0.16, 0.68], [-0.08, 0.16], [-0.22, 0.5]];
-    s += raw(deck(-W * 0.2), '#26262b');
-    s += raw(deck(0), C.red);
-    s += poly(uv(flame, 1, 0.1), C.orange, ' stroke-width="2.2"', 1);
-    s += poly(uv(flame, 0.55, 0.25), C.yellow, ' stroke-width="2"', 0.6);
-    [-1, 1].forEach(function (sd) {
-      var x = sd * 0.63 * hl;
-      s += rr(x - hw * 0.22, -hw * 1.1, x + hw * 0.22, hw * 1.1, 1, C.steel, ' stroke-width="2.2"');
-      s += rr(x - hw * 0.5, -hw * 0.38, x + hw * 0.5, hw * 0.38, 1.5, C.dsteel, ' stroke-width="2.2"');
-      if (detail) s += dot(x - hw * 0.25, -hw * 0.18, 1) + dot(x + hw * 0.25, hw * 0.18, 1) + dot(x - hw * 0.25, hw * 0.18, 1) + dot(x + hw * 0.25, -hw * 0.18, 1);
-      s += blob(x, -hw * 1.12, hw * 0.44, hw * 0.34, C.cream, ' stroke-width="2.5"');
-      s += blob(x, hw * 1.12, hw * 0.44, hw * 0.34, C.cream, ' stroke-width="2.5"');
-    });
-    return s;
-  }
-
-  /* ---------- stick figure ---------- */
-  function head(h, face, rot) {
-    var x = h[0], y = h[1], s = '';
-    s += blob(x, y, 9, 9, C.white);
-    s += raw('M' + pt(x - 9.6, y - 1.5) + 'Q' + pt(x - 10, y - 12.5) + ' ' + pt(x, y - 12) + 'Q' + pt(x + 10, y - 12.5) + ' ' + pt(x + 9.6, y - 1.5) + 'Q' + pt(x, y - 3.5) + ' ' + pt(x - 9.6, y - 1.5) + 'Z', C.red);
-    s += poly([[x - 8, y - 2], [x - 17.5, y - 1], [x - 16.5, y - 4.5], [x - 8, y - 6.5]], C.red, ' stroke-width="2.5"');
-    if (face === 'ouch') {
-      s += line([[x + 1, y - 0.5], [x + 4, y + 2.5]], 0, 1.7) + line([[x + 4, y - 0.5], [x + 1, y + 2.5]], 0, 1.7);
-      s += line([[x + 5, y - 0.5], [x + 8, y + 2.5]], 0, 1.7) + line([[x + 8, y - 0.5], [x + 5, y + 2.5]], 0, 1.7);
-      s += line([[x + 2, y + 6], [x + 4, y + 5], [x + 6, y + 6.3], [x + 8, y + 5]], 0, 1.6);
-    } else {
-      s += blob(x + 2.6, y + 0.8, 1.3, 1.7, K, ' stroke="none"') + blob(x + 6.2, y + 0.8, 1.3, 1.7, K, ' stroke="none"');
-      if (face === 'yell') s += blob(x + 4.6, y + 5.2, 2.4, 2.6, '#7a1020', ' stroke-width="1.6"');
-      else s += line([[x + 1.5, y + 4.4], [x + 4.6, y + 6.2], [x + 7.8, y + 3.8]], 0, 1.8);
-    }
-    return rot ? grp('rotate(' + rot + ' ' + x + ' ' + y + ')', s) : s;
-  }
-  function shoe(f) { return blob(f[0] + 1.2, f[1], 4.4, 2.7, C.white, ' stroke-width="2.4"'); }
-  function fig(o) {
-    var s = '', tube = wp([o.n, o.p], 0);
-    s += line([o.n, o.a2[0], o.a2[1]], 0, 4.5);
-    s += line([o.p, o.l2[0], o.l2[1]], 0, 4.5) + shoe(o.l2[1]);
-    s += '<path d="' + tube + '" fill="none" stroke-width="12.5"/>';
-    s += '<path d="' + tube + '" fill="none" stroke="' + (o.shirt || C.blue) + '" stroke-width="7"/>';
-    s += line([o.p, o.l1[0], o.l1[1]], 0, 4.5) + shoe(o.l1[1]);
-    s += line([o.n, o.a1[0], o.a1[1]], 0, 4.5);
-    s += head(o.h, o.face, o.hr || 0);
-    return s;
-  }
-
-  var POSE = {
-    idle: function () {
-      return boardSide(50, 82, 0) + fig({
-        h: [50, 26], n: [50, 37], p: [50, 57],
-        a1: [[40, 46], [43, 56]], a2: [[60, 46], [57, 56]],
-        l1: [[41, 69], [38, 80]], l2: [[59, 69], [62, 80]], face: 'smile'
-      }) + line([[41, 57], [45, 57]], 0, 2) + line([[55, 57], [59, 57]], 0, 2);
-    },
-    ollie: function () {
-      return line([[10, 88], [22, 88]], 0, 2.5) + line([[14, 94], [30, 94]], 0, 2.5) + line([[74, 92], [86, 92]], 0, 2.5) +
-        boardSide(50, 80, -14) + fig({
-          h: [54, 23], n: [52, 34], p: [48, 54],
-          a1: [[40, 40], [28, 40]], a2: [[64, 36], [76, 29]],
-          l1: [[34, 64], [37, 80]], l2: [[62, 59], [62, 73]], face: 'smile'
-        });
-    },
-    kickflip: function (compact) {
-      return (compact ? '' : line([[16, 68], [11, 78], [18, 88]], 0, 2.5) + line([[84, 86], [89, 76], [83, 67]], 0, 2.5) +
-        line([[22, 79], [27, 76]], 0, 2) + line([[73, 94], [79, 91]], 0, 2)) +
-        grp(compact ? 'translate(50 77) rotate(-17)' : 'translate(50 78) rotate(16)', boardTop(52, 14, false)) + fig({
-          h: [51, 23], n: [50, 34], p: [50, 54],
-          a1: [[38, 32], [29, 22]], a2: [[62, 32], [72, 23]],
-          l1: [[38, 60], [30, 68]], l2: [[62, 59], [73, 63]], face: 'yell'
-        });
-    },
-    grind: function () {
-      var s = '';
-      [[[22, 76], [22, 96]], [[78, 76], [78, 96]], [[6, 76], [94, 76]]].forEach(function (q) {
-        s += line(q, 0, 7) + line(q, C.steel, 3);
-      });
-      s += boardSide(50, 69, -3);
-      s += sparkle(33, 82, 4, C.yellow) + sparkle(26, 87, 3, C.orange) + sparkle(68, 83, 3.5, C.yellow) + sparkle(74, 88, 3, C.orange);
-      return s + fig({
-        h: [51, 19], n: [50, 30], p: [49, 48],
-        a1: [[38, 33], [24, 36]], a2: [[62, 30], [76, 25]],
-        l1: [[35, 56], [38, 66]], l2: [[64, 54], [62, 65]], face: 'smile'
-      });
-    },
-    bail: function () {
-      return boardSide(70, 74, 150) +
-        line([[62, 92], [72, 92]], 0, 2.5) + line([[80, 95], [90, 95]], 0, 2.5) +
-        fig({
-          h: [24, 60], n: [33, 58], p: [54, 52], hr: -70,
-          a1: [[43, 67], [41, 79]], a2: [[29, 68], [19, 74]],
-          l1: [[62, 38], [70, 28]], l2: [[68, 50], [82, 46]], face: 'ouch', shirt: C.orange
-        }) +
-        star(9, 46, 4.5, 2, 5, 0, C.yellow, ' stroke-width="2"') + star(19, 38, 4, 1.8, 5, 20, C.yellow, ' stroke-width="2"') +
-        star(30, 41, 3.5, 1.6, 5, 10, C.yellow, ' stroke-width="2"');
-    },
-    hype: function () {
-      return line([[10, 40], [18, 43]], 0, 2.5) + line([[9, 53], [17, 53]], 0, 2.5) + line([[90, 40], [82, 43]], 0, 2.5) +
-        line([[91, 53], [83, 53]], 0, 2.5) +
-        boardSide(50, 18, 180) + fig({
-          h: [50, 36], n: [50, 46], p: [50, 68],
-          a1: [[34, 38], [28, 23]], a2: [[66, 38], [72, 23]],
-          l1: [[40, 80], [33, 92]], l2: [[60, 80], [65, 92]], face: 'yell'
-        });
-    }
-  };
-
-  /* ---------- symbols ---------- */
-  var SYM = {
-    cassette: function () {
-      var s = rr(12, 24, 88, 77, 4, '#3b3742');
-      [[17, 29], [83, 29], [17, 72], [83, 72]].forEach(function (q) { s += blob(q[0], q[1], 2, 2, '#9aa0a6', ' stroke-width="1.5"'); });
-      s += rr(21, 29, 79, 60, 3, '#fff1c9');
-      s += tx(50, 42.5, 14, C.red, 'MIX', C.red, 0.8);
-      s += raw('M43 47H57V54H43Z', '#6b3d1e', ' stroke="none"');
-      s += rr(30, 45, 70, 57, 3, 'none');
-      s += raw('M33 48H43V54H33ZM57 48H67V54H57Z', '#1d1b22', ' stroke="none"');
-      s += blob(39, 51, 4.6, 4.6, C.white, ' stroke-width="2.4"') + blob(61, 51, 4.6, 4.6, C.white, ' stroke-width="2.4"');
-      s += dot(39, 51, 1.6) + dot(61, 51, 1.6);
-      s += poly([[27, 77], [32, 65], [68, 65], [73, 77]], C.dark);
-      s += dot(40, 71, 2) + dot(60, 71, 2);
-      return s;
-    },
-    sneaker: function () {
-      var s = poly([[14, 72], [11, 54], [12, 45], [17, 39], [28, 37], [38, 42], [42, 29], [54, 26], [58, 38], [72, 50], [86, 57], [91, 70]], '#e0452f');
-      s += line([[18, 41], [28, 39], [37, 44]], 0, 2.5);
-      s += poly([[70, 69], [73, 56], [84, 58], [91, 66], [91, 69]], C.cream);
-      s += line([[79, 61], [83, 64], [81, 66]], 0, 2);
-      s += poly([[18, 51], [30, 49], [31, 61], [19, 63]], '#c9c9c9', ' stroke-width="2.5"');
-      s += line([[21, 55], [28, 54]], '#8d939b', 1.5) + line([[22, 59], [28, 58]], '#8d939b', 1.5);
-      s += line([[46, 36], [57, 40]], C.white, 3) + line([[50, 44], [62, 46]], C.white, 3) + line([[56, 51], [67, 52]], C.white, 3);
-      s += poly([[9, 70], [92, 68], [93, 79], [89, 84], [13, 84], [9, 79]], C.cream);
-      s += line([[12, 77], [91, 76]], 0, 2);
-      return s;
-    },
-    spray: function () {
-      var s = '';
-      s += dot(66, 13, 2.2, C.magenta) + dot(73, 9, 2.8, C.magenta) + dot(76, 17, 2, C.magenta) + dot(83, 11, 3.2, C.magenta) + dot(84, 21, 2.2, C.magenta) + dot(90, 16, 1.6, C.magenta);
-      s += rr(43, 11, 57, 23, 2, C.white);
-      s += dot(58.5, 16, 1.4);
-      s += raw('M32 34L32 82Q50 90 68 82L68 34Z', C.blue);
-      s += raw('M32 34Q33 22 50 21Q67 22 68 34Q50 40 32 34Z', '#6f9bf0');
-      s += raw('M32 48Q50 54 68 48L68 67Q50 73 32 67Z', C.cream);
-      s += blob(50, 59, 8, 6, C.magenta, ' stroke-width="2"');
-      s += raw('M44 63Q45 69 44 74Q46 76 47 74Q46 69 47 63Z', C.magenta, ' stroke-width="1.8"');
-      s += line([[37, 38], [37, 45]], C.white, 3, ' stroke-opacity=".7"') + line([[37, 71], [37, 80]], C.white, 3, ' stroke-opacity=".7"');
-      return s;
-    },
-    lighter: function () {
-      var s = '';
-      s += raw('M56 31C45 28 47 17 56 7C65 17 67 28 56 31Z', '#ff5a1e');
-      s += raw('M56 29C51 27 51 21 56 15C61 21 61 27 56 29Z', C.yellow, ' stroke-width="2"');
-      s += raw('M35 46L35 84Q35 90 41 90L59 90Q65 90 65 84L65 46Z', C.lime);
-      s += poly([[37.5, 62], [62.5, 60], [62.5, 86], [37.5, 86]], '#5bb81c', ' stroke="none"', 1);
-      s += blob(45, 72, 1.6, 1.6, '#c6ff7a', ' stroke="none"') + blob(52, 79, 1.2, 1.2, '#c6ff7a', ' stroke="none"');
-      s += line([[40.5, 50], [40.5, 57]], C.white, 3, ' stroke-opacity=".75"');
-      s += rr(35, 32, 65, 46, 1.5, C.steel);
-      s += dot(49, 39, 1.4) + dot(55, 39, 1.4) + dot(61, 39, 1.4);
-      s += poly([[48, 29], [63, 29], [63, 33], [48, 33]], K, ' stroke-width="2"');
-      s += blob(40, 31, 5.5, 4.5, C.dsteel);
-      s += line([[37, 29], [37, 33]], 0, 1.5) + line([[40, 28], [40, 34]], 0, 1.5) + line([[43, 29], [43, 33]], 0, 1.5);
-      return s;
-    },
-    wheels: function () {
-      // a stack of three urethane wheels: two behind, one in front, bearings showing
-      function wheel(cx, cy, R, col, core) {
-        return blob(cx, cy, R, R, col) + blob(cx, cy, R * 0.64, R * 0.64, core, ' stroke-width="2.4"') +
-          blob(cx, cy, R * 0.34, R * 0.34, C.steel, ' stroke-width="2.2"') + dot(cx, cy, R * 0.12) +
-          raw('M' + pt(cx - R * 0.78, cy - R * 0.25) + 'Q' + pt(cx - R * 0.72, cy - R * 0.72) + ' ' + pt(cx - R * 0.25, cy - R * 0.8), 'none', ' stroke="#fff" stroke-opacity=".7" stroke-width="2.6"');
-      }
-      var s = sparkle(83, 16, 5) + sparkle(15, 80, 4);
-      s += wheel(32, 36, 17, C.cyan, '#9ff8ff') + wheel(68, 36, 17, C.magenta, '#ff9bd8');
-      s += wheel(50, 63, 23, C.cream, '#ffd9a0');
-      s += tx(50, 91, 9, K, 'SK8', C.white, 2.2);
-      return s;
-    },
-    trucks: function () {
-      // a skate truck seen from the front: baseplate, kingpin, bushings, hanger, axle and wheel ends
-      var s = sparkle(15, 17, 5) + sparkle(50, 86, 4.5);
-      s += rr(30, 14, 70, 26, 2, C.dsteel);
-      s += dot(36, 20, 1.6) + dot(64, 20, 1.6);
-      s += rr(45, 26, 55, 31, 1, '#ffd21f', ' stroke-width="2.5"');
-      s += line([[50, 24], [50, 52]], 0, 4) + line([[50, 24], [50, 52]], C.steel, 1.8);
-      s += rr(43, 31, 57, 43, 2, '#ffd21f');
-      s += poly([[18, 52], [38, 44], [62, 44], [82, 52], [82, 60], [62, 56], [38, 56], [18, 60]], C.steel);
-      s += line([[26, 53], [74, 53]], C.white, 2.2, ' stroke-opacity=".7"');
-      s += rr(6, 50, 18, 62, 2, C.dsteel, ' stroke-width="2.5"') + rr(82, 50, 94, 62, 2, C.dsteel, ' stroke-width="2.5"');
-      s += blob(13, 72, 10, 12, C.orange) + blob(87, 72, 10, 12, C.orange);
-      s += blob(13, 72, 4, 5, C.steel, ' stroke-width="2"') + blob(87, 72, 4, 5, C.steel, ' stroke-width="2"');
-      s += dot(50, 47, 2.6, C.dark);
-      return s;
-    },
-    face: function () {
-      // a grown-up skater: beanie, shades, stubble and a goatee
-      var s = '';
-      s += poly([[24, 92], [30, 80], [70, 80], [76, 92]], '#2d6cdf');
-      s += poly([[42, 80], [50, 89], [58, 80]], C.white, ' stroke-width="2.5"');
-      s += blob(26, 56, 5, 7, '#e8b483') + blob(74, 56, 5, 7, '#e8b483');
-      s += blob(50, 55, 24, 27, '#f0c393');
-      // stubble along the jaw
-      [[36, 70], [40, 74], [45, 77], [55, 77], [60, 74], [64, 70], [39, 68], [61, 68], [44, 72], [56, 72]].forEach(function (q) { s += dot(q[0], q[1], 0.9, '#8a5a3a'); });
-      s += poly([[45, 76], [50, 82], [55, 76], [50, 74]], '#6b3d1e', ' stroke-width="2"');
-      s += line([[43, 69], [50, 71], [58, 67]], 0, 2.6);
-      // shades
-      s += rr(28, 46, 48, 57, 3, '#1e1c24') + rr(52, 46, 72, 57, 3, '#1e1c24');
-      s += line([[48, 49], [52, 49]], 0, 2.6);
-      s += line([[31, 49], [36, 49]], C.white, 2, ' stroke-opacity=".8"') + line([[55, 49], [60, 49]], C.white, 2, ' stroke-opacity=".8"');
-      // beanie with a rolled cuff and a pom
-      s += raw('M25 42Q25 14 50 13Q75 14 75 42Z', C.red);
-      s += rr(23, 35, 77, 44, 2, C.dred);
-      [31, 39, 47, 55, 63, 70].forEach(function (x) { s += line([[x, 37], [x, 42]], '#ff7a6b', 1.5); });
-      s += blob(50, 11, 7, 6, C.white, ' stroke-width="2.5"');
-      return s;
-    },
-    board: function () {
-      return sparkle(21, 22, 8) + sparkle(80, 79, 7) + sparkle(31, 12, 3.5) + sparkle(89, 67, 3.5) +
-        grp('translate(50 51) rotate(-38)', boardTop(80, 26, true));
-    },
-    wild: function (o) {
-      var s = star(50, 48, 42, 28, 12, 0, C.yellow) + star(50, 48, 26, 17, 12, 15, '#fff7b0', ' stroke="none"');
-      s += grp('translate(3 -1) scale(.92)', POSE.kickflip(true));
-      if (o.sticky) {
-        s += '<path d="M11.5 20V14Q11.5 7 17.5 7Q23.5 7 23.5 14V20" fill="none" stroke-width="3.5"/>';
-        s += '<path d="M11.5 20V14Q11.5 7 17.5 7Q23.5 7 23.5 14V20" fill="none" stroke="' + C.steel + '" stroke-width="1.2"/>';
-        s += rr(7, 19, 28, 34, 3, '#ffd21f');
-        s += dot(17.5, 25, 2.2) + line([[17.5, 26], [17.5, 30]], 0, 2);
-      }
-      var m = +o.mult;
-      if (m > 0 && isFinite(m)) {
-        var str = 'x' + (Math.round(m * 100) / 100);
-        var col = m > 50 ? '#ff2fd0' : m > 10 ? '#ff2e2e' : m > 3 ? C.orange : '#ffd21f';
-        var tc = m > 10 ? C.white : K;
-        var fs = str.length > 4 ? 12 : 15, w = str.length * fs * 0.6 + 8, x2 = 93, x1 = x2 - w;
-        s += rr(x1, 72, x2, 93, 4, col);
-        s += tx((x1 + x2) / 2, 88, fs, tc, str, tc, 0.9);
-      }
-      return s;
-    },
-    scatter: function () {
-      var body = [[17, 26], [83, 26], [87, 30], [87, 70], [83, 74], [17, 74], [13, 70], [13, 30]];
-      var s = star(50, 50, 46, 20, 16, 0, '#ff79c0', ' stroke="none"');
-      var t = '';
-      t += poly(body, 'none', ' stroke="#fff36b" stroke-width="13" stroke-opacity=".45"');
-      t += poly(body, 'none', ' stroke="#fffbd0" stroke-width="7.5"');
-      t += poly(body, '#1e1c24');
-      t += rr(19, 30, 81, 55, 2, C.white);
-      t += poly([[19, 50.5], [81, 50.5], [81, 55], [19, 55]], C.cyan, ' stroke="none"', 0.3);
-      t += tx(51.5, 49.5, 20, '#ff2d8f', 'SESH') + tx(50, 48, 20, K, 'SESH', K, 0.8);
-      t += rr(29, 59, 71, 70, 2, '#4a4652', ' stroke-width="2.5"');
-      t += blob(39, 64.5, 4.3, 4.3, C.white, ' stroke-width="2.2"') + blob(61, 64.5, 4.3, 4.3, C.white, ' stroke-width="2.2"');
-      t += dot(39, 64.5, 1.5) + dot(61, 64.5, 1.5);
-      s += grp('rotate(-8 50 50)', t);
-      s += sparkle(15, 16, 6) + sparkle(86, 85, 6) + sparkle(88, 14, 3.5, C.yellow);
-      return s;
-    }
-  };
-
-  var cache = {};
-  function symbol(id, opts) {
-    opts = opts || {};
-    if (!SYM[id]) return '';
-    var key = id + '|' + (id === 'wild' ? (+opts.mult || 0) + '|' + !!opts.sticky : '') + '|' + !!opts.dim;
-    if (cache[key]) return cache[key];
-    var inner = tile(TILE[id]) + SYM[id](opts) + tileEdge();
-    return (cache[key] = wrap(inner, opts.dim ? 'filter:saturate(.15);opacity:.42' : ''));
-  }
-  function skater(pose) {
-    var p = POSE[pose] ? pose : 'idle';
-    var key = 'sk|' + p;
-    // white sticker halo (CSS filter, no ids) so black line art reads on dark pages too
-    var halo = 'filter:drop-shadow(1.2px 0 0 #fff) drop-shadow(-1.2px 0 0 #fff) drop-shadow(0 1.2px 0 #fff) drop-shadow(0 -1.2px 0 #fff)';
-    return cache[key] || (cache[key] = wrap(POSE[p](), halo));
-  }
-
-  window.Sk8Art = {
-    symbol: symbol,
-    skater: skater,
-    ids: IDS.slice(),
-    poses: POSES.slice(),
-    tileColor: function (id) { return TILE[id] || null; }
-  };
-})();
-
-/*
- * Sk8 Sesh audio - synthesized Web Audio module (play money learning project).
- * Plain browser JS, no imports, no files, no network. Defines exactly one global: window.Sk8Audio.
- *
- * Key: A minor (base loop Am7 | Fmaj7 | Dm7 | Em7, bonus Am | F | C | G).
- * Tempo: base 90 BPM swung boom-bap, bonus 170 BPM drum-and-bass / skate-punk.
- * Win stingers use C major (relative major of A minor) so they sit on top of the music.
- *
- * Graph:
- *   seq(base|bonus).gain -> musicBus -> duck -> musicLP -> musicVol --\
- *   sfx voices ---------------------------------> sfxBus -> sfxVol ----+-> compressor -> master -> destination
- */
-(function (root) {
-  'use strict';
-  if (!root) return;
-
-  var AC = root.AudioContext || root.webkitAudioContext;
-
-  // ---------- config ----------
-  var MASTER = 0.9;          // master gain when unmuted
-  var MUSIC_LEVEL = 0.16;    // music bus scaler; with musicVolume 0.8 music peaks ~ -18 dBFS
-  var LOOKAHEAD = 0.12;      // seconds scheduled ahead
-  var TICK_MS = 25;          // scheduler interval
-  var CAP = { sfx: 40, music: 96 };  // max simultaneous voices per pool (oldest is stolen)
-  var LP_BASE = 4200, LP_BONUS = 11000, LP_OPEN = 16000;
-
-  // ---------- state ----------
-  var ctx = null;
-  var muted = false;
-  var musicVolume = 0.8;
-  var sfxVolume = 1;
-  var N = {};                // graph nodes
-  var noiseBuf = null, curveSoft = null, curveHard = null;
-  var seqs = {};
-  var curMode = 'base';
-  var musicOn = false;
-  var duckCount = 0;
-  var antic = null;
-  var voices = { sfx: [], music: [] };
-  var stats = { created: 0, stolen: 0, leakWarned: false };
-
-  // ---------- small helpers ----------
-  function noop() {}
-  function clamp(v, a, b) { v = +v; if (!isFinite(v)) v = a; return v < a ? a : (v > b ? b : v); }
-  function mf(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-  function log10(x) { return Math.log(x) / Math.LN10; }
-  function log2(x) { return Math.log(x) / Math.LN2; }
-  function ok() { return !!ctx && !muted && ctx.state !== 'closed'; }
-  function tNow(pad) { return ctx.currentTime + (pad || 0.01); }
-
-  function safe(fn, fallback) {
-    return function () {
-      try { return fn.apply(null, arguments); }
-      catch (e) { if (0) root.console.warn('[Sk8Audio]', e); return fallback; }
-    };
-  }
-
-  // Freeze a param at time t so a new ramp can start from wherever it is (never jumps).
-  function holdAt(p, t) {
-    if (p.cancelAndHoldAtTime) {
-      try { p.cancelAndHoldAtTime(t); return; } catch (e) { /* fall through */ }
-    }
-    var v = p.value;
-    p.cancelScheduledValues(t);
-    p.setValueAtTime(v, t);
-  }
-
-  // Attack/decay envelope from silence to silence (0.0001 = -80 dB, exponential-safe).
-  function envAD(p, t, a, peak, d) {
-    p.setValueAtTime(0.0001, t);
-    p.linearRampToValueAtTime(Math.max(peak, 0.0002), t + a);
-    p.exponentialRampToValueAtTime(0.0001, t + a + d);
-  }
-  // Attack, decay to a sustain level by t+hold, then release.
-  function envAHR(p, t, a, peak, hold, sus, r) {
-    peak = Math.max(peak, 0.0002);
-    p.setValueAtTime(0.0001, t);
-    p.linearRampToValueAtTime(peak, t + a);
-    p.exponentialRampToValueAtTime(Math.max(peak * sus, 0.0001), t + Math.max(hold, a + 0.005));
-    p.exponentialRampToValueAtTime(0.0001, t + Math.max(hold, a + 0.005) + r);
-  }
-
-  function makeCurve(drive) {
-    var n = 1024, c = new Float32Array(n), norm = Math.tanh(drive);
-    for (var i = 0; i < n; i++) {
-      var x = i * 2 / (n - 1) - 1;
-      c[i] = Math.tanh(drive * x) / norm;
-    }
-    return c;
-  }
-
-  // ---------- voice management ----------
-  // A voice owns every node of one sound. When all of its sources end it disconnects them.
-  function Voice(pool, dest) {
-    this.pool = pool;
-    this.nodes = [];
-    this.sources = [];
-    this.pending = 0;
-    this.done = false;
-    this.stolen = false;
-    this.out = ctx.createGain();
-    this.out.connect(dest);
-    this.nodes.push(this.out);
-  }
-  Voice.prototype.add = function (n) { this.nodes.push(n); return n; };
-  Voice.prototype.play = function (src, t0, t1, offset) {
-    var self = this;
-    this.nodes.push(src);
-    this.sources.push(src);
-    this.pending++;
-    src.onended = function () { self.pending--; if (self.pending <= 0) self.finish(); };
-    if (offset) src.start(t0, offset); else src.start(t0);
-    src.stop(t1);
-    return src;
-  };
-  Voice.prototype.finish = function () {
-    if (this.done) return;
-    this.done = true;
-    for (var i = 0; i < this.nodes.length; i++) {
-      try { this.nodes[i].disconnect(); } catch (e) { /* already gone */ }
-    }
-    this.nodes.length = 0;
-    this.sources.length = 0;
-    var list = voices[this.pool], idx = list.indexOf(this);
-    if (idx >= 0) list.splice(idx, 1);
-  };
-  Voice.prototype.steal = function () {
-    if (this.stolen || this.done) return;
-    this.stolen = true;
-    stats.stolen++;
-    var now = ctx.currentTime, g = this.out.gain, self = this;
-    holdAt(g, now);
-    g.linearRampToValueAtTime(0.0001, now + 0.02);
-    for (var i = 0; i < this.sources.length; i++) {
-      try { this.sources[i].stop(now + 0.03); } catch (e) { /* ignore */ }
-    }
-    setTimeout(function () { self.finish(); }, 600);  // fallback if onended never fires
-  };
-
-  function newVoice(pool, dest) {
-    var list = voices[pool], live = 0, i;
-    for (i = 0; i < list.length; i++) if (!list[i].stolen) live++;
-    i = 0;
-    while (live >= CAP[pool] && i < list.length) {
-      if (!list[i].stolen) { list[i].steal(); live--; }
-      i++;
-    }
-    // Hard ceiling: in a synchronous burst, stolen voices have not started sounding yet,
-    // so dropping the oldest of them outright keeps the node count bounded without clicks.
-    i = 0;
-    while (list.length >= CAP[pool] * 2 && i < list.length) {
-      if (list[i].stolen) list[i].finish(); else i++;
-    }
-    var v = new Voice(pool, dest);
-    list.push(v);
-    stats.created++;
-    return v;
-  }
-  function sfxVoice() { return newVoice('sfx', N.sfxBus); }
-
-  // node builders (all registered on the voice so they get disconnected)
-  function gn(v, dest) { var g = v.add(ctx.createGain()); g.gain.value = 0.0001; g.connect(dest); return g; }
-  function gc(v, val, dest) { var g = v.add(ctx.createGain()); g.gain.value = val; g.connect(dest); return g; }
-  function hz(f) { return Math.min(f, ctx.sampleRate * 0.45); }
-  function filt(v, type, f, q, dest) {
-    var b = v.add(ctx.createBiquadFilter());
-    b.type = type; b.frequency.value = hz(f); b.Q.value = q; b.connect(dest);
-    return b;
-  }
-  function osc(v, type, f, t0, t1, dest, f1, glide, detune) {
-    var o = ctx.createOscillator();
-    o.type = type;
-    o.frequency.setValueAtTime(f, t0);
-    if (f1) o.frequency.exponentialRampToValueAtTime(f1, t0 + glide);
-    if (detune) o.detune.value = detune;
-    o.connect(dest);
-    v.play(o, t0, t1);
-    return o;
-  }
-  function noise(v, t0, t1, dest) {
-    var s = ctx.createBufferSource();
-    s.buffer = noiseBuf;
-    s.loop = true;
-    s.connect(dest);
-    v.play(s, t0, t1, Math.random() * 1.5);
-    return s;
-  }
-  function shaper(v, curve, dest) {
-    var w = v.add(ctx.createWaveShaper());
-    w.curve = curve; w.oversample = '2x'; w.connect(dest);
-    return w;
-  }
-
-  // ---------- shared SFX building blocks ----------
-  function blip(v, t, f, dur, peak) {
-    var g = gn(v, v.out);
-    envAD(g.gain, t, 0.004, peak, dur);
-    var lp = filt(v, 'lowpass', 3200, 0.7, gc(v, 0.45, g));
-    osc(v, 'square', f, t, t + dur + 0.05, lp);
-    osc(v, 'sine', f, t, t + dur + 0.05, gc(v, 0.6, g));
-  }
-  function bell(v, t, f, peak, dur) {
-    var g1 = gn(v, v.out); envAD(g1.gain, t, 0.002, peak, dur);
-    var g2 = gn(v, v.out); envAD(g2.gain, t, 0.002, peak * 0.3, dur * 0.35);
-    var g3 = gn(v, v.out); envAD(g3.gain, t, 0.001, peak * 0.12, dur * 0.12);
-    osc(v, 'sine', f, t, t + dur + 0.05, g1);
-    osc(v, 'sine', f * 2.76, t, t + dur * 0.35 + 0.05, g2);
-    osc(v, 'sine', f * 5.4, t, t + dur * 0.12 + 0.05, g3);
-  }
-  function cymbal(v, t, peak, dur) {
-    var g = gn(v, v.out); envAD(g.gain, t, 0.003, peak, dur);
-    noise(v, t, t + dur + 0.05, filt(v, 'highpass', 6000, 0.7, g));
-    var g2 = gn(v, v.out); envAD(g2.gain, t, 0.002, peak * 0.5, dur * 0.4);
-    noise(v, t, t + dur * 0.4 + 0.05, filt(v, 'bandpass', 9500, 2, g2));
-  }
-  function thump(v, t, peak) {
-    var g = gn(v, v.out); envAD(g.gain, t, 0.002, peak, 0.2);
-    osc(v, 'sine', 160, t, t + 0.25, g, 48, 0.1);
-  }
-  function snap(v, t, peak) {
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, peak, 0.1);
-    noise(v, t, t + 0.13, filt(v, 'bandpass', 2200, 0.9, g));
-  }
-  function brass(v, t, notes, dur, peak) {
-    var tr = gc(v, 0.55, v.out);
-    var sh = shaper(v, curveSoft, tr);
-    var g = gn(v, sh);
-    envAHR(g.gain, t, 0.03, peak / Math.sqrt(notes.length), dur, 0.6, 0.35);
-    var lp = filt(v, 'lowpass', 500, 1, g);
-    lp.frequency.setValueAtTime(500, t);
-    lp.frequency.exponentialRampToValueAtTime(4200, t + 0.08);
-    lp.frequency.exponentialRampToValueAtTime(1800, t + dur + 0.3);
-    for (var i = 0; i < notes.length; i++) {
-      var f = mf(notes[i]);
-      osc(v, 'sawtooth', f, t, t + dur + 0.4, lp, 0, 0, -6);
-      osc(v, 'sawtooth', f, t, t + dur + 0.4, lp, 0, 0, 6);
-    }
-  }
-  function chordBlips(v, t, base, dur, peak) {
-    var ns = [base, base + 4, base + 7, base + 12];
-    for (var i = 0; i < ns.length; i++) blip(v, t + i * 0.012, mf(ns[i]), dur, peak);
-  }
-  function neutralTick() {
-    var v = sfxVoice(), t = tNow();
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.1, 0.035);
-    osc(v, 'triangle', 1050, t, t + 0.06, filt(v, 'bandpass', 1400, 1, g));
-  }
-
-  // C major arpeggio ladder (relative major of the A minor music)
-  var LADDER = [60, 64, 67, 72, 76, 79, 84, 88, 91, 96, 100];
-  function arp(t, startIdx, count, step, peak, holdLast) {
-    var v = sfxVoice(), last = LADDER[0];
-    for (var k = 0; k < count; k++) {
-      var idx = Math.min(startIdx + k, LADDER.length - 1), isLast = (k === count - 1);
-      last = LADDER[idx];
-      blip(v, t + k * step, mf(last), isLast ? holdLast : step * 1.6, isLast ? peak : peak * 0.85);
-    }
-    return { tEnd: t + (count - 1) * step, lastMidi: last };
-  }
-
-  // ---------- music ducking (sidechain dip + low-pass opening) ----------
-  function lpBase() { return curMode === 'bonus' ? LP_BONUS : LP_BASE; }
-  function applyDuck(on) {
-    var now = ctx.currentTime, g = N.duck.gain, f = N.musicLP.frequency;
-    holdAt(g, now); holdAt(f, now);
-    if (on) {
-      g.linearRampToValueAtTime(0.45, now + 0.08);
-      f.exponentialRampToValueAtTime(LP_OPEN, now + 0.35);
-    } else {
-      g.linearRampToValueAtTime(1, now + 0.6);
-      f.exponentialRampToValueAtTime(lpBase(), now + 0.8);
-    }
-  }
-  function acquireDuck() {
-    duckCount++;
-    if (duckCount === 1) applyDuck(true);
-    var released = false;
-    return function () {
-      if (released || !ctx) return;
-      released = true;
-      duckCount = Math.max(0, duckCount - 1);
-      if (duckCount === 0) applyDuck(false);
-    };
-  }
-  function duckFor(sec) { var rel = acquireDuck(); setTimeout(rel, sec * 1000); }
-  function lpTo(when) {
-    if (duckCount > 0) return;  // release will land on the right value
-    var f = N.musicLP.frequency;
-    holdAt(f, when);
-    f.exponentialRampToValueAtTime(lpBase(), when + 0.5);
-  }
-
-  // ---------- music instruments ----------
-  function kick(s, t, vel) {
-    var v = newVoice('music', s.drums);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.002, 0.5 * vel, 0.3);
-    osc(v, 'sine', 135, t, t + 0.36, g, 44, 0.12);
-    var cg = gn(v, v.out); envAD(cg.gain, t, 0.001, 0.1 * vel, 0.012);
-    noise(v, t, t + 0.03, filt(v, 'lowpass', 2500, 0.7, cg));
-  }
-  function snare(s, t, vel, bright) {
-    var v = newVoice('music', s.drums), d = bright ? 0.13 : 0.17;
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.32 * vel, d);
-    noise(v, t, t + d + 0.03, filt(v, 'bandpass', bright ? 2600 : 1800, 0.8, g));
-    var bg = gn(v, v.out); envAD(bg.gain, t, 0.001, 0.2 * vel, 0.07);
-    osc(v, 'triangle', bright ? 220 : 185, t, t + 0.1, bg, 140, 0.07);
-  }
-  function hat(s, t, vel, open) {
-    var v = newVoice('music', s.drums), d = open ? 0.22 : 0.035;
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.1 * vel, d);
-    noise(v, t, t + d + 0.03, filt(v, 'highpass', 7500, 0.7, g));
-  }
-  function crash(s, t, vel) {
-    var v = newVoice('music', s.drums);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.003, 0.13 * vel, 1.6);
-    noise(v, t, t + 1.65, filt(v, 'highpass', 5200, 0.7, g));
-  }
-  function crackle(s, t) {
-    var v = newVoice('music', s.gain);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.0005, 0.06 + Math.random() * 0.12, 0.003);
-    noise(v, t, t + 0.012, filt(v, 'highpass', 3000, 0.7, g));
-  }
-  function bass(s, t, f, len, vel, gritty) {
-    var v = newVoice('music', gritty ? s.drums : s.gain);
-    var g = gn(v, v.out);
-    var p = (gritty ? 0.2 : 0.22) * vel;
-    envAHR(g.gain, t, 0.008, p, Math.max(len, 0.03), 0.45, 0.08);
-    var end = t + Math.max(len, 0.03) + 0.12;
-    if (gritty) {
-      var lp = filt(v, 'lowpass', 2200, 2, g);
-      lp.frequency.setValueAtTime(2200, t);
-      lp.frequency.exponentialRampToValueAtTime(700, t + Math.max(len, 0.03));
-      osc(v, 'sawtooth', f, t, end, lp);
-    } else {
-      osc(v, 'sine', f * 1.015, t, end, g, f, 0.03);           // tiny pitch settle = round thump
-      osc(v, 'triangle', f, t, end, filt(v, 'lowpass', 650, 0.7, gc(v, 0.5, g)));
-    }
-  }
-  function keys(s, t, notes, len, vel) {  // dusty electric piano
-    var v = newVoice('music', s.gain);
-    var lp = filt(v, 'lowpass', 2400, 0.5, v.out);
-    var g = gn(v, lp);
-    envAHR(g.gain, t, 0.012, 0.04 * vel, len, 0.35, 0.45);
-    var gt = gn(v, lp); envAD(gt.gain, t, 0.002, 0.014 * vel, 0.28);
-    var end = t + len + 0.5;
-    for (var i = 0; i < notes.length; i++) {
-      var f = mf(notes[i]);
-      osc(v, 'sine', f, t, end, g);
-      osc(v, 'triangle', f, t, end, g, 0, 0, 7);
-      osc(v, 'sine', f * 4, t, t + 0.35, gt);
-    }
-  }
-  function stab(s, t, notes, len, vel) {  // bright bonus chord stab
-    var v = newVoice('music', s.gain);
-    var lp = filt(v, 'lowpass', 1500, 1.2, v.out);
-    lp.frequency.setValueAtTime(1500, t);
-    lp.frequency.exponentialRampToValueAtTime(3800, t + 0.02);
-    lp.frequency.exponentialRampToValueAtTime(1600, t + len + 0.1);
-    var g = gn(v, lp);
-    envAHR(g.gain, t, 0.005, 0.035 * vel, len, 0.6, 0.12);
-    for (var i = 0; i < notes.length; i++) {
-      var f = mf(notes[i]);
-      osc(v, 'sawtooth', f, t, t + len + 0.15, g, 0, 0, -8);
-      osc(v, 'sawtooth', f, t, t + len + 0.15, g, 0, 0, 8);
-    }
-  }
-
-  // ---------- patterns (16 steps per bar, 8 bars = 128 steps) ----------
-  var BASE = {
-    roots: [45, 41, 38, 40],                                               // A2 F2 D2 E2
-    chords: [[57, 60, 64, 67], [53, 57, 60, 64], [53, 57, 60, 62], [55, 59, 62, 64]], // Am7 Fmaj7 Dm7 Em7
-    sev: [10, 11, 10, 10]
-  };
-  var KA = [1, 0, 0, 0, 0, 0, 0, 0.55, 0, 0, 0.9, 0, 0, 0, 0, 0];
-  var KB = [1, 0, 0, 0.5, 0, 0, 0, 0, 0.8, 0, 0.9, 0, 0, 0, 0, 0];
-  // [step, interval ('s' = chord 7th), length in steps, velocity]
-  var BASSA = [[0, 0, 5, 1], [7, 0, 2, 0.7], [10, 7, 3, 0.9], [14, 12, 2, 0.6]];
-  var BASSB = [[0, 0, 2, 1], [3, 12, 1, 0.6], [6, 0, 2, 0.8], [8, 7, 2, 0.85], [10, 's', 2, 0.8], [13, 12, 1, 0.55], [14, 7, 2, 0.7]];
-
-  function stepBase(s, step, t) {
-    var bar = step >> 4, i = step & 15, sd = s.sd, ci = bar & 3, k;
-    var tt = t + ((i & 1) ? sd * 0.17 : 0);     // swung 16ths
-    var fill = (bar === 3 || bar === 7), late = fill && i >= 12;
-
-    var kv = ((bar & 1) ? KB : KA)[i];
-    if (late) kv = (bar === 7 && i === 12) ? 0.8 : 0;
-    if (kv) kick(s, tt, kv);
-
-    var sv = (i === 4 || i === 12) ? 1 : 0;
-    if (!fill && (bar & 1) && i === 15) sv = 0.16;
-    if ((bar & 1) && i === 9) sv = 0.13;
-    if (late) sv = (bar === 7) ? [0.9, 0.55, 0.75, 1][i - 12] : [1, 0.4, 0.6, 0.85][i - 12];
-    if (sv) snare(s, tt, sv, false);
-
-    var openBar = (bar === 1 || bar === 5);
-    if (!late && !(openBar && i === 15)) {
-      var open = openBar && i === 14;
-      hat(s, tt, open ? 0.5 : (i % 4 === 0 ? 0.75 : (i % 2 === 0 ? 0.5 : 0.28)), open);
-    }
-    if (step === 0 && s.loops > 0) crash(s, t, 0.5);
-
-    var pat = bar < 4 ? BASSA : BASSB;
-    for (k = 0; k < pat.length; k++) {
-      if (pat[k][0] !== i) continue;
-      var iv = pat[k][1] === 's' ? BASE.sev[ci] : pat[k][1];
-      bass(s, tt, mf(BASE.roots[ci] + iv), pat[k][2] * sd * 0.92, pat[k][3], false);
-    }
-
-    var ch = BASE.chords[ci];
-    if (bar < 4) {
-      if (i === 0) keys(s, t, ch, 7 * sd, 1);
-      else if (i === 10 && (bar & 1)) keys(s, t, ch, 5 * sd, 0.7);
-    } else {
-      if (i === 0) keys(s, t, ch, 3 * sd, 0.95);
-      else if (i === 3) keys(s, tt, ch, 3 * sd, 0.6);
-      else if (i === 10) keys(s, t, ch, 5 * sd, 0.8);
-    }
-
-    if (Math.random() < 0.28) crackle(s, t + Math.random() * sd);  // vinyl dust
-  }
-
-  var BON = {
-    roots: [45, 41, 48, 43],                                         // A2 F2 C3 G2
-    chords: [[69, 72, 76], [65, 69, 72], [67, 72, 76], [67, 71, 74]]  // Am F C G, high and bright
-  };
-  var STABA = [[0, 3, 1], [3, 2, 0.7], [6, 3, 0.9], [10, 2, 0.75], [12, 4, 0.9]];
-  var STABB = [[0, 6, 1], [6, 4, 0.8], [10, 6, 0.9]];
-
-  function stepBonus(s, step, t) {
-    var bar = step >> 4, i = step & 15, sd = s.sd, ci = bar & 3, k;
-    var fill = (bar === 3 || bar === 7);
-    var roll = (bar === 7 && i >= 8) || (bar === 3 && i >= 12);
-
-    var kv = (i === 0) ? 1 : (i === 10) ? 0.9 : ((bar & 1) && i === 2) ? 0.5 : 0;
-    if (roll) kv = (i === 12) ? 0.8 : 0;
-    if (kv) kick(s, t, kv);
-
-    var sv = (i === 4 || i === 12) ? 1 : (i === 7) ? 0.2 : (i === 15 && !fill) ? 0.15 : 0;
-    if (roll) sv = (bar === 7) ? 0.3 + 0.7 * (i - 8) / 7 : [0.9, 0.6, 0.8, 1][i - 12];
-    if (sv) snare(s, t, sv, true);
-
-    if (!roll) hat(s, t, (i % 4 === 2) ? 0.8 : (i % 2 === 0 ? 0.45 : 0.18), false);
-    if (i === 0 && (bar === 0 || bar === 4)) crash(s, t, bar === 0 ? 0.55 : 0.35);
-
-    if ((i & 1) === 0) {
-      var up = bar >= 4 && (i % 4 === 2);
-      bass(s, t, mf(BON.roots[ci] + (up ? 12 : 0)), sd * 1.6, i % 4 === 0 ? 1 : 0.8, true);
-    }
-
-    var st = bar < 4 ? STABA : STABB;
-    for (k = 0; k < st.length; k++) {
-      if (st[k][0] === i) stab(s, t, BON.chords[ci], st[k][1] * sd * 0.95, st[k][2]);
-    }
-  }
-
-  // ---------- sequencer ----------
-  function makeSeq(mode, bpm) {
-    var g = ctx.createGain(); g.gain.value = 0.0001; g.connect(N.musicBus);
-    var trim = ctx.createGain(); trim.gain.value = 0.7; trim.connect(g);
-    var sh = ctx.createWaveShaper(); sh.curve = curveSoft; sh.oversample = '2x'; sh.connect(trim);
-    return { mode: mode, bpm: bpm, sd: 60 / bpm / 4, gain: g, drums: sh,
-             active: false, step: 0, nextTime: 0, stopAt: 0, loops: 0 };
-  }
-
-  function tick() {
-    if (!ctx) return;
-    var t = ctx.currentTime;
-    for (var key in seqs) {
-      var s = seqs[key];
-      if (!s.active) continue;
-      if (s.stopAt && t > s.stopAt + 0.1) { s.active = false; s.stopAt = 0; continue; }
-      if (s.nextTime < t - 0.2) s.nextTime = t + 0.03;   // resync after tab throttling
-      var guard = 0;
-      while (s.nextTime < t + LOOKAHEAD && guard++ < 64) {
-        if ((!s.stopAt || s.nextTime < s.stopAt) && !muted && ctx.state === 'running') {
-          try { (s.mode === 'base' ? stepBase : stepBonus)(s, s.step, s.nextTime); }
-          catch (e) { if (0) root.console.warn('[Sk8Audio] step', e); }
-        }
-        s.nextTime += s.sd;
-        s.step = (s.step + 1) % 128;
-        if (s.step === 0) s.loops++;
-      }
-    }
-    if (!stats.leakWarned && (voices.sfx.length > CAP.sfx * 3 || voices.music.length > CAP.music * 3)) {
-      stats.leakWarned = true;
-      if (0) root.console.warn('[Sk8Audio] voice list growing: sfx=' + voices.sfx.length + ' music=' + voices.music.length);
-    }
-  }
-
-  function startSeq(s, at, fadeIn) {
-    if (!s.active) { s.active = true; s.step = 0; s.loops = 0; s.nextTime = at; }
-    s.stopAt = 0;
-    var h = s.gain.gain;
-    holdAt(h, at);
-    h.linearRampToValueAtTime(1, at + Math.max(fadeIn, 0.01));
-  }
-  function fadeSeq(s, from, to) {
-    var g = s.gain.gain;
-    holdAt(g, from);
-    g.linearRampToValueAtTime(0.0001, to);
-    s.stopAt = to;
-  }
-  // from-seq fades over [fadeStart, fadeEnd]; to-seq starts at step 0 at startAt.
-  function switchMode(mode, fadeStart, fadeEnd, startAt, fadeIn) {
-    if (mode === curMode) return;
-    var from = seqs[curMode], to = seqs[mode];
-    curMode = mode;
-    lpTo(startAt);
-    if (!musicOn) return;
-    if (from.active) fadeSeq(from, fadeStart, fadeEnd);
-    startSeq(to, startAt, fadeIn);
-  }
-
-  // ---------- public: control ----------
-  function init() {
-    if (ctx) {
-      if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
-      return true;
-    }
-    if (!AC) return false;
-    ctx = new AC();
-    if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
-
-    N.master = ctx.createGain(); N.master.gain.value = muted ? 0.0001 : MASTER; N.master.connect(ctx.destination);
-    N.comp = ctx.createDynamicsCompressor();
-    N.comp.threshold.value = -12; N.comp.knee.value = 12; N.comp.ratio.value = 3;
-    N.comp.attack.value = 0.004; N.comp.release.value = 0.25;
-    N.comp.connect(N.master);
-    N.musicVol = ctx.createGain(); N.musicVol.gain.value = musicVolume * MUSIC_LEVEL; N.musicVol.connect(N.comp);
-    N.musicLP = ctx.createBiquadFilter(); N.musicLP.type = 'lowpass'; N.musicLP.frequency.value = lpBase(); N.musicLP.Q.value = 0.5;
-    N.musicLP.connect(N.musicVol);
-    N.duck = ctx.createGain(); N.duck.gain.value = 1; N.duck.connect(N.musicLP);
-    N.musicBus = ctx.createGain(); N.musicBus.gain.value = 1; N.musicBus.connect(N.duck);
-    N.sfxVol = ctx.createGain(); N.sfxVol.gain.value = sfxVolume; N.sfxVol.connect(N.comp);
-    N.sfxBus = ctx.createGain(); N.sfxBus.gain.value = 1; N.sfxBus.connect(N.sfxVol);
-
-    var len = Math.floor(ctx.sampleRate * 2);
-    noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
-    var d = noiseBuf.getChannelData(0);
-    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-    curveSoft = makeCurve(1.1);
-    curveHard = makeCurve(4);
-
-    seqs.base = makeSeq('base', 90);
-    seqs.bonus = makeSeq('bonus', 170);
-    setInterval(tick, TICK_MS);
-    return true;
-  }
-
-  function startMusic() {
-    if (!ctx || musicOn) return;
-    musicOn = true;
-    var t = tNow(0.06), other = seqs[curMode === 'base' ? 'bonus' : 'base'];
-    if (other.active && !other.stopAt) fadeSeq(other, t, t + 0.3);
-    startSeq(seqs[curMode], t, 0.25);
-  }
-
-  function stopMusic() {
-    if (!ctx || !musicOn) return;
-    musicOn = false;
-    var t = ctx.currentTime;
-    for (var key in seqs) if (seqs[key].active) fadeSeq(seqs[key], t, t + 0.4);
-  }
-
-  function setMode(mode) {
-    if (mode !== 'base' && mode !== 'bonus') return;
-    if (!ctx) { curMode = mode; return; }
-    var t = tNow(0.03), beat = 60 / seqs[curMode].bpm;
-    switchMode(mode, t, t + beat, t, beat);
-  }
-
-  function stopAntic(fade) {
-    if (!antic) return;
-    var a = antic; antic = null;
-    clearTimeout(a.timer);
-    if (a.rel){ a.rel(); a.rel = null; }   // let the main music come back up
-    if (a.v.done) return;
-    var now = ctx.currentTime;
-    holdAt(a.grp.gain, now);
-    a.grp.gain.linearRampToValueAtTime(0.0001, now + fade);
-    for (var i = 0; i < a.v.sources.length; i++) {
-      try { a.v.sources[i].stop(now + fade + 0.02); } catch (e) { /* ignore */ }
-    }
-  }
-
-  function setMuted(b) {
-    muted = !!b;
-    if (!ctx) return;
-    if (muted) stopAntic(0.05);
-    var g = N.master.gain, now = ctx.currentTime;
-    holdAt(g, now);
-    g.linearRampToValueAtTime(muted ? 0.0001 : MASTER, now + 0.05);
-  }
-  function setMusicVolume(v) {
-    musicVolume = clamp(v, 0, 1);
-    if (ctx) N.musicVol.gain.setTargetAtTime(musicVolume * MUSIC_LEVEL, ctx.currentTime, 0.05);
-  }
-  function setSfxVolume(v) {
-    sfxVolume = clamp(v, 0, 1);
-    if (ctx) N.sfxVol.gain.setTargetAtTime(sfxVolume, ctx.currentTime, 0.03);
-  }
-  function isReady() { return !!ctx && ctx.state === 'running'; }
-
-  // ---------- public: game feedback ----------
-  function spinStart() {
-    if (!ok()) return;
-    var v = sfxVoice(), t = tNow();
-    var g = gn(v, v.out);                                  // whoosh
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.22, t + 0.09);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-    var bp = filt(v, 'bandpass', 400, 1.2, g);
-    bp.frequency.setValueAtTime(400, t);
-    bp.frequency.exponentialRampToValueAtTime(2600, t + 0.22);
-    noise(v, t, t + 0.32, bp);
-    var pg = gn(v, v.out); envAD(pg.gain, t, 0.002, 0.4, 0.09);   // board pop
-    osc(v, 'sine', 220, t, t + 0.12, pg, 70, 0.07);
-    var cg = gn(v, v.out); envAD(cg.gain, t, 0.001, 0.18, 0.015);
-    noise(v, t, t + 0.03, filt(v, 'highpass', 3000, 0.7, cg));
-  }
-
-  function reelStop(i) {
-    if (!ok()) return;
-    i = Math.round(clamp(i, 0, 4));
-    var v = sfxVoice(), t = tNow();
-    var f = 520 * Math.pow(2, (i * 2) / 12) * (1 + (Math.random() - 0.5) * 0.02);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.002, 0.17, 0.09);           // woody knock (softened)
-    osc(v, 'triangle', f, t, t + 0.12, filt(v, 'lowpass', 1800, 0.7, g), f * 0.7, 0.05);
-    var ng = gn(v, v.out); envAD(ng.gain, t, 0.0015, 0.07, 0.035);        // light clack (was the grating part)
-    noise(v, t, t + 0.05, filt(v, 'bandpass', f * 1.8, 1.5, ng));
-    var tg = gn(v, v.out); envAD(tg.gain, t, 0.002, 0.18, 0.08);          // truck thud
-    osc(v, 'sine', 110 * Math.pow(2, i / 12), t, t + 0.11, tg, 70, 0.06);
-  }
-
-  var SCATTER = [79, 81, 84, 86, 88];  // G5 A5 C6 D6 E6: C major pentatonic, n=3 lands on the tonic C
-  function scatterLand(n) {
-    if (!ok()) return;
-    n = Math.round(clamp(n, 1, 5));
-    var v = sfxVoice(), t = tNow(), f = mf(SCATTER[n - 1]);
-    var peak = 0.26 + 0.03 * (n - 1);
-    bell(v, t, f, peak, 0.9 + 0.15 * n);
-    if (n >= 3) {                           // arrival: sparkle and a low octave for weight
-      bell(v, t + 0.06, f * 1.5, peak * 0.4, 0.6);
-      bell(v, t + 0.12, f * 2, peak * 0.3, 0.5);
-      var lg = gn(v, v.out); envAD(lg.gain, t, 0.004, 0.14, 1.2);
-      osc(v, 'sine', f / 2, t, t + 1.25, lg);
-    }
-  }
-
-  // Tension loop while the last reels spin after 2 bonus tapes: the main music dips and a tense groove plays
-  // until the last reel lands (anticipation(false)). Low bass rubbing E against F, a shaky tritone chord
-  // that swells and opens up, ticking hats and a heartbeat. Hard stop after 12 s in case nobody calls off.
-  function anticipation(on) {
-    if (!on) { if (ctx) stopAntic(0.25); return; }
-    if (!ok() || antic) return;
-    var v = sfxVoice(), t = tNow(), MAX = 12, end = t + MAX, step = 60 / 152 / 2;   // eighth notes at 152 bpm
-    var grp = gc(v, 1, v.out), rel = acquireDuck();
-    // pulsing bass: E2 E2 E2 F2, never resolving
-    var bg = gn(v, grp);
-    var bo = osc(v, 'sawtooth', mf(40), t, end, filt(v, 'lowpass', 520, 4, bg));
-    // shaky chord: E3 + Bb3 (a tritone), tremolo from a 9 Hz wobble, swelling and opening over ~3 s
-    var pg = gn(v, grp);
-    pg.gain.setValueAtTime(0.0001, t); pg.gain.linearRampToValueAtTime(0.075, t + 2.8);
-    var plp = filt(v, 'lowpass', 700, 1.2, pg);
-    plp.frequency.setValueAtTime(700, t); plp.frequency.exponentialRampToValueAtTime(2800, t + 4);
-    var trem = gc(v, 0.6, plp);
-    osc(v, 'sine', 9, t, end, gc(v, 0.4, trem.gain));
-    osc(v, 'sawtooth', mf(52), t, end, trem, 0, 0, -7);
-    osc(v, 'sawtooth', mf(58), t, end, trem, 0, 0, 7);
-    // ticking hats and a heartbeat on the beat
-    var hg = gn(v, grp);
-    noise(v, t, end, filt(v, 'highpass', 7000, 0.7, hg));
-    var hb = gn(v, grp);
-    osc(v, 'triangle', 55, t, end, filt(v, 'lowpass', 400, 0.7, hb));
-    var i = 0, tp = t;
-    while (tp < end - 0.05){
-      var onBeat = i % 2 === 0, prog = Math.min(1, (tp - t) / 4);
-      bo.frequency.setValueAtTime(mf(i % 4 === 3 ? 41 : 40), tp);
-      envAD(bg.gain, tp, 0.005, (onBeat ? 0.3 : 0.2) * (0.8 + 0.35 * prog), step * 0.8);
-      envAD(hg.gain, tp, 0.001, onBeat ? 0.085 : 0.045, 0.035);
-      if (i % 4 === 0){ envAD(hb.gain, tp, 0.012, 0.3, 0.13); envAD(hb.gain, tp + 0.16, 0.012, 0.19, 0.12); }
-      tp += step; i++;
-    }
-    grp.gain.setValueAtTime(1, end - 0.3); grp.gain.exponentialRampToValueAtTime(0.0001, end);
-    antic = { v: v, grp: grp, rel: rel, timer: setTimeout(function () { stopAntic(0.3); }, MAX * 1000) };
-  }
-
-  var WILD = [57, 60, 62, 64, 67, 69, 72, 74, 76, 79];  // A minor pentatonic ladder
-  function wildLand(mult) {
-    if (!ok()) return;
-    var p = clamp(log2(Math.max(1, +mult || 1)), 0, 7);
-    var v = sfxVoice(), t = tNow();
-    var f = mf(WILD[Math.min(WILD.length - 1, Math.round(p * 1.3))]);
-    var cut = 1200 * Math.pow(2, p * 0.55), dur = 0.22 + p * 0.04;
-    thump(v, t, 0.34);
-    snap(v, t, 0.22);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.003, 0.16 + 0.015 * p, dur);
-    var lp = filt(v, 'lowpass', cut * 1.6, 1.5, g);
-    lp.frequency.setValueAtTime(hz(cut * 1.6), t);
-    lp.frequency.exponentialRampToValueAtTime(hz(cut * 0.5), t + dur);
-    var drive = gc(v, 0.5, shaper(v, curveHard, lp));
-    osc(v, 'sawtooth', f, t, t + dur + 0.05, drive);
-    osc(v, 'sawtooth', f * 1.5, t, t + dur + 0.05, drive);
-    osc(v, 'square', f * 2, t, t + dur + 0.05, drive);
-    if (p >= 4) cymbal(v, t, 0.08, 0.4);
-  }
-
-  function win(x) {
-    if (!ok()) return;
-    x = +x;
-    if (!(x > 0) || !isFinite(x)) return;
-    if (x < 1) { neutralTick(); return; }   // honest design: a net loss never gets a celebration
-    var s = log10(x), t = tNow();
-    if (x < 5) {
-      arp(t, 0, 3 + Math.floor(s * 3), 0.085 - 0.012 * s, 0.26, 0.25 + 0.35 * s);
-      return;
-    }
-    if (x < 20) {
-      var a = arp(t, Math.floor(s), Math.min(8, 5 + Math.floor((s - 0.7) * 5)), 0.07 - 0.008 * s, 0.24, 0.5);
-      var v = sfxVoice();
-      chordBlips(v, a.tEnd, 12 * Math.floor(a.lastMidi / 12), 0.5 + 0.3 * s, 0.08);
-      cymbal(v, a.tEnd, 0.16, 1.2 + 0.3 * s);
-      return;
-    }
-    bigWin(s, t);
-  }
-
-  function bigWin(s, t) {
-    var L = Math.min(3.2, 1.4 + 0.55 * (s - 1.3));
-    var v = sfxVoice();
-    duckFor(L + 0.4);
-    thump(v, t, 0.3);
-    snap(v, t, 0.2);
-    cymbal(v, t, 0.18, 2 + 0.3 * s);
-    brass(v, t, [48, 55, 60, 64, 67, 72], L * 0.55, 0.26);
-    var start = Math.min(2 + Math.floor(s - 1.3), 4);
-    var cnt = Math.min(LADDER.length - start, 5 + Math.round(s * 1.5));
-    for (var k = 0; k < cnt; k++) blip(v, t + 0.1 + k * 0.055, mf(LADDER[start + k]), 0.12, 0.14);
-    var tf = t + 0.1 + cnt * 0.055 + 0.05;
-    var ring = Math.max(0.8, L - (tf - t) + 0.8);
-    var bells = [84, 88, 91, 96];
-    for (var b = 0; b < bells.length; b++) bell(v, tf + b * 0.02, mf(bells[b]), 0.07, ring);
-    if (s >= 2) {
-      brass(v, tf, [60, 64, 67, 72, 76], Math.max(0.4, L - (tf - t)), 0.2);
-      cymbal(v, tf, 0.12, 1.6);
-    }
-  }
-
-  function coinTick(dest, t, f, peak) {
-    var v = newVoice('sfx', dest);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.001, peak * 0.6, 0.028);
-    osc(v, 'square', f, t, t + 0.05, filt(v, 'lowpass', 5000, 0.7, g));
-    var g2 = gn(v, v.out); envAD(g2.gain, t, 0.001, peak * 0.4, 0.05);
-    osc(v, 'sine', f * 2, t, t + 0.08, g2);
-  }
-  function resolveChord(t, x) {
-    var v = sfxVoice(), ns = [72, 76, 79, 84];
-    for (var i = 0; i < ns.length; i++) bell(v, t + i * 0.015, mf(ns[i]), 0.1, 1.4);
-    if (x >= 5) cymbal(v, t, 0.12, 1.2);
-    if (x >= 20) thump(v, t, 0.25);
-  }
-
-  function countUp(durationMs, x) {
-    if (!ok()) return noop;
-    var D = clamp((+durationMs || 0) / 1000, 0.2, 30);
-    x = +x || 0;
-    var s = x > 1 ? Math.min(log10(x), 3) : 0;
-    var t0 = tNow(0.03), end = t0 + D, next = t0, done = false;
-    var f0 = 620 * Math.pow(2, (s * 2) / 12);
-    var grp = ctx.createGain(); grp.gain.value = 1; grp.connect(N.sfxBus);
-    var releaseDuck = acquireDuck();
-    var timer = null;
-
-    function finish(at, chord) {
-      if (done) return;
-      done = true;
-      clearInterval(timer);
-      if (chord && !muted) resolveChord(at, x);
-      var ms = Math.max(0, (at - ctx.currentTime) * 1000) + 300;
-      setTimeout(function () { releaseDuck(); try { grp.disconnect(); } catch (e) { /* ignore */ } }, ms);
-    }
-    function pump() {
-      if (done) return;
-      try {
-        var lim = ctx.currentTime + 0.1;
-        while (next < lim && next < end) {
-          var p = (next - t0) / D;
-          if (!muted) coinTick(grp, next, f0 * Math.pow(2, 1.5 * p), 0.13 + 0.03 * p);
-          next += 0.075 - 0.028 * p;   // ticks speed up slightly
-        }
-        if (next >= end) finish(end, true);
-      } catch (e) { done = true; clearInterval(timer); releaseDuck(); }
-    }
-    timer = setInterval(pump, TICK_MS);
-    pump();
-
-    return function stop(playFinal) {
-      if (done || !ctx) return;
-      var t = ctx.currentTime;
-      holdAt(grp.gain, t);
-      grp.gain.linearRampToValueAtTime(0.0001, t + 0.03);
-      finish(t + 0.03, playFinal !== false);
-    };
-  }
-
-  function bonusTrigger() {
-    if (!ok()) return;
-    var v = sfxVoice(), t = tNow(0.02), T = 1.25, h = t + T;
-    var rg = gn(v, v.out);                                   // noise riser
-    rg.gain.setValueAtTime(0.0001, t);
-    rg.gain.linearRampToValueAtTime(0.22, h);
-    rg.gain.linearRampToValueAtTime(0.0001, h + 0.06);
-    var bp = filt(v, 'bandpass', 250, 3, rg);
-    bp.frequency.setValueAtTime(250, t);
-    bp.frequency.exponentialRampToValueAtTime(7000, h);
-    noise(v, t, h + 0.1, bp);
-    var sg = gn(v, v.out);                                   // saw sweep
-    sg.gain.setValueAtTime(0.0001, t);
-    sg.gain.linearRampToValueAtTime(0.12, h);
-    sg.gain.linearRampToValueAtTime(0.0001, h + 0.05);
-    var lp = filt(v, 'lowpass', 400, 2, sg);
-    lp.frequency.setValueAtTime(400, t);
-    lp.frequency.exponentialRampToValueAtTime(5000, h);
-    osc(v, 'sawtooth', 110, t, h + 0.1, lp, 880, T);
-    var run = [57, 60, 62, 64, 67, 69, 72, 76];              // pentatonic run into the hit
-    for (var k = 0; k < run.length; k++) blip(v, h - 0.5 + k * 0.06, mf(run[k]), 0.07, 0.1);
-    thump(v, h, 0.4);                                        // the hit
-    cymbal(v, h, 0.22, 2);
-    var sv = sfxVoice();
-    var g = gn(sv, sv.out); envAD(g.gain, h, 0.004, 0.22, 1.2);
-    var slp = filt(sv, 'lowpass', 3500, 1, g);
-    var dr = gc(sv, 0.4, shaper(sv, curveHard, slp));
-    var power = [45, 52, 57, 64, 69];                        // A5 power chord
-    for (var i = 0; i < power.length; i++) osc(sv, 'sawtooth', mf(power[i]), h, h + 1.3, dr);
-    if (musicOn) switchMode('bonus', t, h, h, 0.01);
-    else curMode = 'bonus';
-  }
-
-  function bonusSpinWin(x) {
-    if (!ok()) return;
-    x = +x;
-    if (!(x > 0) || !isFinite(x)) return;
-    if (x < 1) { neutralTick(); return; }
-    var s = log10(x), t = tNow();
-    arp(t, Math.min(1 + Math.floor(s), 4), Math.min(5, 2 + Math.floor(s * 2)), 0.06, 0.18, 0.2 + 0.2 * s);
-    if (x >= 20) { var v = sfxVoice(); cymbal(v, t, 0.1, 0.8); }
-  }
-
-  function bonusEnd(x) {
-    if (!ctx) return;
-    x = +x || 0;
-    var t = tNow(0.02), L = 0.8;
-    if (ok()) {
-      var s = x >= 1 ? Math.min(log10(x), 3.5) : 0, v = sfxVoice();
-      if (x < 1) {
-        blip(v, t, mf(67), 0.2, 0.12);
-        blip(v, t + 0.18, mf(72), 0.5, 0.12);
-      } else {
-        var tr = 0.11;                                       // triplet pickup G G G
-        for (var k = 0; k < 3; k++) brass(v, t + k * tr, [67], 0.07, 0.2);
-        var tm = t + 3 * tr, h1 = 0.5 + 0.2 * s;
-        brass(v, tm, [60, 64, 67, 72], h1, 0.28);
-        thump(v, tm, 0.3);
-        cymbal(v, tm, 0.14 + 0.02 * s, 1.2 + 0.3 * s);
-        L = 3 * tr + h1 + 0.4;
-        if (s >= 1) {                                        // x >= 10: climb to the octave
-          var t2 = tm + h1;
-          brass(v, t2, [67], 0.08, 0.2);
-          brass(v, t2 + 0.1, [69], 0.08, 0.2);
-          brass(v, t2 + 0.2, [71], 0.08, 0.2);
-          var t3 = t2 + 0.3, h2 = 0.7 + 0.3 * s;
-          brass(v, t3, [72, 76, 79, 84], h2, 0.3);
-          thump(v, t3, 0.32);
-          cymbal(v, t3, 0.18, 1.8 + 0.3 * s);
-          L = t3 - t + h2 + 0.5;
-          if (s >= 2) {                                      // x >= 100: timpani roll + sparkle
-            var v2 = sfxVoice();
-            for (var r = 0; r < 10; r++) thump(v2, t3 + r * 0.07, 0.08 + 0.015 * r);
-            for (var b = 0; b < 6; b++) blip(v2, t3 + 0.1 + b * 0.05, mf(LADDER[4 + b]), 0.1, 0.1);
-          }
-        }
-      }
-      duckFor(L);
-    }
-    if (musicOn && curMode === 'bonus') {
-      var fs = t + L * 0.7, beat = 60 / seqs.base.bpm;
-      switchMode('base', fs, fs + beat, fs, beat);
-    } else if (!musicOn) {
-      curMode = 'base';
-    }
-  }
-
-  function bail() {
-    if (!ok()) return;
-    var v = sfxVoice(), t = tNow();
-    var g = gn(v, v.out);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(0.26, t + 0.03);
-    g.gain.linearRampToValueAtTime(0.22, t + 0.6);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
-    var o = ctx.createOscillator();                          // slide whistle
-    o.type = 'sine';
-    o.frequency.setValueAtTime(900, t);
-    o.frequency.exponentialRampToValueAtTime(1250, t + 0.07);
-    o.frequency.exponentialRampToValueAtTime(260, t + 0.75);
-    o.connect(g);
-    var lfo = ctx.createOscillator(); lfo.frequency.value = 7;
-    var depth = gc(v, 14, o.frequency);
-    lfo.connect(depth);
-    v.play(lfo, t, t + 0.85);
-    v.play(o, t, t + 0.85);
-    var tl = t + 0.78;                                        // landing thud
-    thump(v, tl, 0.34);
-    var ng = gn(v, v.out); envAD(ng.gain, tl, 0.002, 0.15, 0.1);
-    noise(v, tl, tl + 0.14, filt(v, 'lowpass', 800, 0.7, ng));
-  }
-
-  function debug() {
-    return {
-      state: ctx ? ctx.state : 'none', mode: curMode, musicOn: musicOn, muted: muted,
-      sfxVoices: voices.sfx.length, musicVoices: voices.music.length,
-      created: stats.created, stolen: stats.stolen, ducking: duckCount
-    };
-  }
-
-  root.Sk8Audio = {
-    init: safe(init, false),
-    isReady: safe(isReady, false),
-    startMusic: safe(startMusic),
-    stopMusic: safe(stopMusic),
-    setMode: safe(setMode),
-    getMode: function () { return curMode; },
-    setMuted: safe(setMuted),
-    setMusicVolume: safe(setMusicVolume),
-    setSfxVolume: safe(setSfxVolume),
-    spinStart: safe(spinStart),
-    reelStop: safe(reelStop),
-    scatterLand: safe(scatterLand),
-    anticipation: safe(anticipation),
-    wildLand: safe(wildLand),
-    win: safe(win),
-    countUp: safe(countUp, noop),
-    bonusTrigger: safe(bonusTrigger),
-    bonusSpinWin: safe(bonusSpinWin),
-    bonusEnd: safe(bonusEnd),
-    bail: safe(bail),
-    _debug: debug
-  };
-})(typeof window !== 'undefined' ? window : null);
-
-// Sk8Anim: animated stick-figure skater doing real tricks, drawn as a jittery Flash-era doodle.
-// Sk8Anim.play(el, trick) renders into el and loops until another play() on el or stop().
-// Tricks: idle, ollie, kickflip, treflip, grind, spin900, hype, bail.
-(function(){
-  const NS = 'http://www.w3.org/2000/svg';
-  const J = ['head','neck','hip','kL','fL','kR','fR','eL','hL','eR','hR'];
-  // poses: joint coords in a 100x100 box, feet sit on the board line at y = 76
-  const P = {
-    stand:  {head:[50,22],neck:[50,31],hip:[50,52],kL:[43,64],fL:[40,76],kR:[57,64],fR:[61,76],eL:[43,41],hL:[38,51],eR:[57,41],hR:[63,50]},
-    crouch: {head:[50,33],neck:[50,41],hip:[50,60],kL:[40,65],fL:[40,76],kR:[60,65],fR:[61,76],eL:[41,49],hL:[36,57],eR:[59,49],hR:[65,56]},
-    air:    {head:[50,24],neck:[50,32],hip:[50,50],kL:[41,54],fL:[40,63],kR:[60,54],fR:[61,63],eL:[39,35],hL:[31,29],eR:[61,35],hR:[70,30]},
-    tuck:   {head:[50,27],neck:[50,35],hip:[50,52],kL:[42,50],fL:[40,62],kR:[58,50],fR:[61,62],eL:[41,42],hL:[44,53],eR:[59,42],hR:[57,54]},
-    grind:  {head:[46,30],neck:[47,38],hip:[50,57],kL:[40,63],fL:[39,73],kR:[60,63],fR:[62,73],eL:[36,42],hL:[26,40],eR:[60,44],hR:[72,38]},
-    hypeA:  {head:[50,22],neck:[50,31],hip:[50,52],kL:[43,64],fL:[40,76],kR:[57,64],fR:[61,76],eL:[41,24],hL:[37,12],eR:[59,24],hR:[63,12]},
-    hypeB:  {head:[50,23],neck:[50,32],hip:[50,53],kL:[43,65],fL:[40,76],kR:[57,65],fR:[61,76],eL:[40,30],hL:[33,22],eR:[60,30],hR:[67,22]},
-    fall:   {head:[36,50],neck:[42,48],hip:[58,50],kL:[66,40],fL:[74,34],kR:[68,56],fR:[78,58],eL:[38,38],hL:[30,34],eR:[44,58],hR:[36,64]}
-  };
-  // keyframes: t (0..1 of the loop), pose, dy (body lift), board {dy, rot, flip (turns), spin (turns), dx}, rot (body rotation deg), spin (body turns)
-  const T = {
-    idle:    {ms:1600, k:[[0,'stand',0],[0.5,'stand',1.2],[1,'stand',0]], roll:true},
-    ollie:   {ms:1300, k:[[0,'stand',0],[0.18,'crouch',0],[0.32,'air',-16,{rot:-18}],[0.5,'air',-22,{rot:0}],[0.68,'tuck',-8,{rot:6}],[0.8,'crouch',0],[1,'stand',0]], roll:true},
-    kickflip:{ms:1400, k:[[0,'stand',0],[0.16,'crouch',0],[0.3,'air',-18,{rot:-14}],[0.36,'air',-22,{gap:6,rot:-4,flip:0}],[0.58,'air',-24,{gap:6,flip:1}],[0.7,'tuck',-10,{rot:4,flip:1}],[0.82,'crouch',0,{flip:1}],[1,'stand',0,{flip:1}]], roll:true, trail:true},
-    treflip: {ms:1500, k:[[0,'stand',0],[0.16,'crouch',0],[0.3,'air',-18,{rot:-12}],[0.36,'air',-24,{gap:7,flip:0,spin:0}],[0.62,'air',-26,{gap:7,flip:1,spin:1}],[0.72,'tuck',-10,{flip:1,spin:1}],[0.84,'crouch',0,{flip:1,spin:1}],[1,'stand',0,{flip:1,spin:1}]], roll:true, trail:true},
-    grind:   {ms:1100, k:[[0,'grind',0],[0.5,'grind',1.5],[1,'grind',0]], rail:true, sparks:true, roll:true},
-    spin900: {ms:2200, k:[[0,'stand',0],[0.14,'crouch',0],[0.26,'tuck',-20,{},0,0],[0.72,'tuck',-26,{},0,2.5],[0.84,'crouch',0,{},0,2.5],[1,'stand',0,{},0,2.5]], ramp:true},
-    hype:    {ms:700,  k:[[0,'hypeA',0,{hold:true}],[0.5,'hypeB',-6,{hold:true}],[1,'hypeA',0,{hold:true}]], confetti:true},
-    bail:    {ms:1900, k:[[0,'stand',0],[0.15,'crouch',0],[0.3,'air',-18,{rot:-16}],[0.45,'air',-20,{gap:8,rot:40,dx:10}],[0.62,'fall',-4,{ground:1,rot:170,dx:20},-40],[0.8,'fall',6,{ground:1,rot:180,dx:24},-10],[1,'fall',6,{ground:1,rot:180,dx:24},-10]], stars:true}
-  };
-  const lerp = (a,b,t) => a + (b-a)*t;
-  const ease = t => t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2;
-  function sample(tr, t){
-    const k = tr.k; let i = 0; while (i < k.length-2 && t > k[i+1][0]) i++;
-    const A = k[i], B = k[i+1], q = ease(Math.max(0, Math.min(1, (t-A[0])/(B[0]-A[0] || 1))));
-    const pa = P[A[1]], pb = P[B[1]], pose = {};
-    J.forEach(j => { pose[j] = [lerp(pa[j][0], pb[j][0], q), lerp(pa[j][1], pb[j][1], q)]; });
-    const ba = A[3]||{}, bb = B[3]||{}, g = (o,key,d) => o[key] == null ? d : o[key];
-    return { pose, dy: lerp(A[2]||0, B[2]||0, q), rot: lerp(A[4]||0, B[4]||0, q), spin: lerp(A[5]||0, B[5]||0, q),
-      board: {gap: lerp(g(ba,'gap',0), g(bb,'gap',0), q), ground: lerp(g(ba,'ground',0), g(bb,'ground',0), q), rot: lerp(g(ba,'rot',0), g(bb,'rot',0), q), flip: lerp(g(ba,'flip',0), g(bb,'flip',0), q), spin: lerp(g(ba,'spin',0), g(bb,'spin',0), q), dx: lerp(g(ba,'dx',0), g(bb,'dx',0), q), hold: !!(ba.hold || bb.hold)} };
-  }
-  const el = (name, attrs, parent) => { const e = document.createElementNS(NS, name); for (const a in attrs) e.setAttribute(a, attrs[a]); if (parent) parent.appendChild(e); return e; };
-  const running = new WeakMap();
-
-  function build(root, tr){
-    root.innerHTML = '';
-    const svg = el('svg', {viewBox:'0 0 100 100', width:'100%', height:'100%', style:'overflow:visible;display:block'}, root);
-    const scene = el('g', {transform:'translate(8 13) scale(.84)'}, svg);   // leaves headroom for the jumps
-    const ground = el('g', {stroke:'#111', 'stroke-width':'1.6', 'stroke-linecap':'round', opacity:'.55'}, scene);
-    const dashes = [0,1,2,3].map(i => el('line', {x1:0, y1:90, x2:8, y2:90}, ground));
-    let rail = null, ramp = null;
-    if (tr.rail){ rail = el('g', {}, scene); el('line', {x1:4, y1:79, x2:96, y2:79, stroke:'#111', 'stroke-width':'4', 'stroke-linecap':'round'}, rail); el('line', {x1:4, y1:79, x2:96, y2:79, stroke:'#bfc6cc', 'stroke-width':'1.6', 'stroke-linecap':'round'}, rail);
-      [18,50,82].forEach(x => el('line', {x1:x, y1:80, x2:x, y2:94, stroke:'#111', 'stroke-width':'3'}, rail)); }
-    if (tr.ramp){ ramp = el('path', {d:'M2 94 Q2 72 14 70 L86 70 Q98 72 98 94', fill:'none', stroke:'#111', 'stroke-width':'2.4', opacity:'.6'}, scene); }
-    const fx = el('g', {}, scene);
-    const board = el('g', {}, scene);
-    const rider = el('g', {}, scene);
-    const deckShadow = el('rect', {x:-21, y:-3.2, width:42, height:6.4, rx:3.2, fill:'#111'}, board);
-    const deck = el('rect', {x:-20, y:-2.4, width:40, height:4.8, rx:2.4, fill:'#ff3ea5', stroke:'#111', 'stroke-width':'1.6'}, board);
-    const bolt = el('path', {d:'M-6 -1 L0 1 L-2 -1 L6 1', fill:'none', stroke:'#ffe600', 'stroke-width':'1.2'}, board);
-    const wheels = [-13,13].map(x => el('circle', {cx:x, cy:4.6, r:2.6, fill:'#fff', stroke:'#111', 'stroke-width':'1.4'}, board));
-    const body = el('g', {fill:'none', stroke:'#111', 'stroke-width':'3.6', 'stroke-linecap':'round', 'stroke-linejoin':'round'}, rider);
-    const limbs = {torso: el('polyline', {}, body), legL: el('polyline', {}, body), legR: el('polyline', {}, body), armL: el('polyline', {}, body), armR: el('polyline', {}, body)};
-    const head = el('circle', {r:7.2, fill:'#fff', stroke:'#111', 'stroke-width':'3'}, rider);
-    const cap = el('path', {fill:'#e8322d', stroke:'#111', 'stroke-width':'1.6', 'stroke-linejoin':'round'}, rider);
-    const eye = el('circle', {r:1.1, fill:'#111'}, rider);
-    return {svg, scene, dashes, rail, fx, rider, board, deck, deckShadow, bolt, wheels, limbs, head, cap, eye};
-  }
-
-  function draw(g, tr, s, time, t){
-    // Flash-style "boiling" lines: joints jitter a hair, re-seeded every 110ms
-    const seed = Math.floor(time/110), jit = (i) => { const x = Math.sin(seed*12.9898 + i*78.233)*43758.5453; return (x - Math.floor(x) - .5)*0.9; };
-    const p = {}; let n = 0; J.forEach(j => { p[j] = [s.pose[j][0] + jit(n++), s.pose[j][1] + s.dy + jit(n++)]; });
-    const pt = a => a[0].toFixed(1) + ',' + a[1].toFixed(1);
-    g.limbs.torso.setAttribute('points', [p.neck, p.hip].map(pt).join(' '));
-    g.limbs.legL.setAttribute('points', [p.hip, p.kL, p.fL].map(pt).join(' '));
-    g.limbs.legR.setAttribute('points', [p.hip, p.kR, p.fR].map(pt).join(' '));
-    g.limbs.armL.setAttribute('points', [p.neck, p.eL, p.hL].map(pt).join(' '));
-    g.limbs.armR.setAttribute('points', [p.neck, p.eR, p.hR].map(pt).join(' '));
-    const hx = p.head[0], hy = p.head[1];
-    g.head.setAttribute('cx', hx.toFixed(1)); g.head.setAttribute('cy', hy.toFixed(1));
-    g.cap.setAttribute('d', `M${hx-7.4} ${hy-1.5} Q${hx-6} ${hy-9.5} ${hx+1} ${hy-8.6} Q${hx+7} ${hy-7} ${hx+7.4} ${hy-1.8} L${hx+12} ${hy-1.2} Z`);
-    g.eye.setAttribute('cx', (hx+3).toFixed(1)); g.eye.setAttribute('cy', (hy+0.5).toFixed(1));
-    // board: rides under the feet, or held overhead in the hype pose
-    const b = s.board;
-    let bx = (p.fL[0] + p.fR[0])/2 + b.dx, by = lerp(Math.max(p.fL[1], p.fR[1]) + 3.6 + b.gap, 79.6, b.ground);
-    if (b.hold){ bx = (p.hL[0] + p.hR[0])/2; by = Math.min(p.hL[1], p.hR[1]) - 2; }
-    if (tr.rail && !b.hold) by = 76.6;
-    const flipC = Math.cos(b.flip*2*Math.PI), spinC = Math.cos(b.spin*2*Math.PI);
-    const cx = 50, cy = 50 + s.dy, bodySpin = Math.cos(s.spin*2*Math.PI), bsx = Math.max(0.12, Math.abs(bodySpin)) * (bodySpin < 0 ? -1 : 1);
-    const spinT = s.spin ? `translate(${cx} ${cy}) scale(${bsx.toFixed(2)} 1) translate(${-cx} ${-cy}) ` : '';
-    const sy = Math.max(0.14, Math.abs(flipC)) * (flipC < 0 ? -1 : 1), sx = Math.max(0.16, Math.abs(spinC));
-    g.board.setAttribute('transform', spinT + `translate(${bx.toFixed(1)} ${by.toFixed(1)}) rotate(${(b.rot + (b.hold ? 180 : 0)).toFixed(1)}) scale(${sx.toFixed(2)} ${sy.toFixed(2)})`);
-    g.deck.setAttribute('fill', flipC < 0 ? '#ffe600' : '#ff3ea5');   // flipping shows the underside graphic
-    g.bolt.setAttribute('stroke', flipC < 0 ? '#ff3ea5' : '#ffe600');
-    // whole-rider transforms: 900 spin (turns squash x), bail tumble
-    g.rider.setAttribute('transform', `translate(${cx} ${cy}) rotate(${s.rot.toFixed(1)}) scale(${bsx.toFixed(2)} 1) translate(${-cx} ${-cy})`);
-    // ground motion
-    const off = tr.roll ? (time/6) % 26 : 0;
-    g.dashes.forEach((d,i) => { const x = ((i*26 - off) % 104 + 104) % 104 - 2; d.setAttribute('x1', x.toFixed(1)); d.setAttribute('x2', (x+8).toFixed(1)); });
-    // effects
-    g.fx.innerHTML = '';
-    if (tr.trail && (b.flip % 1 > 0.05 && b.flip % 1 < 0.95 || (b.flip > 0 && b.flip < 1))){
-      [-1,1].forEach(side => el('path', {d:`M${bx-24} ${by+side*6} q-6 ${side*-3} -12 0`, stroke:'#111', 'stroke-width':'1.2', fill:'none', 'stroke-linecap':'round', opacity:'.6'}, g.fx));
-    }
-    if (tr.sparks){ for (let i=0;i<5;i++){ const a = Math.sin(seed*3.1 + i*1.7), x = bx - 16 - i*3, y = 78; el('line', {x1:x, y1:y, x2:(x - 4 - Math.abs(a)*4).toFixed(1), y2:(y - 3 - Math.abs(a)*5).toFixed(1), stroke: i%2 ? '#ffe600' : '#ff8a00', 'stroke-width':'1.6', 'stroke-linecap':'round'}, g.fx); } }
-    if (tr.confetti){ for (let i=0;i<10;i++){ const x = (i*11 + seed*7) % 100, y = ((seed*9 + i*17) % 60) + 4; el('rect', {x, y, width:2.6, height:2.6, fill:['#ff3ea5','#ffe600','#3be3ff','#9bff3b'][i%4], transform:`rotate(${(seed*40+i*30)%360} ${x} ${y})`}, g.fx); } }
-    if (tr.stars && t > 0.6){ for (let i=0;i<3;i++){ const a = time/300 + i*2.1, x = hx + Math.cos(a)*10, y = hy - 8 + Math.sin(a)*3;
-      el('path', {d:`M${x} ${y-2.4} L${x+.8} ${y-.6} L${x+2.6} ${y-.6} L${x+1.2} ${y+.6} L${x+1.8} ${y+2.4} L${x} ${y+1.3} L${x-1.8} ${y+2.4} L${x-1.2} ${y+.6} L${x-2.6} ${y-.6} L${x-.8} ${y-.6} Z`, fill:'#ffe600', stroke:'#111', 'stroke-width':'.6'}, g.fx); } }
-  }
-
-  function play(root, trick){
-    stop(root);
-    const tr = T[trick] || T.idle, g = build(root, tr);
-    const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const t0 = performance.now(); const state = {on: true};
-    running.set(root, state);
-    const frame = now => {
-      if (!state.on) return;
-      const time = now - t0, t = (time % tr.ms)/tr.ms;
-      draw(g, tr, sample(tr, reduce ? 0.5 : t), reduce ? 0 : time, reduce ? 0.5 : t);
-      if (!reduce) requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-    return {stop: () => stop(root)};
-  }
-  function stop(root){ const s = running.get(root); if (s) s.on = false; }
-  window.Sk8Anim = window.MangoAnim;
-})();
+window.Sk8Anim = window.MangoAnim;
 
 // Sk8 Sesh engine. 5 reels x 4 rows, 16 lines, 9 paying symbols, Wild (plain or with a multiplier), SESH tapes.
 // Modes: base (1x), Bonus Boost (2x), Trick Spins OLLIE/GRIND/KICKFLIP (cfg.specialCost), bonus buys (cfg.buyCost).
@@ -5498,14 +4155,17 @@ function stackSVG_sk8(M, sticky){
     <rect x="9" y="361" width="82" height="32" rx="8" fill="${bg}" stroke="#111" stroke-width="4"/><text x="50" y="378" text-anchor="middle" dominant-baseline="middle" font-family="'Press Start 2P',Consolas,monospace" font-size="${fsz}" fill="${fg}">${label}</text>
     ${sticky ? '<g transform="translate(10 12)"><rect x="0" y="9" width="22" height="18" rx="3" fill="#ffd21f" stroke="#111" stroke-width="3"/><path d="M5 10 V5 a6 6 0 0 1 12 0 V10" fill="none" stroke="#111" stroke-width="3"/></g>' : ''}</svg>`;
 }
-function setStack(r, M, sticky){ let ov = reelEls[r].querySelector('.stackov'); if (!ov){ ov = document.createElement('div'); ov.className = 'stackov'; reelEls[r].appendChild(ov); } ov.innerHTML = stackSVG(M, sticky); ov.style.clipPath = ''; return ov; }
+function setStack(r, M, sticky){ let ov = reelEls[r].querySelector('.stackov:not(.folding)'); if (!ov){ ov = document.createElement('div'); ov.className = 'stackov'; reelEls[r].appendChild(ov); } ov.innerHTML = stackSVG(M, sticky); ov.style.clipPath = ''; return ov; }
 async function growStack(r, M, sticky, rows){
   // the wild reel spreads up and down from the row(s) where the wilds landed
   let lo = rows ? rows[0] : ROWS-1, hi = rows ? rows[1] : ROWS-1;
   const clip = () => `inset(${(lo/ROWS*100).toFixed(1)}% 0 ${((ROWS-1-hi)/ROWS*100).toFixed(1)}% 0)`;
-  const ov = setStack(r, M, sticky); ov.classList.remove('settle'); ov.classList.add('building'); ov.style.clipPath = clip(); void ov.offsetWidth;
-  for (let k=1; ; k++){ sfx('reelStop', k); await wait(T(180)); if (lo === 0 && hi === ROWS-1) break; lo = Math.max(0, lo-1); hi = Math.min(ROWS-1, hi+1); ov.style.clipPath = clip(); }
-  ov.classList.remove('building'); ov.style.clipPath = ''; void ov.offsetWidth; ov.classList.add('settle');
+  const steps = Math.max(lo, ROWS-1-hi), beat = T(180), box = (a, b) => `inset(${a}% -60% ${b}% -60%)`;
+  const ov = setStack(r, M, sticky); ov.classList.remove('settle'); ov.classList.add('building');
+  ov.style.transition = 'opacity .2s ease-out'; ov.style.clipPath = box((lo/ROWS*100).toFixed(2), ((ROWS-1-hi)/ROWS*100).toFixed(2)); void ov.offsetWidth;
+  ov.style.transition = reduce ? 'none' : `clip-path ${beat*(steps+1)}ms cubic-bezier(.45,0,.25,1), opacity .2s ease-out`; ov.style.clipPath = box(-30, -30);
+  for (let k=1; k<=steps+1; k++){ if (k <= steps) sfx('reelStop', k); await wait(beat); }
+  ov.style.transition = ''; ov.classList.remove('building'); ov.style.clipPath = ''; void ov.offsetWidth; ov.classList.add('settle');
 }
 function clearStacks(){ reelEls.forEach(el=>{ el.querySelectorAll('.stackov,.pinov').forEach(o=>o.remove()); }); }
 function pinWild(c, m){ const r = Math.floor(c/ROWS), el = cells[c], p = document.createElement('div'); p.className = 'pinov'; p.style.top = el.offsetTop+'px'; p.style.height = el.offsetHeight+'px'; p.innerHTML = symHTML(W, {mult: m, sticky: true}); reelEls[r].appendChild(p); paintCell(c, W, m, true); }
@@ -5515,8 +4175,11 @@ async function shrinkStacks(list, fast){
   if (!fast) await Promise.all(list.map(async a => { const r = Math.floor(a.c/ROWS), row = a.c % ROWS, ov = reelEls[r].querySelector('.stackov'); if (!ov) return;
     let lo = 0, hi = ROWS-1; const clip = () => `inset(${(lo/ROWS*100).toFixed(1)}% 0 ${((ROWS-1-hi)/ROWS*100).toFixed(1)}% 0)`;
     ov.classList.remove('settle'); ov.classList.add('building');
-    while (lo < row || hi > row){ if (lo < row) lo++; if (hi > row) hi--; ov.style.clipPath = clip(); await wait(T(120)); } }));
-  list.forEach(a => { const o = reelEls[Math.floor(a.c/ROWS)].querySelector('.stackov'); if (o) o.remove(); pinWild(a.c, a.m); });
+    const dur = T(120)*Math.max(1, row, ROWS-1-row);
+    ov.style.transition = 'none'; ov.style.clipPath = 'inset(-30% -60% -30% -60%)'; void ov.offsetWidth;
+    ov.style.transition = reduce ? 'none' : `clip-path ${dur}ms cubic-bezier(.45,0,.25,1)`; ov.style.clipPath = `inset(${(row/ROWS*100).toFixed(2)}% -60% ${((ROWS-1-row)/ROWS*100).toFixed(2)}% -60%)`;
+    await wait(dur); }));
+  list.forEach(a => { const o = reelEls[Math.floor(a.c/ROWS)].querySelector('.stackov:not(.folding)'); pinWild(a.c, a.m); if (o){ o.classList.add('folding'); o.style.transition = 'opacity .2s ease-out'; o.style.opacity = '0'; setTimeout(() => o.remove(), T(220)); } });
 }
 async function mergeAnim(merged, fast, sticky){
   // held reels with no new wild just grow back, all at once and without a banner
@@ -5529,7 +4192,7 @@ async function mergeAnim(merged, fast, sticky){
       tag.textContent = mg.M > 1 && fac.length > 1 ? fac.map(m=>'x'+fx(m)).join(' × ') + ' = x' + fx(mg.M) : mg.M > 1 ? 'STACK x' + fx(mg.M) : 'WILD REEL';
       tag.style.left = (rb.left-gb.left+rb.width/2)+'px'; tag.style.top = (rb.top-gb.top+rb.height*.45)+'px'; gridEl.parentElement.appendChild(tag);
       const lit = mg.from.map(f=>f.c).concat(mg.anchor ? [mg.anchor.c] : []);
-      lit.forEach(c=>cells[c].classList.add('hit')); sfx('wildLand', mg.M); await wait(T(650)); tag.remove(); lit.forEach(c=>cells[c].classList.remove('hit')); }
+      lit.forEach(c=>cells[c].classList.add('hit')); sfx('wildLand', mg.M); await wait(T(650)); tag.classList.add('out'); setTimeout(() => tag.remove(), 240); lit.forEach(c=>cells[c].classList.remove('hit')); }
     if (fast) setStack(mg.r, mg.M, sticky); else { const rws = mg.from.map(f => f.c % ROWS).concat(mg.anchor ? [mg.anchor.c % ROWS] : []); await growStack(mg.r, mg.M, sticky, [Math.min(...rws), Math.max(...rws)]); }
     if (!fast){ gridEl.classList.remove('shake'); void gridEl.offsetWidth; gridEl.classList.add('shake'); banner(mg.M > 1 ? `STACK! x${fx(mg.M)} ON REEL ${mg.r+1}` : `WILD REEL ON REEL ${mg.r+1}`); await wait(T(420)); }
   }
@@ -5601,6 +4264,7 @@ async function spinAnim(g, mults, sticky, fast, isBonus, opt){
       R.st.style.transform = `translateY(${y.toFixed(1)}px)`; if (p > .55) R.st.classList.remove('blur');
       if (p >= 1){ R.landed = true; R.st.remove(); reelOff(r); reelEls[r].querySelectorAll('.pinov').forEach(o=>o.remove());
         for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); cells[c].classList.remove('spinning'); paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0);
+          { const sc = R.st.children[row], sm = sc && sc.firstElementChild, cm = cells[c].firstElementChild; if (sm && cm && sm.outerHTML === cm.outerHTML) cells[c].replaceChildren(sm); }
           if (dg[c]===S1){ n1++; if (n1 >= 2) sfx('scatterLand', n1); if (r < REELS-1 && n1 === 3) banner('SESH BONUS! ONE MORE TAPE FOR LEGEND'); if (r < REELS-1 && n1 === 4) banner('LEGEND! ONE MORE TAPE FOR 12 SPINS'); } else if (dg[c]===S2){ n2++; if (n2 >= 2) sfx('scatterLand', n2); } else if (dg[c]===W && !(sticky && sticky[c])) sfx('wildLand', dm[c]); }
         sfx('reelStop', r); if (r+1 === antFrom && !antOn){ antOn = true; sfx('anticipation', true); banner(antWild && n1 < 2 ? 'x25 WILD ON REEL 1...' : n1 >= 3 ? 'SESH BONUS! ONE MORE TAPE FOR LEGEND' : 'TWO SESH TAPES... ONE MORE!'); document.body.classList.add('chase'); for (let k=antFrom;k<REELS;k++){ reelEls[k].classList.add('tease'); reelEls[k].classList.toggle('legend', antLegend); } }
       } else all = false; });
@@ -6095,7 +4759,7 @@ async function bootReplay(){
     btn.disabled = false; btn.textContent = 'PLAY AGAIN';
   };
 }
-renderRules();
+(window.requestIdleCallback || setTimeout)(() => { try { renderRules(); } catch(e){} }, {timeout: 1500});
 mascot('idle');
 // opening board: a static display, not a result
 { const g = [], m = []; for (let c=0;c<CELLS;c++){ g.push(c % 9); m.push(0); } spinAnim(g, m, null, true, false, {}); }
@@ -6105,250 +4769,7 @@ else { $('msg').textContent = 'Connecting to the casino...'; $('spinbtn').disabl
 })();
 </script>
 <script>
-// Sk8Crowd: background skaters riding the park behind the slot (no sound). They follow the real obstacles in
-// sk8-park.svg: airs and tricks on the quarter pipe, grinds down the stair handrail and along the pink rail, and
-// some bails. Sk8Crowd.start(sceneEl) lays an SVG over the park with the same 1600x900 box and the same
-// "xMidYMax slice" fit as the park background, so the riders line up with the drawing at every screen size.
-// Riders take turns: usually one at a time (sometimes two), picked from four lanes (quarter pipe, handrail, pink rail,
-// a cruiser pushing across the park), with a random pause between runs. Grinds throw sparks off the trucks, and on flat
-// ground riders push with the back foot, then coast.
-// Off for prefers-reduced-motion; paused while the tab is hidden.
-(function(root){
-  const NS = 'http://www.w3.org/2000/svg';
-  const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
-  const lerp = (a, b, t) => a + (b - a)*t, clamp = (t, a = 0, b = 1) => Math.max(a, Math.min(b, t));
-  const smooth = t => { t = clamp(t); return t*t*(3 - 2*t); }, bump = t => Math.sin(Math.PI*clamp(t));
-  const norm = (x, y) => { const l = Math.hypot(x, y) || 1; return [x/l, y/l]; };
-  const span = (t, a, b) => clamp((t - a)/(b - a));
-  const pick = a => a[Math.floor(Math.random()*a.length)];
 
-  // ---------- park geometry (sk8-park.svg coordinates) ----------
-  // quarter pipe face: quadratic curve from the ground to the coping (group translate(-537 371) scale(2.4))
-  const Q0 = [19.8, 639.8], QC = [235.8, 639.8], Q1 = [250.2, 452.6];
-  const qp = s => [(1-s)*(1-s)*Q0[0] + 2*(1-s)*s*QC[0] + s*s*Q1[0], (1-s)*(1-s)*Q0[1] + 2*(1-s)*s*QC[1] + s*s*Q1[1]];
-  const qt = s => norm(2*(1-s)*(QC[0]-Q0[0]) + 2*s*(Q1[0]-QC[0]), 2*(1-s)*(QC[1]-Q0[1]) + 2*s*(Q1[1]-QC[1]));
-  const LIP = qt(1);
-  // stair handrail (top right to bottom left), stair deck and the ground at the foot of the stairs
-  const H0 = [1346, 414], H1 = [1140, 563], DECK = 476.6, FOOT = 640;
-  const HU = norm(H1[0]-H0[0], H1[1]-H0[1]);
-  // pink rail in the foreground and the ground in front of it
-  const R0x = 950, R1x = 1228, RY = 752, RG = 826;
-
-  // ---------- one rider: a board group and a body group, each placed with its own frame ----------
-  const CAPS = ['#e8322d','#2d6cdf','#ffd21f','#35c46a','#ff3ea5','#ff8a1e','#9b5cff'];
-  const DECKS = ['#ff2fb0','#3be3ff','#ffe600','#9bff3b','#ff8a1e','#ffffff'];
-  function rider(layer){
-    const g = el('g', {opacity: 0}, layer);
-    const board = el('g', {}, g), boardInner = el('g', {}, board);
-    const deckCol = pick(DECKS);
-    el('path', {d: 'M-30 -8L-24 -4H24L30 -8', fill: 'none', stroke: '#141414', 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round'}, boardInner);
-    el('path', {d: 'M-24 -4H24', stroke: deckCol, 'stroke-width': 2.5, 'stroke-linecap': 'round'}, boardInner);
-    el('circle', {cx: -15, cy: 1, r: 3.6, fill: '#fff', stroke: '#141414', 'stroke-width': 2.4}, boardInner);
-    el('circle', {cx: 15, cy: 1, r: 3.6, fill: '#fff', stroke: '#141414', 'stroke-width': 2.4}, boardInner);
-    const body = el('g', {}, g), bodyInner = el('g', {}, body);
-    const st = {fill: 'none', stroke: '#141414', 'stroke-width': 5.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round'};
-    const legs = el('path', st, bodyInner), torso = el('path', st, bodyInner), arms = el('path', st, bodyInner);
-    const head = el('circle', {r: 9, fill: '#fff', stroke: '#141414', 'stroke-width': 4}, bodyInner);
-    const cap = el('path', {fill: pick(CAPS), stroke: '#141414', 'stroke-width': 2.5, 'stroke-linejoin': 'round'}, bodyInner);
-    // pose: c crouch 0..1, a arms 0 (down) .. 1 (up), grab (front hand to the nose), lean (-1..1), lift (feet above deck)
-    function pose(p){
-      const c = p.c || 0, a = p.a == null ? .35 : p.a, lean = p.lean || 0, lift = p.lift || 0;
-      const fy = -6 - lift, ff = [12, fy];
-      let fb = [-12, fy];
-      if (p.push != null){ const q = p.push % 1;
-        fb = q < .2 ? [lerp(-12, 6, q/.2), lerp(fy, 7, q/.2) - 6*bump(q/.2)] : q < .7 ? [lerp(6, -40, (q - .2)/.5), 8] : [lerp(-40, -12, (q - .7)/.3), lerp(7, fy, (q - .7)/.3) - 8*bump((q - .7)/.3)]; }
-      const hip = [-1 + lean*3 + (p.push != null ? 3 : 0), -42 + 15*c - lift*.6];
-      const kf = [(hip[0] + ff[0])/2 + 5 + 6*c, (hip[1] + fy)/2 - 1], kb = [(hip[0] + fb[0])/2 + 5 + 6*c, (hip[1] + fy)/2 - 1];
-      const neck = [hip[0] + 3 + 6*c + lean*6, hip[1] - 29 + 4*c];
-      const sh = [neck[0], neck[1] + 5];
-      // arms spread forward and back; a lifts them from down by the hips (-0.9 rad) to up by the head (+0.9 rad)
-      const ang = lerp(-.9, .9, a), hf = p.grab ? [17, fy - 3] : [sh[0] + 17*Math.cos(ang), sh[1] - 17*Math.sin(ang)];
-      const hb = [sh[0] - 17*Math.cos(ang), sh[1] - 17*Math.sin(ang)];
-      legs.setAttribute('d', `M${fb}L${kb}L${hip}L${kf}L${ff}`);
-      torso.setAttribute('d', `M${hip}L${neck}`);
-      arms.setAttribute('d', `M${hf}L${sh}L${hb}`);
-      const hx = neck[0] + 2, hy = neck[1] - 11;
-      head.setAttribute('cx', hx); head.setAttribute('cy', hy);
-      cap.setAttribute('d', `M${hx-9.5} ${hy-1}Q${hx-8} ${hy-14} ${hx+1} ${hy-12.5}Q${hx+9} ${hy-11} ${hx+9.5} ${hy-2}L${hx+15} ${hy-1}Z`);
-    }
-    // frame: position + facing direction u (unit); "up" is the side of u away from the surface, never pointing down
-    const place = (node, x, y, u, extra) => {
-      let up = [u[1], -u[0]]; if (up[1] > 1e-6) up = [-up[0], -up[1]];
-      node.setAttribute('transform', `matrix(${u[0]} ${u[1]} ${-up[0]} ${-up[1]} ${x} ${y})` + (extra || ''));
-    };
-    return {
-      g,
-      draw(f){
-        g.setAttribute('opacity', f.o == null ? 1 : f.o);
-        const b = f.board || f, by = f.body || f;
-        place(board, b.x, b.y, b.u, b.rot ? ` rotate(${b.rot})` : '');
-        const sx = Math.cos((f.shove || 0)*Math.PI/180), sy = Math.cos((f.flip || 0)*Math.PI/180), yaw = Math.cos((f.spin || 0)*Math.PI/180);
-        const bsx = Math.sign(sx*yaw || 1)*Math.max(.18, Math.abs(sx*yaw)), bsy = Math.sign(sy || 1)*Math.max(.15, Math.abs(sy));
-        boardInner.setAttribute('transform', `translate(0 ${-(f.boardLift || 0)}) scale(${bsx} ${bsy})`);
-        place(body, by.x, by.y, by.u, by.rot ? ` rotate(${by.rot})` : '');
-        bodyInner.setAttribute('transform', `scale(${Math.sign(yaw || 1)*Math.max(.2, Math.abs(yaw))} 1)`);
-        pose(f.pose || {});
-      },
-      remove(){ g.remove(); }
-    };
-  }
-
-  // ---------- runs: each is a list of segments {d (seconds), f(t) -> frame} ----------
-  const seq = segs => ({total: segs.reduce((s, x) => s + x.d, 0), at(tau){ let t = tau; for (const s of segs){ if (t <= s.d) return s.f(t/s.d); t -= s.d; } return null; }});
-  const fadeIn = t => smooth(t/.25), fadeOut = t => 1 - smooth((t - .7)/.3);
-  const ground = (x, y) => ({x, y, u: [1, 0]});
-  // pose for a stretch of flat ground: n pushes spread over the first 'share' of it, then coast
-  const rolling = (t, n, share) => t < share ? {c: .4, a: .25, push: (t/share)*n} : {c: .25, a: .3};
-
-  // quarter pipe: roll in from the left, up the face, a trick above the coping, back down fakie and out
-  function rampRun(trick){
-    const H = trick === 'rock' ? 0 : trick === 'indy' || trick === 'spin' ? 150 : 120;
-    const air = trick === 'rock' ? .9 : 1.1;
-    const bail = trick === 'bailflip' || trick === 'bailspin';
-    const segs = [
-      {d: 1.6, f: t => ({...ground(lerp(-150, Q0[0], t), Q0[1]), o: fadeIn(t), pose: rolling(t, 2, .7)})},
-      {d: .6, f: t => { const s = t, [x, y] = qp(s); return {x, y, u: qt(s), pose: {c: .25 + .45*t, a: .35}}; }},
-      {d: air, f: t => {
-        const y = Q1[1] - 4*H*t*(1 - t), x = Q1[0] + (trick === 'rock' ? 4 : 10)*bump(t);
-        // the body swings from the wall angle toward upright at the top of the air, then back for the landing
-        const th = Math.atan2(LIP[1], LIP[0]), tu = lerp(th, -.18, .85*bump(t)), f = {x, y, u: [Math.cos(tu), Math.sin(tu)], pose: {c: .45, a: .5}};
-        if (trick === 'rock'){ f.pose = {c: .55, a: .4, lean: -.5}; f.board = {x: Q1[0] + 8, y: Q1[1] - 8, u: [0, -1], rot: 0}; f.body = {x: Q1[0] + 8, y: Q1[1] - 8, u: [lerp(-.2, .2, bump(t)), -1]}; f.body.u = norm(...f.body.u); return f; }
-        f.pose.c = .45 + .4*bump(t); f.boardLift = 5*bump(t);
-        if (trick === 'kickflip' || trick === 'bailflip') f.flip = (trick === 'bailflip' ? 250 : 360)*smooth(span(t, .12, .62));
-        if (trick === 'heelflip') f.flip = -360*smooth(span(t, .12, .62));
-        if (trick === 'shuv') f.shove = 180*smooth(span(t, .15, .65));
-        if (trick === 'spin' || trick === 'bailspin') f.spin = (trick === 'bailspin' ? 470 : 360)*smooth(span(t, .05, .9));
-        if (trick === 'indy'){ f.pose = {c: .85, a: .7, grab: t > .2 && t < .78}; f.boardLift = 3; }
-        if (trick === 'ollie') f.pose.a = .5 + .3*bump(t);
-        return f; }},
-    ];
-    if (!bail){
-      segs.push({d: .6, f: t => { const s = 1 - t, [x, y] = qp(s); return {x, y, u: qt(s), pose: {c: .6 - .3*t, a: .4}}; }});
-      segs.push({d: 1.1, f: t => ({...ground(lerp(Q0[0], -100, t), Q0[1]), o: fadeOut(t), pose: {c: .25, a: .3}})});
-    } else {
-      // the board drops down the face and rolls out; the rider tumbles down after it and lies there a moment
-      segs.push({d: 2.4, f: t => {
-        const bs = 1 - clamp(t/.3), [bx0, by0] = qp(Math.max(0, bs));
-        const board = t < .3 ? {x: bx0, y: by0, u: qt(Math.max(.001, bs)), rot: 30*t} : {x: lerp(Q0[0], -110, (t - .3)/.7), y: Q0[1], u: [1, 0]};
-        const fs = 1 - clamp(t/.45), [fx, fy] = qp(Math.max(0, fs));
-        const body = t < .45 ? {x: fx + 10, y: fy - 6, u: qt(Math.max(.001, fs)), rot: 220*t/.45} : {x: Q0[0] + 34, y: Q0[1] + 4, u: [1, 0], rot: 95};
-        return {board, body, x: fx, y: fy, u: [1, 0], o: 1 - smooth((t - .82)/.18), pose: {c: .3, a: .9}}; }});
-    }
-    return seq(segs);
-  }
-
-  // stair handrail: roll along the deck from the right, ollie onto the rail, grind down, drop to the ground, roll out
-  function handrailRun(trick){
-    const uL = [-1, 0], bail = trick === 'bail';
-    const top = [H0[0] + HU[0]*-2, H0[1] - 4];
-    const segs = [
-      {d: 1.5, f: t => ({x: lerp(1740, 1392, t), y: DECK, u: uL, o: fadeIn(t), pose: rolling(t, 2, .65)})},
-      {d: .38, f: t => ({x: lerp(1392, top[0], t), y: lerp(DECK, top[1], t) - 34*bump(t), u: uL, pose: {c: .35 + .35*bump(t), a: .55}, boardLift: 4*bump(t)})},
-    ];
-    const railAt = t => [lerp(top[0], H1[0], t), lerp(top[1], H1[1] - 4, t)];
-    const grindFrame = (t, shove) => { const [x, y] = railAt(t); return {x, y, u: HU, sparks: true, shove, spin: shove ? 70 : 0, pose: {c: .5, a: .7, lean: shove ? .2 : 0}}; };
-    if (!bail){
-      segs.push({d: 1.0, f: t => grindFrame(t, trick === 'board' ? 90 : 0)});
-      segs.push({d: .36, f: t => ({x: lerp(H1[0], 1086, t), y: lerp(H1[1] - 4, FOOT, t) - 18*bump(t), u: uL, pose: {c: .4 + .3*bump(t), a: .55}})});
-      segs.push({d: 1.6, f: t => ({x: lerp(1086, 900, t), y: FOOT, u: uL, o: fadeOut(t), pose: t > .25 && t < .6 ? {c: .3, a: .25, push: (t - .25)/.35} : {c: .25, a: .3}})});
-    } else {
-      segs.push({d: .5, f: t => grindFrame(t*.5, 0)});
-      // the rider slips off the rail and falls to the ground beside the stairs; the board grinds on and clatters down
-      segs.push({d: 2.2, f: t => {
-        const [sx, sy] = railAt(.5);
-        const body = t < .4 ? {x: lerp(sx, sx - 40, t/.4), y: sy + (FOOT + 4 - sy)*Math.pow(t/.4, 2), u: HU, rot: -180*t/.4} : {x: sx - 40, y: FOOT + 4, u: uL, rot: -95};
-        const board = t < .35 ? (() => { const [bx, by] = railAt(.5 + .5*t/.35); return {x: bx, y: by, u: HU, rot: 0}; })() : {x: lerp(H1[0], 1010, (t - .35)/.65), y: FOOT, u: uL, rot: 0};
-        return {board, body, x: sx, y: sy, u: uL, o: 1 - smooth((t - .82)/.18), pose: {c: .3, a: .9}}; }});
-    }
-    return seq(segs);
-  }
-
-  // pink rail: roll in from the left, ollie up, grind across, pop off (maybe with a flip) and roll out
-  function railRun(trick){
-    const uR = [1, 0], bail = trick === 'bail';
-    const segs = [
-      {d: 1.5, f: t => ({x: lerp(700, 918, t), y: RG, u: uR, o: fadeIn(t), pose: rolling(t, 2, .65)})},
-      {d: .36, f: t => ({x: lerp(918, R0x, t), y: lerp(RG, RY, t) - 30*bump(t), u: uR, pose: {c: .35 + .35*bump(t), a: .55}, boardLift: 4*bump(t)})},
-    ];
-    const grind = t => ({x: lerp(R0x, R1x, t), y: RY, u: trick === 'nose' ? norm(1, .08) : uR, sparks: true, pose: {c: .5, a: .7, lean: trick === 'nose' ? .6 : 0}});
-    if (!bail){
-      segs.push({d: .95, f: grind});
-      segs.push({d: .42, f: t => ({x: lerp(R1x, 1272, t), y: lerp(RY, RG, t) - 32*bump(t), u: uR, flip: trick === 'flipout' ? 360*smooth(span(t, .05, .75)) : 0, boardLift: 6*bump(t), pose: {c: .4 + .4*bump(t), a: .6}})});
-      segs.push({d: 1.5, f: t => ({x: lerp(1272, 1460, t), y: RG, u: uR, o: fadeOut(t), pose: t > .25 && t < .6 ? {c: .3, a: .25, push: (t - .25)/.35} : {c: .25, a: .3}})});
-    } else {
-      segs.push({d: .4, f: t => grind(t*.4)});
-      // the board stops dead on the rail; the rider flies forward over it and lands on the ground
-      segs.push({d: 2.1, f: t => {
-        const sx = lerp(R0x, R1x, .4);
-        const body = t < .45 ? {x: sx + 120*t/.45, y: RY - 40*bump(t/.45*.6) + (RG + 4 - RY)*Math.pow(t/.45, 2), u: uR, rot: 200*t/.45} : {x: sx + 120 + 20*clamp((t - .45)/.2), y: RG + 4, u: uR, rot: 95};
-        const board = t < .25 ? {x: sx, y: RY, u: uR, rot: 0} : {x: sx - 10*clamp((t - .25)/.2), y: lerp(RY, RG, smooth((t - .25)/.2)), u: uR, rot: -25*clamp((t - .25)/.2)};
-        return {board, body, x: sx, y: RY, u: uR, o: 1 - smooth((t - .82)/.18), pose: {c: .3, a: .9}}; }});
-    }
-    return seq(segs);
-  }
-
-  function cruiseRun(trick){
-    const dir = Math.random() < .5 ? 1 : -1, x0 = dir > 0 ? -120 : 1720, x1 = dir > 0 ? 1720 : -120, y = 694, u = [dir, 0];
-    return seq([{d: 9, f: t => {
-      const x = lerp(x0, x1, t), f = {x, y, u, o: smooth(t/.06)*(1 - smooth((t - .94)/.06)), pose: {c: .25, a: .3}};
-      const cyc = (t*9)/1.6, k = cyc % 1;
-      if (k < .5) f.pose = {c: .3, a: .25, push: k/.5};
-      if (trick === 'ollie' && t > .55 && t < .62){ const q = (t - .55)/.07; f.y = y - 34*bump(q); f.pose = {c: .35 + .4*bump(q), a: .55}; f.boardLift = 5*bump(q); }
-      return f; }}]);
-  }
-  const LANES = {
-    ramp: {tricks: ['ollie','kickflip','heelflip','shuv','spin','indy','rock','bailflip','bailspin'], make: rampRun, gap: [1.2, 4]},
-    handrail: {tricks: ['5050','board','bail','5050'], make: handrailRun, gap: [2.5, 6]},
-    rail: {tricks: ['5050','flipout','nose','bail'], make: railRun, gap: [2, 5.5]},
-    cruise: {tricks: ['push','push','ollie'], make: cruiseRun, gap: [3, 8]},
-  };
-
-  let svg = null, sparkLayer = null, raf = 0, last = 0, active = [], cooldown = 1.2, prevLane = null;
-  const sparks = [];
-  // one rider at a time, sometimes a second one joins; never two on the same lane, never the same lane twice running
-  function launch(){
-    const names = Object.keys(LANES).filter(n => !active.some(a => a.lane === n) && n !== prevLane);
-    const lane = pick(names), L = LANES[lane]; prevLane = lane;
-    let tr; do { tr = pick(L.tricks); } while (tr === L.prev && L.tricks.length > 1); L.prev = tr;
-    active.push({lane, run: L.make(tr), r: rider(svg), t: 0});
-  }
-  function spark(x, y, u){
-    // a short streak thrown backwards off the trucks, falling as it fades
-    const sp = 120 + Math.random()*160, back = -1, ang = Math.atan2(u[1], u[0]) + Math.PI*(back < 0 ? 1 : 0) + (Math.random() - .5)*.9;
-    const n = el('line', {stroke: Math.random() < .5 ? '#ffd21f' : '#ff8a1e', 'stroke-width': 2.6, 'stroke-linecap': 'round'}, sparkLayer);
-    sparks.push({n, x, y, vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp - 60, life: .22 + Math.random()*.18, age: 0});
-  }
-  function tick(now){
-    raf = requestAnimationFrame(tick);
-    const dt = Math.min(.1, last ? (now - last)/1000 : 0); last = now;
-    if (cooldown > 0) cooldown -= dt;
-    else if (!active.length || (active.length === 1 && Math.random() < .0006)) { launch(); cooldown = 2 + Math.random()*5; }
-    for (let i = active.length - 1; i >= 0; i--){
-      const s = active[i]; s.t += dt;
-      const f = s.run.at(s.t);
-      if (!f){ s.r.remove(); active.splice(i, 1); if (!active.length) cooldown = Math.max(cooldown, 1.5 + Math.random()*4.5); continue; }
-      s.r.draw(f);
-      if (f.sparks && dt > 0){ const d = [-f.u[1], f.u[0]], down = d[1] < 0 ? [-d[0], -d[1]] : d;
-        for (const off of [-15, 15]) if (Math.random() < .55) spark(f.x + f.u[0]*off + down[0]*3, f.y + f.u[1]*off + down[1]*3, f.u); }
-    }
-    for (let i = sparks.length - 1; i >= 0; i--){
-      const p = sparks[i]; p.age += dt; if (p.age >= p.life){ p.n.remove(); sparks.splice(i, 1); continue; }
-      p.vy += 900*dt; const x2 = p.x + p.vx*dt, y2 = p.y + p.vy*dt;
-      p.n.setAttribute('x1', p.x); p.n.setAttribute('y1', p.y); p.n.setAttribute('x2', x2); p.n.setAttribute('y2', y2); p.n.setAttribute('opacity', 1 - p.age/p.life);
-      p.x = x2; p.y = y2;
-    }
-  }
-  function start(scene){
-    if (svg || !scene || (root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-    svg = el('svg', {viewBox: '0 0 1600 900', preserveAspectRatio: 'xMidYMax slice', 'aria-hidden': 'true'});
-    svg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:hidden';
-    scene.appendChild(svg);
-    sparkLayer = el('g', {}, svg);
-    raf = requestAnimationFrame(tick);
-    document.addEventListener('visibilitychange', () => { if (document.hidden){ cancelAnimationFrame(raf); raf = 0; } else if (!raf){ last = 0; raf = requestAnimationFrame(tick); } });
-  }
-  root.Sk8Crowd = {start};
-})(typeof window !== 'undefined' ? window : this);
 
 try { MangoSkin.scene(document.querySelector('.scene')); } catch(e) {}
 </script>
