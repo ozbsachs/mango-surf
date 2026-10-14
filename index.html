@@ -2737,7 +2737,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   function symbol(id, o){
     o = o || {}; const k = IMG[id] || 'L1';
     return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})"><img src="${src(k)}" alt="" draggable="false">`
-      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : k === 'W' ? '<b class="mx plain">WILD</b>' : '')   // a plain wild says WILD + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';
+      + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : k === 'W' ? '<b class="mx plain">WILD</b>' : '') + (o.sticky ? '<i class="lk" aria-hidden="true"></i>' : '') + '</div>';   // a plain wild says WILD
   }
   window.MangoArt = {symbol, skater: () => `<img class="mg" src="${src('H3')}" alt="">`};
 
