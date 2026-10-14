@@ -4,6 +4,281 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mango Surf</title>
+<link rel="preconnect" href="https://sk8.pred2upredictions.top" crossorigin><!--/mango-preconnect-->
+<style>
+/* Mango Surf loading screen (loader.html + loader.js, put first in the page by build.js). A spray can rattles, then sweeps
+   the HOOLIGANS row left to right and the STUDIOS row back, and the logo appears under its spray; then "presents", the
+   MANGO SURF sign and a paint bar that follows the real loading. Only transform and opacity move (masks are static), so it
+   stays smooth while the page behind it is still being parsed. --W is the logo's width; everything is sized from it.
+   Timeline after .go (s): can in 0-.35, rattle .05-.5, HOOLIGANS sweep .5-1.15, drop 1.15-1.3, STUDIOS sweep 1.3-1.8,
+   can out 1.8-2.1, presents 1.7, sign 1.85. loader.js keeps the same numbers. */
+#mld{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  --W:min(680px, 76vw, calc((100vh - 120px) * 1.3));--H:calc(var(--W) * .3542);--E:cubic-bezier(.42,0,.58,1);
+  background:radial-gradient(ellipse 70% 55% at 50% 42%, rgba(255,150,40,.16), rgba(255,150,40,0) 70%),
+    repeating-linear-gradient(180deg, rgba(255,255,255,0) 0 62px, rgba(0,0,0,.22) 62px 64px, rgba(255,255,255,.035) 64px 65px),
+    linear-gradient(180deg, #123546 0%, #0c2532 55%, #071820 100%);
+  color:#fff;opacity:1;transition:opacity .5s ease;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;cursor:default;
+  font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;contain:strict}
+#mld.out{opacity:0;pointer-events:none}
+#mld.out .mld-in{transform:scale(1.03);transition:transform .5s ease}
+#mld *{box-sizing:border-box}
+#mld img{display:block;max-width:none;-webkit-user-drag:none}
+#mld .mld-in{display:flex;flex-direction:column;align-items:center;width:var(--W)}
+#mld .mld-art{position:relative;width:var(--W);display:flex;flex-direction:column;align-items:center}
+#mld .mld-logo{position:relative;width:var(--W);height:var(--H)}
+#mld .mld-ghost{position:absolute;left:0;top:0;width:var(--W);height:var(--H);opacity:.07}
+#mld .mld-strip{position:absolute;left:0;right:0;overflow:hidden}
+#mld .mld-strip.t{top:0;height:72.7%}
+#mld .mld-strip.b{top:72.7%;bottom:0}
+#mld .mld-win{position:absolute;top:0;bottom:0;width:115%;will-change:transform}
+#mld .mld-cnt{position:absolute;inset:0;will-change:transform}
+#mld .mld-cnt img{position:absolute;width:var(--W);height:var(--H)}
+/* the window slides on, its content slides back the same amount, so the logo stays put and only the window's sprayed edge
+   moves. The edge is a soft fade with a few blotches ahead of it (mask layers add up) */
+#mld .t .mld-win{left:0;transform:translateX(-100%);
+  -webkit-mask:linear-gradient(90deg,#000 84%,transparent 99%),radial-gradient(circle at 89% 22%,#000 0 1.6%,transparent 4.5%),radial-gradient(circle at 92% 64%,#000 0 1.2%,transparent 3.8%),radial-gradient(circle at 86.5% 88%,#000 0 1.8%,transparent 4.8%),radial-gradient(circle at 94% 42%,#000 0 .7%,transparent 2.4%);
+  mask:linear-gradient(90deg,#000 84%,transparent 99%),radial-gradient(circle at 89% 22%,#000 0 1.6%,transparent 4.5%),radial-gradient(circle at 92% 64%,#000 0 1.2%,transparent 3.8%),radial-gradient(circle at 86.5% 88%,#000 0 1.8%,transparent 4.8%),radial-gradient(circle at 94% 42%,#000 0 .7%,transparent 2.4%)}
+#mld .t .mld-cnt{transform:translateX(100%)}
+#mld .t img{left:0;top:0}
+#mld .b .mld-win{right:0;transform:translateX(100%);
+  -webkit-mask:linear-gradient(270deg,#000 84%,transparent 99%),radial-gradient(circle at 11% 30%,#000 0 1.6%,transparent 4.5%),radial-gradient(circle at 8% 75%,#000 0 1.2%,transparent 3.8%),radial-gradient(circle at 13% 55%,#000 0 .9%,transparent 3%);
+  mask:linear-gradient(270deg,#000 84%,transparent 99%),radial-gradient(circle at 11% 30%,#000 0 1.6%,transparent 4.5%),radial-gradient(circle at 8% 75%,#000 0 1.2%,transparent 3.8%),radial-gradient(circle at 13% 55%,#000 0 .9%,transparent 3%)}
+#mld .b .mld-cnt{transform:translateX(-100%)}
+#mld .b img{left:calc(var(--W) * .15);top:calc(var(--H) * -.727)}
+#mld.go .t .mld-win{animation:mldWinT .65s var(--E) .5s both}
+#mld.go .t .mld-cnt{animation:mldCntT .65s var(--E) .5s both}
+#mld.go .b .mld-win{animation:mldWinB .5s var(--E) 1.3s both}
+#mld.go .b .mld-cnt{animation:mldCntB .5s var(--E) 1.3s both}
+@keyframes mldWinT{from{transform:translateX(-100%)}to{transform:none}}
+@keyframes mldCntT{from{transform:translateX(100%)}to{transform:none}}
+@keyframes mldWinB{from{transform:translateX(100%)}to{transform:none}}
+@keyframes mldCntB{from{transform:translateX(-100%)}to{transform:none}}
+
+/* the can: c1..c3 are logo-sized boxes whose top-left corner is the spray point (the middle of the sprayed edge);
+   c1 sweeps the HOOLIGANS row, c2 drops to STUDIOS, c3 sweeps back; c4 (a point) brings the can in and out, c5 turns it */
+#mld .mld-c1,#mld .mld-c2,#mld .mld-c3{position:absolute;left:0;width:100%;height:100%;pointer-events:none}
+#mld .mld-c1{top:41.5%;transform:translateX(-7.5%)}
+#mld .mld-c2,#mld .mld-c3{top:0}
+#mld .mld-c4{position:absolute;left:0;top:0;width:0;height:0;opacity:0}
+#mld .mld-can{position:absolute;overflow:visible;width:calc(var(--W) * .2);height:calc(var(--W) * .2833);
+  left:calc(var(--W) * -.01667);top:calc(var(--W) * -.2167);transform-origin:58% 54%}
+#mld .mld-cone{opacity:0}
+#mld .mld-mist{position:absolute;left:calc(var(--W) * -.08);top:calc(var(--W) * -.08);width:calc(var(--W) * .16);height:calc(var(--W) * .16);opacity:0;
+  border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75) 0,rgba(255,240,215,.42) 30%,rgba(255,255,255,.12) 55%,rgba(255,255,255,0) 70%)}
+#mld.go .mld-c1{animation:mldC1 .65s var(--E) .5s both}
+#mld.go .mld-c2{animation:mldC2 .15s ease-in-out 1.15s both}
+#mld.go .mld-c3{animation:mldC3 .5s var(--E) 1.3s both}
+#mld.go .mld-c4{animation:mldC4 2.1s linear both,mldFlip .18s ease-in-out 1.12s both}
+#mld.go .mld-can{animation:mldRattle .11s linear .05s 4 both}
+#mld.go .mld-cone,#mld.go .mld-mist{animation:mldSpray 2.1s linear both}
+#mld.go .mld-mist::before{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:mldPuff .12s ease-in-out infinite alternate}
+@keyframes mldC1{from{transform:translateX(-7.5%)}to{transform:translateX(107.5%)}}
+@keyframes mldC2{from{transform:none}to{transform:translateY(45.4%)}}
+@keyframes mldC3{from{transform:none}to{transform:translateX(-115%)}}
+@keyframes mldC4{
+  0%{opacity:0;transform:translate(calc(var(--W) * -.12),calc(var(--W) * .2)) rotate(-25deg)}
+  16%{opacity:1;transform:none}
+  85.7%{opacity:1;transform:none;animation-timing-function:ease-in}
+  100%{opacity:0;transform:translate(calc(var(--W) * -.1),calc(var(--W) * -.28)) rotate(-30deg)}}
+@keyframes mldRattle{0%,100%{transform:none}25%{transform:rotate(-14deg) translateY(-4%)}75%{transform:rotate(14deg) translateY(4%)}}
+@keyframes mldFlip{from{scale:1 1}to{scale:-1 1}}
+@keyframes mldSpray{0%,23%{opacity:0}25.5%,53.5%{opacity:1}55.5%,61%{opacity:0}63%,84%{opacity:1}86%,100%{opacity:0}}
+@keyframes mldPuff{from{transform:scale(.88)}to{transform:scale(1.1)}}
+
+/* paint speckles and drips (loader.js places them along the sweep) */
+#mld .mld-dots{position:absolute;inset:0;pointer-events:none}
+#mld .mld-dots i{position:absolute;border-radius:50%;background:var(--c,#fff);transform:scale(0);opacity:0}
+#mld .mld-dots i.dr{border-radius:2px;width:3px;transform-origin:50% 0;background:#fff}
+#mld .mld-dots i.dr::after{content:"";position:absolute;left:-1.5px;bottom:-3px;width:6px;height:6px;border-radius:50%;background:#fff}
+#mld.go .mld-dots i{animation:mldDot .18s ease-out var(--d) both}
+#mld.go .mld-dots i.dr{animation:mldDrip .9s cubic-bezier(.55,0,.8,.6) var(--d) both}
+@keyframes mldDot{from{transform:scale(0);opacity:0}60%{transform:scale(1.35);opacity:1}to{transform:none;opacity:var(--o,1)}}
+@keyframes mldDrip{from{transform:scaleY(0);opacity:1}to{transform:none;opacity:.95}}
+
+/* presents + the MANGO SURF sign (the game's own sign art and lettering) */
+#mld .mld-title{display:flex;flex-direction:column;align-items:center;margin-top:calc(var(--W) * .045)}
+#mld .mld-pres{margin:0 0 calc(var(--W) * .012);font:800 max(10px, calc(var(--W) * .028))/1 Montserrat,system-ui,sans-serif;letter-spacing:.5em;text-indent:.5em;
+  text-transform:uppercase;color:rgba(255,255,255,.72);opacity:0}
+#mld .mld-sign{--sh:calc(var(--W) * .62 * 250 / 880);position:relative;width:calc(var(--W) * .62);height:var(--sh);opacity:0;
+  background:url("img/title-sign.svg?v=8f857f14") center/100% 100% no-repeat;filter:drop-shadow(0 6px 5px rgba(0,0,0,.45));
+  display:flex;align-items:center;justify-content:center;padding:0 calc(var(--sh) * .32) 0 calc(var(--sh) * .85)}
+#mld .mld-sign b{font:400 calc(var(--sh) * .355)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.02em;white-space:nowrap;
+  background:linear-gradient(#fff3a6,#ffc21f 45%,#ff7a1f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:#ffc21f;
+  -webkit-text-stroke:calc(var(--sh) * .022) #2a0e12;filter:drop-shadow(0 calc(var(--sh) * .025) 0 #2a0e12);paint-order:stroke fill;transform:translateY(calc(var(--sh) * -.02))}
+#mld .mld-sign i{position:absolute;left:calc(var(--sh) * -.12);bottom:calc(var(--sh) * .02);height:calc(var(--sh) * 1.05);aspect-ratio:242/260;
+  background:url("img/wild-rider.webp?v=c2212150") center/contain no-repeat;transform:rotate(-8deg);filter:drop-shadow(0 3px 2px rgba(0,0,0,.3))}
+#mld.go .mld-pres{animation:mldUp .4s ease-out 1.7s both}
+#mld.go .mld-sign{animation:mldPop .45s cubic-bezier(.3,1.5,.5,1) 1.85s both}
+@keyframes mldUp{from{opacity:0;transform:translateY(40%)}to{opacity:1;transform:none}}
+@keyframes mldPop{from{opacity:0;transform:scale(.8) rotate(-3deg)}to{opacity:1;transform:none}}
+
+/* the paint bar: a sprayed stripe that grows with the real loading (loader.js sets its scale and the tip's place) */
+#mld .mld-bar{position:relative;width:calc(var(--W) * .56);height:8px;margin-top:calc(var(--W) * .055);border-radius:99px;background:rgba(255,255,255,.1);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+#mld .mld-fill{position:absolute;inset:0;border-radius:99px;transform-origin:0 50%;transform:scaleX(.02);transition:transform .45s cubic-bezier(.25,.8,.35,1);
+  background:linear-gradient(90deg,#ff7a1f,#ffb627 60%,#ffe14d)}
+#mld .mld-tip{position:absolute;left:-11px;top:-7px;width:22px;height:22px;border-radius:50%;transition:transform .45s cubic-bezier(.25,.8,.35,1);
+  background:radial-gradient(circle,rgba(255,236,170,.95) 0,rgba(255,190,60,.55) 35%,rgba(255,170,40,0) 70%)}
+#mld .mld-say{margin:12px 0 0;font:700 12px/1.2 Montserrat,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55);min-height:1.2em}
+#mld.ready .mld-say{color:#ffd23f}
+@media (max-height:420px){ #mld .mld-say{display:none} #mld .mld-bar{margin-top:calc(var(--W) * .035)} }
+
+/* reduced motion: no can and no sweep; the logo, then the title, simply fade in */
+@media (prefers-reduced-motion:reduce){
+  #mld .mld-c1,#mld .mld-dots,#mld .mld-ghost{display:none}
+  #mld .mld-win,#mld .mld-cnt{transform:none!important;animation:none!important;-webkit-mask:none;mask:none}
+  #mld .mld-logo{opacity:0}
+  #mld.go .mld-logo{animation:mldFade .5s ease-out both}
+  #mld.go .mld-pres,#mld.go .mld-sign{animation:mldFade .4s ease-out .45s both}
+  #mld .mld-fill,#mld .mld-tip{transition-duration:.2s}
+}
+@keyframes mldFade{from{opacity:0}to{opacity:1}}
+</style>
+<div id="mld" role="status" aria-live="polite" aria-label="Loading Mango Surf">
+<div class="mld-in">
+<div class="mld-art">
+<div class="mld-logo">
+<img class="mld-ghost" src="img/hooligans-logo.webp?v=10e92930" alt="" draggable="false">
+<div class="mld-strip t"><div class="mld-win"><div class="mld-cnt"><img src="img/hooligans-logo.webp?v=10e92930" alt="Hooligans Studios" draggable="false" fetchpriority="high"></div></div></div>
+<div class="mld-strip b"><div class="mld-win"><div class="mld-cnt"><img src="img/hooligans-logo.webp?v=10e92930" alt="" draggable="false"></div></div></div>
+<div class="mld-dots" aria-hidden="true"></div>
+<div class="mld-c1" aria-hidden="true"><div class="mld-c2"><div class="mld-c3"><div class="mld-mist"></div><div class="mld-c4">
+<svg class="mld-can" viewBox="0 0 120 170" aria-hidden="true">
+<defs>
+<linearGradient id="mldBody" x1="0" x2="1"><stop offset="0" stop-color="#ff8a1f"/><stop offset=".22" stop-color="#ffd23f"/><stop offset=".42" stop-color="#ffb627"/><stop offset=".8" stop-color="#f06a12"/><stop offset="1" stop-color="#b8460a"/></linearGradient>
+<linearGradient id="mldMetal" x1="0" x2="1"><stop offset="0" stop-color="#8d97a3"/><stop offset=".3" stop-color="#eef2f6"/><stop offset=".6" stop-color="#b9c2cc"/><stop offset="1" stop-color="#5f6873"/></linearGradient>
+<linearGradient id="mldCone" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+</defs>
+<path class="mld-cone" d="M33 37 L-6 122 Q6 142 26 136 L36 40 Z" fill="url(#mldCone)"/>
+<g transform="translate(70 92) rotate(-28)">
+<rect x="-6" y="-70" width="12" height="11" rx="2.5" fill="#f4f1ea" stroke="#1b1420" stroke-width="2.5"/>
+<circle cx="-6" cy="-64.5" r="2.2" fill="#1b1420"/>
+<path d="M-17 -59 H17 L22 -46 H-22 Z" fill="url(#mldMetal)" stroke="#1b1420" stroke-width="2.5" stroke-linejoin="round"/>
+<path d="M-22 -46 Q-22 -50 -18 -50 H18 Q22 -50 22 -46 V52 Q22 58 16 58 H-16 Q-22 58 -22 52 Z" fill="url(#mldBody)" stroke="#1b1420" stroke-width="3" stroke-linejoin="round"/>
+<rect x="-22" y="-20" width="44" height="34" fill="#1b2a3a"/>
+<path d="M-15 2 Q-9 -10 -2 -3 Q4 3 9 -6 Q12 -11 16 -9" fill="none" stroke="#3be3ff" stroke-width="3.2" stroke-linecap="round"/>
+<path d="M-15 9 Q-8 3 -1 8 Q6 12 15 5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".8"/>
+<path d="M-22 -20 H22 M-22 14 H22" stroke="#1b1420" stroke-width="2.5"/>
+<rect x="-15" y="-44" width="5" height="96" rx="2.5" fill="#fff" opacity=".42"/>
+<path d="M-22 50 H22" stroke="#1b1420" stroke-width="2" opacity=".5"/>
+</g>
+</svg>
+</div></div></div></div>
+</div>
+<div class="mld-title"><p class="mld-pres">presents</p><div class="mld-sign"><i></i><b>MANGO SURF</b></div></div>
+</div>
+<div class="mld-bar" aria-hidden="true"><div class="mld-fill"></div><div class="mld-tip"></div></div>
+<p class="mld-say">Loading the beach</p>
+</div>
+</div>
+<script>
+// Mango Surf loading screen (loader.html / loader.css). Runs right after the loader's markup, before the rest of the page
+// is even parsed. It starts the spray reveal once the logo has arrived, fills the paint bar from what the game really waits
+// for (page parsed, first-paint art and symbol pictures decoded, fonts, the casino session: bet levels filled, or a notice
+// shown), and fades out when all of that is in AND the reveal has played (never before ~2.3 s, never after 12 s).
+// A tap or Space/Enter after the reveal skips it; no key reaches the game while it is up (Space must not start a spin).
+(function(){
+  var L = document.getElementById('mld'); if (!L) return;
+  var now = function(){ return (window.performance && performance.now) ? performance.now() : Date.now(); };
+  var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var REVEAL = reduce ? 900 : 1850, MIN = reduce ? 1200 : 2350, CAP = 12000;
+  var start = now(), t0 = 0, gone = false, shown = 0, timer = 0;
+  var fill = L.querySelector('.mld-fill'), tip = L.querySelector('.mld-tip'), say = L.querySelector('.mld-say'), bar = L.querySelector('.mld-bar');
+
+  // ---- paint speckles and drips along the sweep: each pops when the sprayed edge passes it ----
+  var E = function(t){ return [3*(1-t)*(1-t)*t*.42 + 3*(1-t)*t*t*.58 + t*t*t, 3*(1-t)*t*t + t*t*t]; };   // cubic-bezier(.42,0,.58,1): [x, y]
+  var at = function(p){ var a = 0, b = 1; for (var i = 0; i < 18; i++){ var m = (a + b)/2; if (E(m)[1] < p) a = m; else b = m; } return E((a + b)/2)[0]; };
+  var clamp = function(v){ return Math.max(0, Math.min(1, v)); };
+  var when = function(x, row){ return row ? 1.3 + .5*at(clamp((1.075 - x)/1.15)) : .5 + .65*at(clamp((x + .075)/1.15)); };
+  var DOTS = [[.04,.3,.010,0],[.1,.12,.006,1],[.16,.78,.008,0],[.27,.06,.012,1],[.34,.62,.007,0],[.41,.16,.005,1],[.52,.04,.009,0],[.58,.7,.011,1],
+    [.66,.1,.006,0],[.73,.6,.008,1],[.8,.2,.012,0],[.88,.08,.007,1],[.95,.55,.009,0],[.98,.25,.005,1],
+    [.12,.9,.007,1],[.24,.97,.006,0],[.71,.94,.008,1],[.86,.84,.006,0],[.6,.99,.005,1]];
+  var html = '';
+  for (var i = 0; i < DOTS.length; i++){ var d = DOTS[i], row = d[1] > .74 ? 1 : 0;
+    html += '<i style="left:' + (d[0]*100) + '%;top:' + (d[1]*100) + '%;width:calc(var(--W) * ' + d[2] + ');height:calc(var(--W) * ' + d[2] + ');margin:calc(var(--W) * ' + (-d[2]/2) +
+      ') 0 0 calc(var(--W) * ' + (-d[2]/2) + ');--d:' + (when(d[0], row) + .02).toFixed(3) + 's;--c:' + (d[3] ? '#ffb627' : '#fff') + ';--o:' + (d[3] ? 1 : .85) + '"></i>'; }
+  var DRIPS = [[.215,.66,.09],[.475,.67,.06],[.835,.655,.11]];
+  for (i = 0; i < DRIPS.length; i++){ d = DRIPS[i];
+    html += '<i class="dr" style="left:' + (d[0]*100) + '%;top:' + (d[1]*100) + '%;height:calc(var(--H) * ' + d[2] + ');--d:' + (when(d[0], 0) + .18).toFixed(3) + 's"></i>'; }
+  var dots = L.querySelector('.mld-dots'); if (dots) dots.innerHTML = html;
+
+  // ---- start the reveal once the logo is here (or after 1.2 s anyway) ----
+  function go(){ if (t0 || gone) return; t0 = now(); L.classList.add('go'); }
+  var logo = L.querySelector('.mld-strip.t img');
+  if (!logo || (logo.complete && logo.naturalWidth)) go();
+  else { logo.addEventListener('load', go); logo.addEventListener('error', go); setTimeout(go, 1200); }
+
+  // ---- what the game waits for ----
+  var st = {dom: 0, img: 0, font: 0, sess: 0}, imgs = null, fontsAsked = false, fontsDone = false;
+  function domReady(){ return document.readyState !== 'loading'; }
+  function track(){
+    if (imgs || !domReady()) return;
+    imgs = []; var seen = {};
+    var add = function(src, im){ if (!src || seen[src]) return; seen[src] = 1; var o = {ok: false}; imgs.push(o);
+      im = im || new Image(); if (!im.src) im.src = src;
+      var done = function(){ o.ok = true; };
+      if (im.complete && im.naturalWidth) o.ok = true;
+      else if (im.decode) im.decode().then(done, done);
+      else { im.addEventListener('load', done); im.addEventListener('error', done); }
+      setTimeout(done, 8000); };
+    // the first-paint art build.js preloads (the day plate, the frame), then every symbol picture (skin.js MangoKeep)
+    var pre = document.querySelectorAll('link[rel="preload"][as="image"]');
+    for (var j = 0; j < pre.length; j++) if (!/hooligans-logo/.test(pre[j].href)) add(pre[j].href);
+    var keep = window.MangoKeep || [];
+    for (j = 0; j < keep.length; j++) add(keep[j].src, keep[j]);
+  }
+  function fonts(){
+    if (fontsAsked || !domReady() || !document.fonts) { if (!document.fonts) fontsDone = true; return; }
+    fontsAsked = true; var ok = function(){ fontsDone = true; };
+    Promise.all([document.fonts.load('400 1em "Lilita One"'), document.fonts.load('800 1em Montserrat')]).then(function(){ return document.fonts.ready; }).then(ok, ok);
+    setTimeout(ok, 6000);
+  }
+  function session(){
+    var m = document.getElementById('modal');
+    if (m && !m.hidden) return true;                                   // a notice, the name prompt or the load offer: the game is talking
+    if (document.body && document.body.classList.contains('replay')){
+      var rb = document.getElementById('replaybtn'), ri = document.getElementById('replayinfo');
+      return !!(rb && (!rb.disabled || !/LOADING/.test(rb.textContent))) || !!(ri && /Missing/.test(ri.textContent)); }
+    try { return !!(window.MangoBet && MangoBet.get().levels.length); } catch(e){ return false; }
+  }
+  var LINES = ['Loading the beach', 'Waxing the boards', 'Paddling out', 'Surf’s up!'];
+  function tick(){
+    if (gone) return;
+    track(); fonts();
+    st.dom = domReady() ? 1 : 0;
+    st.img = imgs ? (imgs.length ? imgs.filter(function(o){ return o.ok; }).length / imgs.length : 1) : 0;
+    st.font = fontsDone ? 1 : 0;
+    st.sess = st.dom && session() ? 1 : 0;
+    var p = .12 + .14*st.dom + .4*st.img + .1*st.font + .24*st.sess;
+    var ready = st.dom && st.img === 1 && st.font && st.sess;
+    if (p > shown){ shown = p; var w = bar ? bar.offsetWidth : 0;
+      if (fill) fill.style.transform = 'scaleX(' + shown.toFixed(3) + ')'; if (tip) tip.style.transform = 'translateX(' + (w*shown).toFixed(1) + 'px)'; }
+    var line = ready ? 3 : st.img === 1 && st.font ? 2 : st.dom ? 1 : 0;
+    if (say && say.getAttribute('data-l') !== String(line)){ say.setAttribute('data-l', line); say.textContent = LINES[line]; }
+    if (ready) L.classList.add('ready');
+    var t = now();
+    if ((ready && t0 && t - t0 >= MIN) || t - start >= CAP) hide();
+  }
+  function hide(){
+    if (gone) return; gone = true; clearInterval(timer);
+    if (fill) fill.style.transform = 'scaleX(1)'; if (tip && bar) tip.style.transform = 'translateX(' + bar.offsetWidth + 'px)';
+    L.classList.add('out'); L.setAttribute('aria-hidden', 'true'); L.removeAttribute('role');
+    removeEventListener('keydown', keys, true);
+    setTimeout(function(){ if (L.parentNode) L.parentNode.removeChild(L); }, 650);
+  }
+  var revealed = function(){ return t0 && now() - t0 >= REVEAL; };
+  // no key reaches the game while the loader is up; Space / Enter skip it once the logo is in
+  function keys(e){
+    if (gone) return;
+    var k = e.key;
+    if (k === ' ' || k === 'Spacebar' || k === 'Enter' || e.code === 'Space'){ e.preventDefault(); e.stopImmediatePropagation(); if (revealed()) hide(); }
+  }
+  addEventListener('keydown', keys, true);
+  L.addEventListener('click', function(){ if (revealed()) hide(); });
+  timer = setInterval(tick, 100); tick();
+  window.MangoLoader = {hide: hide, state: function(){ return {t0: t0, shown: shown, gone: gone, st: st, imgs: imgs ? imgs.length : 0}; }};
+})();
+</script>
 <style>
 @font-face{font-family:"Press Start 2P";font-weight:400;font-display:swap;src:url("fonts/PressStart2P-400.woff2") format("woff2")}
 @font-face{font-family:"VT323";font-weight:400;font-display:swap;src:url("fonts/VT323-400.woff2") format("woff2")}
@@ -589,8 +864,17 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 #celebrate img.rain{position:absolute;top:-12%;z-index:1;pointer-events:none;animation:fall var(--t) linear forwards}
 @keyframes fall{to{transform:translateY(125vh) rotate(var(--r))}}
 
+/* soft motion (prefers-reduced-motion: reduce): wins still pop (to 106%, no tilt), shine and glow; SURF badges glow and
+   breathe instead of wiggling; the big-win rain falls slower with barely a turn (skin.js rain); the mascot and the old
+   stack swell stay still */
 @media (prefers-reduced-motion:reduce){
-  .grid .c.hit .ms,.grid .c .ms::after,.grid.focusing .c.focus .ms,.mstack img,.mstack .swell,.grid .c.tape,.grid .c.tape .ms .fx-mv > img,img.mg,#celebrate img.rain,.splash{animation:none!important}
+  .grid.focusing .c.focus .ms,.mstack .swell,img.mg{animation:none!important}
+  .grid .c.hit .ms{animation:mpop-soft .55s ease-in-out both}
+  .grid .c.tape .ms .fx-mv > img{animation:badge-soft 2.4s ease-in-out infinite}
+  .celebrate b.pop,.celebrate .celart.pop{animation:celpop-soft .4s ease-out}
+  @keyframes mpop-soft{0%,100%{transform:none}40%{transform:scale(1.06)}}
+  @keyframes badge-soft{0%,100%{transform:none}50%{transform:scale(1.04)}}
+  @keyframes celpop-soft{from{transform:scale(.92);opacity:.3}to{transform:none;opacity:1}}
   #lineov .wl{animation:none;stroke-dashoffset:0}
 }
 
@@ -639,7 +923,8 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 .winpill.out{animation:pillout .22s ease-in forwards}
 @keyframes pillout{to{opacity:0;transform:translate(-50%,-90%) scale(.85)}}
 @keyframes pillin{from{transform:translate(-50%,-80%) scale(.4);opacity:0}to{transform:translate(-50%,-100%) scale(1);opacity:1}}
-@media (prefers-reduced-motion:reduce){.winpill{animation:none}}
+@media (prefers-reduced-motion:reduce){.winpill{animation:pillfade .25s ease-out both}.winpill.out{animation:pillfadeout .22s ease-in forwards}
+  @keyframes pillfade{from{opacity:0}}@keyframes pillfadeout{to{opacity:0}}}
 
 /* coconuts on the palms: invisible buttons over the drawn coconuts, only there in Barrel mode with no round running */
 .nuts{position:fixed;inset:0;pointer-events:none;z-index:30}
@@ -716,8 +1001,12 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
   70%{transform:translate(-50%,15%) rotate(18deg)}85%{transform:translate(-54%,5%) rotate(-4deg)}}
 @keyframes trail{0%,100%{transform:translate(-50%,40%) scaleX(.8);opacity:.6}25%{transform:translate(-55%,-60%) scaleX(1);opacity:.9}45%{transform:translate(-45%,-85%) scaleX(.6);opacity:.4}70%{transform:translate(-50%,70%) scaleX(1.1);opacity:.9}}
 .reel:has(.c.hit) .stackov .mstack.surf .mw-rider{animation:carve 1.6s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.mstack.surf .mw-wave,.mstack.surf .mw-rider,.mstack.surf .mw-trail{animation:none}}
+/* soft motion: the wave breathes slowly and the mango rocks gently on it (no carving up and down the face); the trail rests */
+@media (prefers-reduced-motion:reduce){.mstack.surf .mw-wave{animation:wavebob 5s ease-in-out infinite}.mstack.surf .mw-trail{animation:none}
+  .mstack.surf .mw-rider,.reel:has(.c.hit) .stackov .mstack.surf .mw-rider{animation:carve-soft 4s ease-in-out infinite}
+  @keyframes carve-soft{0%,100%{transform:translate(-50%,-10%) rotate(-4deg)}50%{transform:translate(-50%,-14%) rotate(4deg)}}}
 .reel:has(.c.hit) .stackov .mstack.surf .mw-wave{animation:wavebob 1.3s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.reel:has(.c.hit) .stackov .mstack.surf .mw-wave{animation:wavebob 2.6s ease-in-out infinite}}
 /* ---------- wilds are never cut off (Oz) ---------- */
 /* a reel clips only while its spin strip is in it; once it lands, a wild's tag, the tower's splash and the rider can spill over */
 .grid .reel:not(:has(> .strip)){overflow:visible}
@@ -827,13 +1116,17 @@ body.chase .machine .stage{transition-delay:0s}
 .stackov{transition:opacity .2s ease-out}
 .stackov.building{transition:clip-path .13s cubic-bezier(.3,1.4,.5,1),opacity .2s ease-out}   /* the game sets the clip transition here; keep the fade too */
 @starting-style{.stackov{opacity:0}}   /* only when a tower is first drawn, not when it folds or settles */
-@media (prefers-reduced-motion:reduce){.mergetag,.mergetag.out{animation:none}.stackov,.stackov.building{transition:none}}
+/* soft motion: the tag and the tower only fade (the tower still opens over the reel: build.js keeps its eased clip) */
+@media (prefers-reduced-motion:reduce){.mergetag{animation:mtfade .25s ease-out both}.mergetag.out{animation:mtfadeout .22s ease-in forwards}.stackov,.stackov.building{transition:opacity .2s ease-out}
+  @keyframes mtfade{from{opacity:0}}@keyframes mtfadeout{to{opacity:0}}}
+/* soft motion: the chase glow on a teasing reel pulses slowly instead of standing still */
+@media (prefers-reduced-motion:reduce){.grid .reel.tease{animation:tease .9s ease-in-out infinite alternate}}
 /* menus, panels, the bonus sheet and confirm boxes fade in and out with their dark backdrop, instead of cutting in and
    out in one frame (display waits for the fade: allow-discrete; the boxes inside keep their own pop) */
 #backdrop,#drawer,.mpanel,#buysheet,#confirm,#modal{transition:opacity .2s ease-out,display .2s allow-discrete}
 #backdrop[hidden],#drawer[hidden],.mpanel[hidden],#buysheet[hidden],#confirm[hidden],#modal[hidden]{opacity:0}
 @starting-style{#backdrop:not([hidden]),#drawer:not([hidden]),.mpanel:not([hidden]),#buysheet:not([hidden]),#confirm:not([hidden]),#modal:not([hidden]){opacity:0}}
-@media (prefers-reduced-motion:reduce){#backdrop,#drawer,.mpanel,#buysheet,#confirm,#modal{transition:none}}
+/* (fades are kept for reduced motion too: they are opacity only) */
 /* a wild reel's tag fits inside a phone-width tower (it was wider than the reel and ran under the side plank) */
 @media (max-width:640px){.mstack .mx.big{font-size:12px!important;padding:3px 6px 4px!important}}
 
@@ -1019,7 +1312,39 @@ body.chase .machine .stage{transition-delay:0s}
 /* no life where it would distract or cost: the spin strips (the reel is a blur, and a symbol must land exactly as it
    was drawn in the strip), dimmed symbols, .fx-still, or when the player asks for less motion */
 .strip .fx,.strip .fx *,.ms.dim .fx *,.fx-still .fx,.fx-still .fx *{animation:none!important}
-@media (prefers-reduced-motion:reduce){.fx,.fx *{animation:none!important}}
+/* soft motion (prefers-reduced-motion: reduce, e.g. iOS Reduce Motion): the board must never look dead, so light still
+   moves but nothing travels, bobs or spins. Idle: symbols stand still; only the slow water shimmer, the shine, the
+   sparkles, the wild's glow and the badge rays (very slow) stay. Win: the same shared beat, but the pop stays at or under
+   106% with its brightness flash and warm glow, and the part motion is a small 3deg rock for every symbol (the beach
+   ball's full spins, the J's swing and the K's kick are gone). Normal motion is untouched: everything here is inside this query */
+@media (prefers-reduced-motion:reduce){
+  .fx .fx-sq,.fx .h3-leaf{animation:none!important}
+  .fx-water > i{animation-duration:24s}
+  :is(.ms.win,.grid.focusing .c.focus .ms) .fx-water > i{animation-duration:12s}
+  .fx-shine > i,.ms-H4 .fx-shine > i{animation-duration:9s}
+  .fx-rays{animation-duration:90s}
+  :is(.ms.win,.grid.focusing .c.focus .ms) .fx-rays{animation-duration:40s}
+  .fx{--fxpk:fxbeat-calm;--wa:fxw-calm}
+  .ms-H1 .fx{--fxpk:fxbeat-calm-nut}
+  .ms-H2 .fx,.ms-H3 .fx,.ms-H4 .fx{--fxpk:fxbeat-calm-soft}
+  .fx .fx-mv{transform-origin:50% 80%}
+  @keyframes fxbeat-calm{
+    0%{transform:none;filter:brightness(1) saturate(1);animation-timing-function:ease-out}
+    30%{transform:scale(1.05);filter:brightness(1.3) saturate(1.22);animation-timing-function:ease-in-out}
+    64%{transform:scale(1.06);filter:brightness(1.3) saturate(1.22);animation-timing-function:ease-in}
+    100%{transform:none;filter:brightness(1) saturate(1)}}
+  @keyframes fxbeat-calm-nut{
+    0%{transform:none;filter:brightness(1) saturate(1);animation-timing-function:ease-out}
+    30%{transform:scale(1.05);filter:brightness(1.15) saturate(.85);animation-timing-function:ease-in-out}
+    64%{transform:scale(1.06);filter:brightness(1.14) saturate(.86);animation-timing-function:ease-in}
+    100%{transform:none;filter:brightness(1) saturate(1)}}
+  @keyframes fxbeat-calm-soft{
+    0%{transform:none;filter:brightness(1) saturate(1);animation-timing-function:ease-out}
+    30%{transform:scale(1.05);filter:brightness(1.27) saturate(1.09);animation-timing-function:ease-in-out}
+    64%{transform:scale(1.06);filter:brightness(1.27) saturate(1.09);animation-timing-function:ease-in}
+    100%{transform:none;filter:brightness(1) saturate(1)}}
+  @keyframes fxw-calm{0%,50%,100%{transform:none}26%{transform:rotate(-3deg)}76%{transform:rotate(3deg)}}
+}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -1423,7 +1748,8 @@ body.chase .machine .stage{transition-delay:0s}
   .sa-modes{grid-template-columns:1fr}
   .ss-dots{max-width:52%}
 }
-@media (prefers-reduced-motion:reduce){.ss-track,.mp-box{transition:none}.ss-slide.cur .ss-art > *,.ss-slide.cur .ss-text{animation:none}}
+@media (prefers-reduced-motion:reduce){.ss-track,.mp-box{transition:none}.ss-slide.cur .ss-art > *,.ss-slide.cur .ss-text{animation:ssfade-soft .35s ease-out both}
+  @keyframes ssfade-soft{from{opacity:0}}}   /* soft motion: the rules slides fade in */
 /* 8-slide layout pieces: bonuses side by side, grouped buys, one-slide paytable */
 .sa-bon{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
 .sbon{border-radius:16px;padding:8px 10px 10px;border:2px solid rgba(255,255,255,.35)}
@@ -1590,7 +1916,13 @@ body.chase .machine .stage{transition-delay:0s}
 .sc-splash{position:absolute;bottom:-20px;width:150px;animation:splash 1.1s ease-out forwards;transform-origin:50% 100%}
 @keyframes splash{0%{transform:scale(.2);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(1.15) translateY(10px);opacity:0}}
 
-@media (prefers-reduced-motion:reduce){.sc-palm .crown,.sc-crab,.sc-crab img,.sc-water .wv{animation:none}}
+/* soft motion (prefers-reduced-motion: reduce): the crabs stand still (skin.js skips their walk too), the palm leaves
+   barely stir, and the sea washes in slowly and only a little, so the beach is calm but not frozen */
+@media (prefers-reduced-motion:reduce){.sc-crab,.sc-crab img{animation:none}
+  .sc-palm .crown{animation:sway-soft 12s ease-in-out infinite}.sc-palm.palmR .crown{animation-duration:14s}
+  .sc-water .wv.a{animation:wash-soft 14s ease-in-out infinite}.sc-water .wv.b{animation-duration:10s}
+  @keyframes sway-soft{0%,100%{transform:rotate(-.6deg)}50%{transform:rotate(.7deg)}}
+  @keyframes wash-soft{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.03)}}}
 
 /* the bush in the bottom-left corner is cut out of the plate and drawn again over the palms, so the left palm's trunk
    stands behind its leaves, as in the painting */
@@ -1918,7 +2250,22 @@ header.slotbar{justify-content:flex-end!important}
 /* the bonus ends: the sign lifts away */
 .msign.ms-bye .ms-body{animation:msg-bye .38s ease-in forwards}
 @keyframes msg-bye{to{transform:translateY(-24px) rotate(3deg);opacity:0}}
-@media (prefers-reduced-motion:reduce){ .msign .ms-body,.msign .ms-n,.msign .ms-a,.msign .ms-v::after{animation:none!important} .msign .ms-n.ms-out{opacity:0} }
+/* soft motion (prefers-reduced-motion: reduce): the sign fades in and out instead of dropping, jolting and bouncing on its
+   ropes; a used spin cross-fades the number in its hollow (no drop); added spins fade the number up with the gold flash,
+   and +N fades in and out where it is */
+@media (prefers-reduced-motion:reduce){
+  .msign .ms-body,.msign .ms-n,.msign .ms-a{animation:none!important}
+  .msign.ms-drop .ms-body{animation:msg-fadein .4s ease-out both!important}
+  .msign.ms-bye .ms-body{animation:msg-fadeout .36s ease-in forwards!important}
+  .msign .ms-n.ms-out{animation:msg-fadeout .22s ease-in forwards!important}
+  .msign .ms-n.ms-in{animation:msg-fadein .3s ease-out .08s both!important}
+  .msign .ms-n.ms-big{animation:msg-big-soft .6s ease-out both!important}
+  .msign.ms-add .ms-a{animation:msg-splash-soft 1.4s ease-out both!important}
+  @keyframes msg-fadein{from{opacity:0}}
+  @keyframes msg-fadeout{to{opacity:0}}
+  @keyframes msg-big-soft{0%{opacity:0;transform:scale(.94)}45%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:none}}
+  @keyframes msg-splash-soft{0%{opacity:0}18%,72%{opacity:1}100%{opacity:0}}
+}
 /* portrait phones: TOTAL WIN is centred under the board and grows with the amount, so during a bonus the two signs hang
    as one centred pair (extras.js .mpair): the spins sign joins the row, left of TOTAL WIN, and TOTAL WIN stacks its label
    over the amount, which keeps the pair narrow enough for big amounts */
@@ -2144,11 +2491,15 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 .cf-wild i.cf-n{left:50%;right:auto;top:auto;bottom:-8px;transform:translateX(-50%);white-space:nowrap;font-size:14px;letter-spacing:.04em;padding:3px 10px}
 @media (prefers-reduced-motion:reduce){
   .sheet.mbuy .wc,.sheet.mbuy .wc-img,.sheet.mbuy .wc-win::before,.sheet.mbuy .wc-cta{transition:none}
-  .sheet.mbuy.wcards:not([hidden]) > .win,.sheet.mbuy.wcards.wc-deal:not([hidden]) .wc,.sheet.mbuy .wc-q{animation:none}
+  .sheet.mbuy .wc-q{animation:none}
+  /* soft motion: the sheet and the cards fade in, one after another, without rising or turning */
+  .sheet.mbuy.wcards:not([hidden]) > .win{animation:wcfade .3s ease-out both}
+  .sheet.mbuy.wcards.wc-deal:not([hidden]) .wc{animation:wcfade .3s ease-out both;animation-delay:calc(.03s + var(--o,0)*.035s)}
+  @keyframes wcfade{from{opacity:0}}
 }
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","hooligans-logo":"10e92930","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -3613,12 +3964,14 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   // ---------- big wins: mango and coin rain while the count-up runs ----------
   function rain(){
     const cel = document.getElementById('celebrate'); if (!cel) return; let timer = 0;
-    const drop = () => { const d = document.createElement('img'), coin = Math.random() < 0.45;
+    // soft motion (reduced motion): fewer pieces, falling about twice as slowly, turning a few degrees instead of spinning
+    const soft = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const drop = () => { const d = document.createElement('img'), coin = Math.random() < 0.45, s = soft();
       d.src = src(coin ? 'H2' : 'H3'); d.className = 'rain'; d.alt = '';
-      d.style.left = (Math.random()*100) + '%'; d.style.setProperty('--r', ((Math.random()*2 - 1)*540).toFixed(0) + 'deg');
-      d.style.setProperty('--t', (1.4 + Math.random()*1.2).toFixed(2) + 's'); d.style.width = (28 + Math.random()*34).toFixed(0) + 'px';
-      cel.appendChild(d); setTimeout(() => d.remove(), 2800); };
-    new MutationObserver(() => { if (!cel.hidden && !timer){ timer = setInterval(drop, 90); } else if (cel.hidden && timer){ clearInterval(timer); timer = 0; } })
+      d.style.left = (Math.random()*100) + '%'; d.style.setProperty('--r', ((Math.random()*2 - 1)*(s ? 20 : 540)).toFixed(0) + 'deg');
+      d.style.setProperty('--t', ((s ? 3 : 1.4) + Math.random()*(s ? 1.5 : 1.2)).toFixed(2) + 's'); d.style.width = (28 + Math.random()*34).toFixed(0) + 'px';
+      cel.appendChild(d); setTimeout(() => d.remove(), s ? 4600 : 2800); };
+    new MutationObserver(() => { if (!cel.hidden && !timer){ timer = setInterval(drop, soft() ? 260 : 90); } else if (cel.hidden && timer){ clearInterval(timer); timer = 0; } })
       .observe(cel, {attributes: true, attributeFilter: ['hidden']});
   }
 
@@ -3856,6 +4209,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     const fit = () => { const w = st.getBoundingClientRect().width; st.style.setProperty('--stw', w + 'px');   // the sign's size cap (frame.css)
       box.querySelectorAll('.sc-crab').forEach((el, i) => { const c = FRAME_CRABS[i], dx = (c.x2 - c.x) * w, at = x => `translateX(${x}px)`;
         if (el._walk) el._walk.cancel();
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;   // soft motion: the crabs stand still on the plank
         el._walk = el.animate([{transform: at(0), offset: 0}, {transform: at(0), offset: .12}, {transform: at(dx), offset: .45}, {transform: at(dx), offset: .62}, {transform: at(0), offset: .95}, {transform: at(0), offset: 1}],
           {duration: c.t * 1000, iterations: Infinity, easing: 'ease-in-out', delay: (c.d || 0) * 1000}); }); };
     fit(); new ResizeObserver(fit).observe(st);
@@ -4004,13 +4358,14 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   // portrait phones: change TOTAL WIN's layout (pair on / off) as a fade out, move, fade in; elsewhere just switch
   function pair(on, after){
     const row = el.parentElement, tb = document.getElementById('totalbox');
-    if (!matchMedia(PAIR).matches || still() || !tb || !tb.animate){ row.classList.toggle('mpair', on); after && after(); return; }
+    if (!matchMedia(PAIR).matches || !tb || !tb.animate){ row.classList.toggle('mpair', on); after && after(); return; }
     tb.animate([{opacity: 1}, {opacity: 0}], {duration: 150, easing: 'ease-in', fill: 'forwards'}).finished.then(() => {
       const a = tb.getBoundingClientRect(); row.classList.toggle('mpair', on); after && after();
       const b = tb.getBoundingClientRect(), z = tb.offsetWidth ? b.width / tb.offsetWidth : 1;
       const dx = ((a.left + a.width / 2) - (b.left + b.width / 2)) / z;
       tb.getAnimations().forEach(x => x.cancel());
-      tb.animate([{opacity: 0, transform: `translateX(${dx}px)`}, {opacity: 1, transform: 'none'}], {duration: 380, easing: 'cubic-bezier(.25,1,.4,1)'});
+      // soft motion (reduced motion): TOTAL WIN fades back in where it now is, without sliding over
+      tb.animate(still() ? [{opacity: 0}, {opacity: 1}] : [{opacity: 0, transform: `translateX(${dx}px)`}, {opacity: 1, transform: 'none'}], {duration: 380, easing: 'cubic-bezier(.25,1,.4,1)'});
     }).catch(() => {});
   }
   window.MangoExtras = {
@@ -4019,7 +4374,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
       clearTimeout(tmr); el.classList.remove('ms-bye');
       const was = el.classList.contains('ms-on') && prev !== null;
       el.classList.toggle('ms-last', left === 0);
-      if (!was){ gen++; setNum(left, 'none'); pair(true, () => { el.classList.add('ms-on'); if (!still()) restart(el, 'ms-drop'); }); }
+      if (!was){ gen++; setNum(left, 'none'); pair(true, () => { el.classList.add('ms-on'); restart(el, 'ms-drop'); }); }   // reduced motion: ms-drop is a fade (extras.css)
       else if (left > prev - 1){ el.querySelector('.ms-a').textContent = '+' + (left - prev + 1);
         el.classList.remove('ms-tick'); setNum(left, 'big'); restart(el, 'ms-add'); }
       else if (left !== prev){ el.classList.remove('ms-add', 'ms-drop'); setNum(left, 'ms-tick'); restart(el, 'ms-tick'); }
@@ -4028,7 +4383,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     spinsDone(){
       if (!el || prev === null) return; prev = null; gen++; const my = gen;
       el.classList.remove('ms-tick', 'ms-add', 'ms-drop'); restart(el, 'ms-bye');
-      tmr = setTimeout(() => { if (my !== gen) return; pair(false, () => el.classList.remove('ms-on', 'ms-bye', 'ms-last')); }, still() ? 0 : 380);
+      tmr = setTimeout(() => { if (my !== gen) return; pair(false, () => el.classList.remove('ms-on', 'ms-bye', 'ms-last')); }, 380);   // reduced motion: ms-bye is a fade, it gets the same time
     }
   };
 })();
@@ -4809,7 +5164,7 @@ async function growStack(r, M, sticky, rows){
   const steps = Math.max(lo, ROWS-1-hi), beat = T(180), box = (a, b) => `inset(${a}% -60% ${b}% -60%)`;
   const ov = setStack(r, M, sticky); ov.classList.remove('settle'); ov.classList.add('building');
   ov.style.transition = 'opacity .2s ease-out'; ov.style.clipPath = box((lo/ROWS*100).toFixed(2), ((ROWS-1-hi)/ROWS*100).toFixed(2)); void ov.offsetWidth;
-  ov.style.transition = reduce ? 'none' : `clip-path ${beat*(steps+1)}ms cubic-bezier(.45,0,.25,1), opacity .2s ease-out`; ov.style.clipPath = box(-30, -30);
+  ov.style.transition = `clip-path ${beat*(steps+1)}ms cubic-bezier(.45,0,.25,1), opacity .2s ease-out`; ov.style.clipPath = box(-30, -30);
   for (let k=1; k<=steps+1; k++){ if (k <= steps) sfx('reelStop', k); await wait(beat); }
   ov.style.transition = ''; ov.classList.remove('building'); ov.style.clipPath = ''; void ov.offsetWidth; ov.classList.add('settle');
 }
@@ -4823,7 +5178,7 @@ async function shrinkStacks(list, fast){
     ov.classList.remove('settle'); ov.classList.add('building');
     const dur = T(120)*Math.max(1, row, ROWS-1-row);
     ov.style.transition = 'none'; ov.style.clipPath = 'inset(-30% -60% -30% -60%)'; void ov.offsetWidth;
-    ov.style.transition = reduce ? 'none' : `clip-path ${dur}ms cubic-bezier(.45,0,.25,1)`; ov.style.clipPath = `inset(${(row/ROWS*100).toFixed(2)}% -60% ${((ROWS-1-row)/ROWS*100).toFixed(2)}% -60%)`;
+    ov.style.transition = `clip-path ${dur}ms cubic-bezier(.45,0,.25,1)`; ov.style.clipPath = `inset(${(row/ROWS*100).toFixed(2)}% -60% ${((ROWS-1-row)/ROWS*100).toFixed(2)}% -60%)`;
     await wait(dur); }));
   list.forEach(a => { const o = reelEls[Math.floor(a.c/ROWS)].querySelector('.stackov:not(.folding)'); pinWild(a.c, a.m); if (o){ o.classList.add('folding'); o.style.transition = 'opacity .2s ease-out'; o.style.opacity = '0'; setTimeout(() => o.remove(), T(220)); } });
 }
@@ -5376,9 +5731,10 @@ function startSocial(){
 /* ---------- boot ---------- */
 async function bootPlay(){
   $('calib').textContent = 'connecting...';
+  const authP = RGS.authenticate(); authP.catch(() => {});
   try { Object.assign(GAME, await RGS.game()); renderRules(); } catch(e) {}
   let a;
-  try { a = await RGS.authenticate(); } catch(e){ $('calib').textContent = ''; showError(e); return; }
+  try { a = await authP; } catch(e){ $('calib').textContent = ''; showError(e); return; }
   balance = a.balance.amount; currency = (a.balance.currency || currency).toUpperCase();
   const c = a.config || {}; flags = c.jurisdiction || {};
   if (flags.socialCasino) social = true;
