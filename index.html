@@ -1863,8 +1863,192 @@ header.slotbar .soundbtns .pill:hover{transform:translateY(-1px) rotate(-1deg)}
 header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 @media (max-width:640px){ header.slotbar .soundbtns .pill{border-width:6px!important;border-image-width:6px!important;padding:2px 5px!important} }
 
+/* ---------- wooden bonus-buy cards (buy-cards.css, prototype in anim-v2/buy): the buy sheet is one grid of chunky driftwood cards ----------
+   Each card: a title plank on top, its own art in a sunburst window, a short line, the price and a bright pill.
+   Every word is DOM text (social mode rewrites it); the art carries no words. Animations are transform/opacity only.
+   Markup per card (written by the game's renderModes, replaced in build.js; see anim-v2/buy/proto.html):
+     <button class="wc wc-buy|wc-mode [on] [wc-mystery]" data-buy|data-mode="..." style="--i:n">
+       <span class="wc-plank"><b class="wc-name">SWELL</b></span>
+       <span class="wc-win"><img class="wc-img" src="..." alt=""></span>
+       <span class="wc-tag">3 wilds</span><small class="wc-desc">...</small>
+       <span class="wc-price" style="--pl:7"><b>$125.00</b><i>per spin</i></span><span class="wc-cta">BUY</span></button> */
+.sheet.mbuy{--wc-ink:#2a1608;--wc-cream:#fff4dc;--wc-edge:#e6d3a8;--wc-gap:clamp(10px,1.1vw,18px)}
+.sheet.mbuy.wcards{width:min(1480px,calc(100vw - 16px))}
+.sheet.mbuy.wcards .dh{display:none}
+/* one grid for the whole sheet: the two game containers (#modes, #buys) and their wrappers flatten into it */
+.sheet.mbuy .wc-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:calc(var(--wc-gap) + 14px) var(--wc-gap);padding-top:16px}
+.sheet.mbuy .wc-grid > #buyswin,.sheet.mbuy .wc-grid > #buyswin > .buys,.sheet.mbuy .wc-grid > .modes{display:contents!important}
+.sheet.mbuy .wc-grid > #buyswin[hidden]{display:none!important}
+/* the sheet is measured by skin.js fit() (it scales the whole sign to the screen, never scrolls): no inner scroll box */
+.sheet.mbuy.wcards .body{overflow:visible!important;max-height:none!important}
+.sheet.mbuy .wc-grid i.mt-art,.sheet.mbuy .wc-grid i.bc-art{display:none!important}
+
+/* ---------- the card ---------- */
+.sheet.mbuy .wc{--tint1:#7fe0ff;--tint2:#1aa9ef;--tint3:#0a5fa8;--cta1:#ffb03a;--cta2:#ff4f8b;--ctad:#9c1f4a;
+  position:relative;flex:0 0 calc((100% - 3*var(--wc-gap))/4);min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin:0;padding:34px 12px 14px;text-align:center;cursor:pointer;color:var(--wc-cream);font:400 14px/1.2 "Lilita One",system-ui,sans-serif;
+  border-style:solid;border-color:transparent;border-width:18px;border-radius:0;
+  border-image:url("img/wood-panel.webp?v=3699864c") 16% / 18px stretch;box-shadow:none;
+  /* warmer, lighter boards than the dark sign behind, so each card reads as its own piece of wood */
+  background:repeating-linear-gradient(180deg,transparent 0 46px,rgba(42,20,6,.55) 46px 48px,rgba(255,220,160,.10) 48px 50px),
+    linear-gradient(180deg,#9a6a3c,#7a4d28 55%,#5f3a1c);background-clip:padding-box;background-origin:padding-box;
+  filter:drop-shadow(0 8px 0 rgba(20,10,3,.45)) drop-shadow(0 14px 18px rgba(0,0,0,.35));
+  transition:transform .18s cubic-bezier(.3,1.6,.5,1);-webkit-tap-highlight-color:transparent;order:var(--o,0);
+  will-change:transform}   /* always its own layer: the end of the deal-in no longer re-rasters the card (a one-frame shimmer) */
+.sheet.mbuy .wc:focus-visible{outline:3px solid #ffe14d;outline-offset:6px}
+/* the title plank hangs over the top edge, a little wider than the card */
+.sheet.mbuy .wc-plank{position:absolute;left:-26px;right:-26px;top:-40px;height:62px;display:flex;align-items:center;justify-content:center;
+  background:url("img/title-plank.webp?v=3c9f296b") center/100% 100% no-repeat;filter:drop-shadow(0 4px 0 rgba(20,10,3,.4));pointer-events:none}
+.sheet.mbuy .wc-name{font:400 clamp(18px,1.45vw,26px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.05em;color:#3b220d;
+  text-shadow:0 1px 0 rgba(255,250,235,.75),0 -1px 0 rgba(20,10,3,.35);padding:2px 30px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* the art window: a sunburst in the card's colour, the art floats in it */
+.sheet.mbuy .wc-win{position:relative;display:block;width:100%;height:clamp(96px,14.6vh,172px);border-radius:14px;overflow:hidden;
+  background:radial-gradient(circle at 50% 62%,var(--tint1),var(--tint2) 48%,var(--tint3));
+  box-shadow:inset 0 0 0 3px var(--wc-edge),inset 0 0 0 6px rgba(42,22,8,.55),inset 0 -14px 24px rgba(0,0,0,.28)}
+.sheet.mbuy .wc-win::before{content:"";position:absolute;left:50%;top:62%;width:220%;aspect-ratio:1;translate:-50% -50%;opacity:.28;
+  background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.95) 0 7deg,transparent 7deg 20deg);
+  -webkit-mask:radial-gradient(circle,#000 8%,transparent 55%);mask:radial-gradient(circle,#000 8%,transparent 55%);transition:transform 1.6s ease-out}
+.sheet.mbuy .wc-img{position:absolute;inset:6px 4px 2px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:contain;
+  filter:drop-shadow(0 5px 4px rgba(20,10,3,.35));transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.sheet.mbuy .wc-tag{font:400 12px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--wc-ink);
+  background:var(--wc-edge);border-radius:999px;padding:5px 11px 4px;margin-top:2px;box-shadow:0 2px 0 rgba(20,10,3,.45);max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet.mbuy .wc-desc{font:700 12px/1.3 "Montserrat",system-ui,sans-serif;color:#f1e2bf;min-height:3.9em;max-width:30ch;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+/* the price always fits its card: the card is a size container, the price's character count (--pl, set by renderModes)
+   caps its font size; "per spin" wraps under it when the row is full. Digits are never cut */
+.sheet.mbuy .wc{container-type:inline-size}
+.sheet.mbuy .wc-price{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:center;gap:0 6px;margin-top:auto;white-space:nowrap;max-width:100%}
+.sheet.mbuy .wc-price b{--pf:clamp(22px,1.7vw,30px);font:400 min(var(--pf),calc((100cqi - 6px)/(var(--pl,8)*.6)))/1 "Lilita One",system-ui,sans-serif;color:#ffd96b;text-shadow:0 3px 0 var(--wc-ink)}
+.sheet.mbuy .wc-price i{font:800 10px/1 "Montserrat",system-ui,sans-serif;font-style:normal;letter-spacing:.08em;text-transform:uppercase;color:var(--wc-edge)}
+.sheet.mbuy .wc-cta{display:flex;align-items:center;justify-content:center;min-width:62%;min-height:44px;padding:0 22px;border-radius:999px;
+  font:400 clamp(17px,1.25vw,21px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#fff;text-shadow:0 2px 0 rgba(60,10,20,.45);
+  background:linear-gradient(180deg,var(--cta1),var(--cta2));border:3px solid var(--wc-cream);box-shadow:0 5px 0 var(--ctad),inset 0 3px 0 rgba(255,255,255,.35);
+  transition:transform .1s,box-shadow .1s}
+
+/* ---------- hover / press / chosen / can't afford ---------- */
+@media (hover:hover){
+  .sheet.mbuy .wc:not(:disabled):hover{transform:translateY(-6px) rotate(-.6deg)}
+  .sheet.mbuy .wc:not(:disabled):nth-child(even):hover{transform:translateY(-6px) rotate(.6deg)}
+  .sheet.mbuy .wc:not(:disabled):hover .wc-img{transform:scale(1.07) translateY(-3px)}
+  .sheet.mbuy .wc:not(:disabled):hover .wc-win::before{transform:rotate(40deg)}
+  .sheet.mbuy .wc:not(:disabled):hover .wc-cta{transform:scale(1.05)}
+}
+.sheet.mbuy .wc:not(:disabled):active{transform:translateY(2px) scale(.97)!important;transition-duration:.06s}
+.sheet.mbuy .wc:not(:disabled):active .wc-cta{transform:translateY(4px);box-shadow:0 1px 0 var(--ctad),inset 0 3px 0 rgba(255,255,255,.35)}
+.sheet.mbuy .wc.on .wc-cta{--cta1:#fff07a;--cta2:#E6C46E;--ctad:#6b4a1e;color:var(--wc-ink);text-shadow:none}
+.sheet.mbuy .wc.on{filter:drop-shadow(0 0 0 #ffe14d) drop-shadow(0 0 10px rgba(255,225,77,.85)) drop-shadow(0 8px 0 rgba(20,10,3,.45))}
+.sheet.mbuy .wc:disabled{cursor:not-allowed}
+.sheet.mbuy .wc:disabled .wc-win,.sheet.mbuy .wc:disabled .wc-img{filter:grayscale(.85) brightness(.75)}
+.sheet.mbuy .wc:disabled .wc-cta{--cta1:#8d8a84;--cta2:#6e6a63;--ctad:#3f3b35;opacity:.85}
+.sheet.mbuy .wc:disabled .wc-price b{color:#cfc4ae}
+
+/* ---------- per-card colours (window tint and pill) ---------- */
+.sheet.mbuy .wc[data-buy="BONUS1"]{--tint1:#9ff3e4;--tint2:#22c7c0;--tint3:#0b6f86}
+.sheet.mbuy .wc[data-buy="BONUS2"]{--tint1:#ffe08a;--tint2:#ff8a3d;--tint3:#c2306b}
+.sheet.mbuy .wc[data-buy="BONUS3"]{--tint1:#fff1a8;--tint2:#ffb627;--tint3:#7a2fb0;--cta1:#ffd23f;--cta2:#ff7a1f;--ctad:#8a3c06}
+.sheet.mbuy .wc[data-mode="ANTE"]{--tint1:#ffd0f0;--tint2:#ff6fb5;--tint3:#7b2d8e}
+.sheet.mbuy .wc-mode{--cta1:#5ff0d8;--cta2:#14a9c9;--ctad:#0a5568}
+.sheet.mbuy .wc[data-mode="BASE"]{--tint1:#fff5d6;--tint2:#ffd98a;--tint3:#e09a3e}
+.sheet.mbuy .wc[data-mode="SPECIAL1"]{--tint1:#c9f6ff;--tint2:#4fc3f7;--tint3:#1565a8}
+.sheet.mbuy .wc[data-mode="SPECIAL2"]{--tint1:#b5f2ff;--tint2:#2fa6e8;--tint3:#123f8a}
+/* order in the grid: the three bonus buys, Bonus Boost, then Normal and the wave spins */
+.sheet.mbuy .wc[data-buy="BONUS1"]{--o:1}.sheet.mbuy .wc[data-buy="BONUS2"]{--o:2}.sheet.mbuy .wc[data-buy="BONUS3"]{--o:3}
+.sheet.mbuy .wc[data-mode="ANTE"]{--o:4}.sheet.mbuy .wc[data-mode="BASE"]{--o:5}
+.sheet.mbuy .wc[data-mode="SPECIAL1"]{--o:6}.sheet.mbuy .wc[data-mode="SPECIAL2"]{--o:7}.sheet.mbuy .wc[data-mode="SPECIAL3"]{--o:8}
+
+/* ---------- the mystery card: night sky, the art is a glowing silhouette with ??? until hovered ---------- */
+.sheet.mbuy .wc-mystery{--tint1:#5b3fb8;--tint2:#2a1a6e;--tint3:#0d0a2e;--cta1:#c77dff;--cta2:#7b3ff2;--ctad:#3a1780}
+.sheet.mbuy .wc-mystery .wc-win{background:radial-gradient(circle at 50% 62%,var(--tint1),var(--tint2) 52%,var(--tint3)),#0d0a2e}
+.sheet.mbuy .wc-mystery .wc-win::after{content:"";position:absolute;inset:0;opacity:.9;pointer-events:none;
+  background:radial-gradient(1.5px 1.5px at 12% 20%,#fff 99%,transparent),radial-gradient(1.5px 1.5px at 78% 14%,#fff 99%,transparent),
+    radial-gradient(2px 2px at 88% 52%,#ffe9a8 99%,transparent),radial-gradient(1.5px 1.5px at 24% 70%,#fff 99%,transparent),
+    radial-gradient(1px 1px at 52% 10%,#fff 99%,transparent),radial-gradient(1.5px 1.5px at 64% 82%,#d9ccff 99%,transparent)}
+.sheet.mbuy .wc-mystery .wc-img.sil{filter:brightness(0) drop-shadow(0 0 2px #b9a4ff) drop-shadow(0 0 10px rgba(185,164,255,.75));opacity:.92;transition:opacity .35s,transform .3s}
+.sheet.mbuy .wc-mystery .wc-img.real{opacity:0;transition:opacity .35s,transform .3s}
+.sheet.mbuy .wc-q{position:absolute;left:0;right:0;top:50%;translate:0 -50%;z-index:2;font:400 clamp(34px,3.1vw,56px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.06em;
+  color:#fff4dc;text-shadow:0 0 12px #c77dff,0 0 2px #fff,0 4px 0 #2a1608;transition:opacity .3s,transform .3s;animation:wcq 2.4s ease-in-out infinite;pointer-events:none}
+@keyframes wcq{50%{transform:scale(1.08)}}
+@media (hover:hover){
+  .sheet.mbuy .wc-mystery:not(:disabled):hover .wc-img.sil{opacity:0}
+  .sheet.mbuy .wc-mystery:not(:disabled):hover .wc-img.real{opacity:1}
+  .sheet.mbuy .wc-mystery:not(:disabled):hover .wc-q{opacity:0;transform:scale(1.5)}
+}
+
+/* ---------- opening: the sign drops in, then the cards deal out one by one (transform + opacity only). The sheet itself
+   fades in and out (skin.css, allow-discrete); wc-deal is set by openLayer for the first second only, so a redraw while
+   the sheet is open (bet or balance change) does not deal the cards again ---------- */
+.sheet.mbuy.wcards:not([hidden]) > .win{animation:wcopen .38s cubic-bezier(.2,1.25,.4,1) both}
+.sheet.mbuy.wcards.wc-deal:not([hidden]) .wc{animation:wcdeal .36s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(.03s + var(--o,0)*.035s)}
+@keyframes wcopen{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes wcdeal{from{opacity:0;transform:translateY(26px) scale(.9) rotate(-2deg)}to{opacity:1;transform:none}}
+
+/* ---------- smaller screens ---------- */
+/* short desktop windows (1366x768, 1280x720): both rows still fit without scrolling */
+@media (min-width:761px) and (max-height:900px){
+  .sheet.mbuy .wc-grid{gap:calc(var(--wc-gap) + 10px) var(--wc-gap);padding-top:10px}
+  .sheet.mbuy .wc{padding:26px 10px 6px;gap:3px}
+  .sheet.mbuy .wc-plank{top:-36px;height:52px}
+  .sheet.mbuy .wc-win{height:clamp(70px,10.4vh,116px)}
+  .sheet.mbuy .wc-desc{-webkit-line-clamp:2;line-clamp:2;min-height:2.6em;font-size:11px}
+  .sheet.mbuy .wc-cta{min-height:44px}
+}
+/* 1280x720 and other very short laptop windows: smaller art, one line of text */
+@media (min-width:761px) and (max-height:760px){
+  .sheet.mbuy .wc-win{height:clamp(56px,8.6vh,72px)}
+  .sheet.mbuy .wc-desc{-webkit-line-clamp:1;line-clamp:1;min-height:1.3em}
+}
+/* phones (portrait): three columns, buys on the first row, everything fits without scrolling; the words that do not fit
+   (description, "per spin") are in the confirm popup */
+@media (max-width:760px){
+  .sheet.mbuy{--wc-gap:7px}
+  .sheet.mbuy.wcards{width:calc(100vw - 12px)}
+  .sheet.mbuy .wc-grid{gap:26px 7px;padding-top:12px}
+  .sheet.mbuy .wc{flex-basis:calc((100% - 2*var(--wc-gap))/3);border-width:10px;border-image-width:10px;padding:20px 2px 4px;gap:4px;
+    background:linear-gradient(180deg,#9a6a3c,#7a4d28 55%,#5f3a1c);background-clip:padding-box}
+  .sheet.mbuy .wc-plank{left:-10px;right:-10px;top:-30px;height:40px}
+  .sheet.mbuy .wc-name{font-size:13px;letter-spacing:.03em;padding:2px 9px 0;white-space:normal;line-height:.92;text-overflow:clip;max-height:2em}
+  .sheet.mbuy .wc-win{height:clamp(62px,10.5vh,92px);border-radius:9px}
+  .sheet.mbuy .wc-win::before{opacity:.22}
+  .sheet.mbuy .wc-tag,.sheet.mbuy .wc-desc,.sheet.mbuy .wc-price i{display:none}
+  .sheet.mbuy .wc-price b{--pf:clamp(11px,4.1vw,16px);text-shadow:0 2px 0 var(--wc-ink)}
+  .sheet.mbuy .wc-cta{min-width:0;width:100%;min-height:44px;font-size:15px;letter-spacing:.05em;padding:0 4px;border-width:2px;box-shadow:0 4px 0 var(--ctad),inset 0 2px 0 rgba(255,255,255,.35)}
+  .sheet.mbuy .wc-q{font-size:26px}
+}
+/* phones on their side and other short landscape windows (1024x576, 800x450, Stake's pop-outs): one row of eight */
+@media (orientation:landscape) and (max-height:620px){
+  .sheet.mbuy{--wc-gap:6px}
+  .sheet.mbuy.wcards{width:calc(100vw - 12px)}
+  .sheet.mbuy .wc-grid{gap:26px 6px;padding-top:12px}
+  .sheet.mbuy .wc{flex-basis:calc((100% - 7*var(--wc-gap))/8);border-width:9px;border-image-width:9px;padding:18px 2px 4px;gap:4px;
+    background:linear-gradient(180deg,#9a6a3c,#7a4d28 55%,#5f3a1c);background-clip:padding-box}
+  .sheet.mbuy .wc-plank{left:-9px;right:-9px;top:-28px;height:38px}
+  .sheet.mbuy .wc-name{font-size:12px;letter-spacing:.02em;padding:2px 8px 0;white-space:normal;line-height:.92;text-overflow:clip;max-height:2em}
+  .sheet.mbuy .wc-win{height:clamp(56px,22vh,96px);border-radius:8px}
+  .sheet.mbuy .wc-tag,.sheet.mbuy .wc-desc,.sheet.mbuy .wc-price i{display:none!important}
+  .sheet.mbuy .wc-price b{--pf:clamp(11px,1.75vw,15px);text-shadow:0 2px 0 var(--wc-ink)}
+  .sheet.mbuy .wc-cta{min-width:0;width:100%;min-height:44px;font-size:14px;letter-spacing:.04em;padding:0 3px;border-width:2px}
+  .sheet.mbuy .wc-q{font-size:24px}
+}
+/* Stake's smallest pop-out (400x225): no room for art; two rows of four signs with name, price and pill */
+@media (orientation:landscape) and (max-height:300px){
+  .sheet.mbuy .wc{flex-basis:calc((100% - 3*var(--wc-gap))/4)}
+  .sheet.mbuy .wc-win{display:none}
+  .sheet.mbuy .wc-name{font-size:11px;white-space:nowrap;text-overflow:ellipsis}
+  .sheet.mbuy .wc-plank{height:30px;top:-24px}
+  .sheet.mbuy .wc{padding-top:12px}
+  .sheet.mbuy .wc-grid{gap:22px 6px}
+  .sheet.mbuy .wc-cta{min-height:32px;font-size:12px}
+}
+/* the confirm popup's wave-spin art (skin.js confirmSkin): the wild count is words in a pill under the wild */
+.cf-wild i.cf-n{left:50%;right:auto;top:auto;bottom:-8px;transform:translateX(-50%);white-space:nowrap;font-size:14px;letter-spacing:.04em;padding:3px 10px}
+@media (prefers-reduced-motion:reduce){
+  .sheet.mbuy .wc,.sheet.mbuy .wc-img,.sheet.mbuy .wc-win::before,.sheet.mbuy .wc-cta{transition:none}
+  .sheet.mbuy.wcards:not([hidden]) > .win,.sheet.mbuy.wcards.wc-deal:not([hidden]) .wc,.sheet.mbuy .wc-q{animation:none}
+}
+
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","caustic":"f39ac984","frame-driftwood":"76ee142b","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -3393,7 +3577,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     const modes = document.getElementById('modes'), buys = document.getElementById('buys'); if (!modes || !buys) return;
     modes.querySelectorAll('[data-mode]').forEach(b => { if (b.querySelector('.mt-art')) return; const a = MODE_ART[b.dataset.mode]; if (!a) return;
       const art = document.createElement('span'); art.className = 'mt-art' + (a[0] === 'icon' ? ' icon' : '');
-      art.innerHTML = a[0] === 'icon' ? `<img src="img/${a[1]}" alt="">` : `<img src="${src('W')}" alt=""><i class="mt-n">×${a[1]}</i>`;
+      art.innerHTML = a[0] === 'icon' ? `<img src="img/${a[1]}" alt="">` : `<img src="${src('W')}" alt=""><i class="mt-n">${a[1]} WILD${a[1] > 1 ? 'S' : ''}</i>`;
       b.prepend(art); });
     buys.querySelectorAll('[data-buy]').forEach((b, i) => { if (b.querySelector('.bc-art')) return; const a = BUY_ART[b.dataset.buy]; if (!a) return;
       b.classList.add('bc', 'bc' + (i + 1));
@@ -3600,9 +3784,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     const fan = (k, n) => `<div class="sa-fan">${imgs(k, n)}</div>`;
     const ART = [[/SWELL/i, 't1', () => fan('W', 3)], [/SURF/i, 't2', () => fan('S1', 3)], [/KAHUNA/i, 't3', () => fan('S1', 4)],
       [/BOOST/i, 't0', () => `<img class="cf-ico" src="img/icon-bolt.svg" alt="">`],
-      [/RIPPLE/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i>×1</i></div>`],
-      [/CURL/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i>×2</i></div>`],
-      [/BARREL/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i>×3</i></div>`]];
+      [/RIPPLE/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i class="cf-n">1 WILD</i></div>`],
+      [/CURL/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i class="cf-n">2 WILDS</i></div>`],
+      [/BARREL/i, 't0', () => `<div class="cf-wild"><img src="${src('W')}" alt=""><i class="cf-n">3 WILDS</i></div>`]];
     let last = '';
     const sync = () => { const t = title.textContent.trim(); if (t === last) return; last = t;
       const hit = ART.find(([re]) => re.test(t)) || [null, 't0', () => ''];
@@ -3818,9 +4002,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
         <div class="acts"><button class="btn go" id="cf-ok" type="button">CONFIRM</button><button class="btn" id="cf-cancel" type="button">CANCEL</button></div>
       </div></div>
   </div>
-  <div class="sheet" id="buysheet" hidden role="dialog" aria-label="Modes and bonus buys">
+  <div class="sheet mbuy wcards" id="buysheet" hidden role="dialog" aria-label="Modes and bonus buys">
     <div class="win"><div class="bar"><span>MODES &amp; BONUS BUY</span><button class="pill" type="button" data-close>CLOSE</button></div>
-      <div class="body">
+      <div class="body wc-grid">
         <h3 class="dh" style="margin-top:0">SPIN MODE</h3>
         <div class="modes" id="modes" role="group" aria-label="Spin mode"></div>
         <div id="buyswin"><h3 class="dh">BONUS BUY</h3><div class="buys" id="buys"></div></div>
@@ -4878,13 +5062,26 @@ async function resumeRound(round){
 }
 
 /* ---------- controls ---------- */
+const WC_ART = {BONUS1: 'card-swell', BONUS2: 'card-surf', BONUS3: 'card-kahuna', BASE: 'card-normal', ANTE: 'card-boost', SPECIAL1: 'card-ripple', SPECIAL2: 'card-curl', SPECIAL3: 'card-barrel'};
+// card prices: the game's own formatter; from 1,000 up whole amounts drop their .00 (cents that are not zero stay)
+const wcMoney = units => { const s = fmtBal(units); return units/API >= 1000 ? s.replace(/[.]0+(?=[^0-9]*$)/, '') : s; };
+const wcSrc = k => 'img/' + k + '.webp' + (window.MANGO_IMG_V && MANGO_IMG_V[k] ? '?v=' + MANGO_IMG_V[k] : '');
+function wcCard(kind, id, name, tag, desc, price, per, cta, on, ok){
+  const art = wcSrc(WC_ART[id] || 'card-normal'), mys = id === 'SPECIAL3';   // Barrel: the ??? card (a silhouette until hovered)
+  const img = mys ? `<img class="wc-img sil" src="${art}" alt=""><img class="wc-img real" src="${art}" alt=""><span class="wc-q" aria-hidden="true">???</span>` : `<img class="wc-img" src="${art}" alt="">`;
+  return `<button class="wc wc-${kind}${on ? ' on' : ''}${mys ? ' wc-mystery' : ''}" type="button" data-${kind}="${id}"${kind === 'mode' ? ` aria-pressed="${on}"` : ''} ${ok ? '' : 'disabled'}>` +
+    `<i class="${kind === 'mode' ? 'mt-art' : 'bc-art'}" hidden></i><span class="wc-plank"><b class="wc-name">${name}</b></span><span class="wc-win">${img}</span>` +
+    `<span class="wc-tag">${tag}</span><small class="wc-desc">${desc}</small><span class="wc-price" style="--pl:${String(price).length}"><b>${price}</b>${per ? `<i>${per}</i>` : ''}</span><span class="wc-cta">${cta}</span></button>`;
+}
 function renderModes(){
   const buyOff = !!flags.disabledBuyFeature;
-  $('modes').innerHTML = UI_MODES.filter(m => !(buyOff && m.id.startsWith('SPECIAL'))).map(m => `<button class="btn ${mode===m.id?'on':''}" type="button" data-mode="${m.id}" aria-pressed="${mode===m.id}" ${busy?'disabled':''}>${m.label}<small>${m.sub()}</small></button>`).join('');
+  $('modes').innerHTML = UI_MODES.filter(m => !(buyOff && m.id.startsWith('SPECIAL'))).map(m => { const on = mode===m.id, sub = m.sub().split(' · ');
+    return wcCard('mode', m.id, m.label, m.id === 'BASE' ? 'Normal spins' : m.id === 'ANTE' ? 'Every spin' : 'Wave spin', sub.slice(1).join(' · ') || 'Regular spins at your bet.',
+      wcMoney(levels[betIdx]*costOf(m.id)), 'per spin', on ? 'ACTIVE' : 'PLAY', on, !busy); }).join('');
   $('modes').querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (busy) return; const id = b.dataset.mode; if (id === 'BASE'){ mode = id; openLayer(null); meta(); } else confirmChoice({kind: 'mode', name: id}); });
   $('buyswin').hidden = buyOff;
   $('buys').innerHTML = BUY_MODES.map((name, t) => { const price = levels[betIdx]*costOf(name), ok = balance >= price && !busy;
-    return `<button class="buy" type="button" data-buy="${name}" ${ok?'':'disabled'}><b>${BONUS[t].name.toUpperCase()}</b><span class="p">${fmtBal(price)}</span><small>${BONUS[t].desc} ${costOf(name)}x bet.</small></button>`; }).join('');
+    return wcCard('buy', name, BONUS[t].name.toUpperCase(), BONUS[t].trig, `${BONUS[t].desc} ${costOf(name)}x bet.`, wcMoney(price), '', 'BUY', false, ok); }).join('');
   $('buys').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => confirmChoice({kind: 'buy', name: b.dataset.buy}));
 }
 /* confirmations: price, a bet changer, and the bonus odds for Bonus Boost */
@@ -4983,7 +5180,8 @@ function showTab(name){ TABS.forEach(t => { $('tab-'+t).hidden = t !== name; $('
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { openLayer(null); showTab(b.dataset.tab); if (b.dataset.tab === 'history') renderHistory(); });
 document.querySelectorAll('[data-tab-back]').forEach(b => b.onclick = () => showTab('play'));
 /* slot chrome: menu, modes/buy sheet, bet -/+ */
-function openLayer(id){ ['drawer','buysheet'].forEach(x => { $(x).hidden = x !== id; }); $('backdrop').hidden = !id; $('menubtn').setAttribute('aria-expanded', id === 'drawer'); }
+function openLayer(id){ if (id === 'buysheet' && $('buysheet').hidden){ const s = $('buysheet'); s.classList.remove('wc-deal'); void s.offsetWidth; s.classList.add('wc-deal'); clearTimeout(s._wcd); s._wcd = setTimeout(() => s.classList.remove('wc-deal'), 1200); }
+  ['drawer','buysheet'].forEach(x => { $(x).hidden = x !== id; }); $('backdrop').hidden = !id; $('menubtn').setAttribute('aria-expanded', id === 'drawer'); }
 $('menubtn').onclick = () => openLayer($('drawer').hidden ? 'drawer' : null);
 $('modebtn').onclick = () => { if (!busy) openLayer('buysheet'); };
 $('buybtn').onclick = () => { if (!busy) openLayer('buysheet'); };
