@@ -14,6 +14,11 @@
    can out 1.8-2.1, presents 1.7, sign 1.85. loader.js keeps the same numbers. */
 #mld{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;overflow:hidden;
   --W:min(680px, 76vw, calc((100vh - 120px) * 1.3));--H:calc(var(--W) * .3542);--E:cubic-bezier(.42,0,.58,1);
+  /* the can's path, clamped so the whole can stays on screen on narrow phones (wide screens get the full sweep): --S is the
+     room beside the logo, the can reaches .1833W past the spray point, 8px spare. --cx1 = where the HOOLIGANS sweep ends,
+     --cx2 = where the STUDIOS sweep ends, --cxi = how far left the can comes in from (all from the logo's left edge) */
+  --S:calc((100vw - var(--W)) / 2);--cx1:min(calc(var(--W) * 1.075), calc(var(--W) * .8167 + var(--S) - 8px));
+  --cx2:max(calc(var(--W) * -.075), calc(var(--W) * .1833 + 8px - var(--S)));--cxi:max(calc(var(--W) * -.12), calc(var(--W) * .19 + 8px - var(--S)));
   background:radial-gradient(ellipse 70% 55% at 50% 42%, rgba(255,150,40,.16), rgba(255,150,40,0) 70%),
     repeating-linear-gradient(180deg, rgba(255,255,255,0) 0 62px, rgba(0,0,0,.22) 62px 64px, rgba(255,255,255,.035) 64px 65px),
     linear-gradient(180deg, #123546 0%, #0c2532 55%, #071820 100%);
@@ -72,11 +77,11 @@
 #mld.go .mld-can{animation:mldRattle .11s linear .05s 4 both}
 #mld.go .mld-cone,#mld.go .mld-mist{animation:mldSpray 2.1s linear both}
 #mld.go .mld-mist::before{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:mldPuff .12s ease-in-out infinite alternate}
-@keyframes mldC1{from{transform:translateX(-7.5%)}to{transform:translateX(107.5%)}}
+@keyframes mldC1{from{transform:translateX(-7.5%)}to{transform:translateX(var(--cx1))}}
 @keyframes mldC2{from{transform:none}to{transform:translateY(45.4%)}}
-@keyframes mldC3{from{transform:none}to{transform:translateX(-115%)}}
+@keyframes mldC3{from{transform:none}to{transform:translateX(calc(var(--cx2) - var(--cx1)))}}
 @keyframes mldC4{
-  0%{opacity:0;transform:translate(calc(var(--W) * -.12),calc(var(--W) * .2)) rotate(-25deg)}
+  0%{opacity:0;transform:translate(var(--cxi),calc(var(--W) * .2)) rotate(-25deg)}
   16%{opacity:1;transform:none}
   85.7%{opacity:1;transform:none;animation-timing-function:ease-in}
   100%{opacity:0;transform:translate(calc(var(--W) * -.1),calc(var(--W) * -.28)) rotate(-30deg)}}
