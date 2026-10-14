@@ -556,7 +556,7 @@ body.replay .ctrlbar,body.replay #menubtn,body.replay .spinwrap,body.replay #buy
 /* the wiggle moves the picture, never the cell: the game measures cell 1 to size the next spin's strip, and a tilted badge there made
    every symbol of the next spin too big until it landed */
 .grid .c.tape{filter:drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 12px #ff9a1f);animation:badgein .3s ease-out}
-.grid .c.tape .ms > img{animation:badge 1.4s ease-in-out infinite}
+.grid .c.tape .ms .fx-mv > img{animation:badge 1.4s ease-in-out infinite}
 @keyframes badge{0%,100%{transform:rotate(0deg) scale(1)}25%{transform:rotate(-5deg) scale(1.03)}75%{transform:rotate(5deg) scale(1.06)}}   /* small enough to stay clear of the planks at the board edge */
 @keyframes badgein{from{filter:drop-shadow(0 0 0 rgba(255,210,63,0)) drop-shadow(0 0 0 rgba(255,154,31,0))}}
 .reel.tease{--gl:#3be3ff}
@@ -590,7 +590,7 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 @keyframes fall{to{transform:translateY(125vh) rotate(var(--r))}}
 
 @media (prefers-reduced-motion:reduce){
-  .grid .c.hit .ms,.grid .c .ms::after,.grid.focusing .c.focus .ms,.mstack img,.mstack .swell,.grid .c.tape,.grid .c.tape .ms > img,img.mg,#celebrate img.rain,.splash{animation:none!important}
+  .grid .c.hit .ms,.grid .c .ms::after,.grid.focusing .c.focus .ms,.mstack img,.mstack .swell,.grid .c.tape,.grid .c.tape .ms .fx-mv > img,img.mg,#celebrate img.rain,.splash{animation:none!important}
   #lineov .wl{animation:none;stroke-dashoffset:0}
 }
 
@@ -625,10 +625,9 @@ img.mg.p-bail{animation:bail .9s ease-in forwards}
 /* a symbol leaving the spotlight finishes its hop first (skin.js), and the halo fades instead of blinking */
 .grid .c .ms{transition:filter .25s}
 .grid.focusing .c.focus.leaving .ms{filter:none}
-.grid.focusing .c.focus .ms{animation:mdance .9s var(--d,0s) ease-in-out infinite both;filter:drop-shadow(0 0 4px #fff6c4) drop-shadow(0 0 12px rgba(255,196,48,.95))}
-/* a little surf dance: hop, lean one way, lean the other, settle; each reel starts a beat after the one before */
-@keyframes mdance{0%,100%{transform:translateY(0) rotate(0) scale(1)}18%{transform:translateY(-14%) rotate(-7deg) scale(1.1)}
-  40%{transform:translateY(0) rotate(0) scale(1.04,.94)}60%{transform:translateY(-9%) rotate(7deg) scale(1.08)}80%{transform:translateY(0) rotate(0) scale(.98,1.02)}}
+.grid.focusing .c.focus .ms{animation:none;filter:drop-shadow(0 0 4px #fff6c4) drop-shadow(0 0 12px rgba(255,196,48,.95))}
+/* the dance itself is each symbol's own win loop on the shared beat, inside the symbol (sym-fx.css); the .ms box stays
+   still (the landing pop, mpop, is not replayed when the spotlight comes round) */
 .winpill{position:absolute;z-index:9;transform:translate(-50%,-100%);display:flex;align-items:center;gap:6px;white-space:nowrap;pointer-events:none;
   font:400 clamp(12px,1.9vw,18px)/1 "Lilita One",system-ui,sans-serif;color:var(--outline);background:linear-gradient(#fffaf0,#ffe8b0);
   border:3px solid var(--outline);box-shadow:0 0 0 3px var(--lc),0 4px 0 3px var(--outline);border-radius:999px;padding:5px 12px 5px 6px;animation:pillin .3s cubic-bezier(.2,1.6,.4,1) both}
@@ -837,6 +836,190 @@ body.chase .machine .stage{transition-delay:0s}
 @media (prefers-reduced-motion:reduce){#backdrop,#drawer,.mpanel,#buysheet,#confirm,#modal{transition:none}}
 /* a wild reel's tag fits inside a phone-width tower (it was wider than the reel and ran under the side plank) */
 @media (max-width:640px){.mstack .mx.big{font-size:12px!important;padding:3px 6px 4px!important}}
+
+/* ---------- Mango Surf symbol life (anim-v2/symbols) ----------
+   Every symbol has its own small idle loop and its own win loop. Only transform and opacity move, plus the win flash's
+   brightness filter on .fx-pop. Nothing here changes the cell's (.c) or the symbol box's (.ms) layout or transform: all of
+   it lives in .fx, an absolutely placed layer inside .ms (the game measures cells[0] to size the spin strips).
+   Markup (sym-fx.js MangoSymFX.inner):
+     .ms > .fx > .fx-bk (flash glow, rays, shadow: still)  +  .fx-sq (idle move) > .fx-pop (win beat) > .fx-mv (win part
+     motion) > imgs, water, shine, particles
+   States: idle by default; win = .ms.win or the win walk's spotlight (.grid.focusing .c.focus .ms); no motion at all in a
+   spin strip, on a dimmed symbol, under .fx-still, or with reduced motion. */
+.fx{position:absolute;inset:0;container-type:size;pointer-events:none}
+.fx-sq,.fx-bk{position:absolute;left:50%;top:50%;width:min(100cqw,100cqh);height:min(100cqw,100cqh);translate:-50% -50%}
+.fx-pop,.fx-mv{position:absolute;inset:0}
+.fx-mv > img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.fx i{position:absolute;display:block;font-style:normal}
+
+/* water: the caustic tile drifts inside the letter's / wave's water (masks: one sprite, anim-v2/symbols/build-layers.py).
+   One tile = 50% of the symbol; the layer is two tiles wide and moves exactly one tile per loop, so the loop has no seam.
+   It is a finishing touch, so its two pictures load after the page (sym-fx.js adds .fx-live): no cost to the first load */
+.fx-water{inset:0;display:none;-webkit-mask:url("img/water.webp?v=2efbf99a") var(--wm) 0/600% 100% no-repeat;mask:url("img/water.webp?v=2efbf99a") var(--wm) 0/600% 100% no-repeat;overflow:hidden}
+.fx-live .fx-water{display:block}
+.fx-water > i{left:0;top:0;width:200%;height:200%;background:url("img/caustic.webp?v=f39ac984") 0 0/25% 25% repeat;opacity:.5;animation:fxcaus 9s linear infinite}
+@keyframes fxcaus{to{transform:translate(-25%,-25%)}}
+.ms-L1{--wm:0%}.ms-L2{--wm:20%}.ms-L3{--wm:40%}.ms-L4{--wm:60%}.ms-L5{--wm:80%}.ms-W{--wm:100%}
+
+/* shine (idle): a soft light bar crossing the symbol now and then, cut to its outline (--src, the symbol picture). A win
+   uses the game's own shine (.grid .c .ms::after) */
+.fx-shine{inset:0;-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat;overflow:hidden}
+.fx-shine > i{top:-25%;bottom:-25%;left:0;width:34%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0) 20%,rgba(255,255,255,.62) 50%,rgba(255,255,255,0) 80%,transparent);
+  transform:translateX(-130%) rotate(18deg);animation:fxshine 6.5s ease-in-out infinite}
+@keyframes fxshine{0%,70%{transform:translateX(-130%) rotate(18deg)}86%,100%{transform:translateX(330%) rotate(18deg)}}
+.ms-H4 .fx-shine > i{animation-duration:5.2s}
+
+/* sparkles: a four-point star */
+.fx-spk{width:22%;aspect-ratio:1;margin:-11% 0 0 -11%;background:radial-gradient(circle,#fff 0 16%,#fff6c8 28%,rgba(255,226,120,0) 64%);
+  clip-path:polygon(50% 0,58% 42%,100% 50%,58% 58%,50% 100%,42% 58%,0 50%,42% 42%);opacity:0;transform:scale(0)}
+@keyframes fxtw{0%,72%,100%{opacity:0;transform:scale(0) rotate(0)}80%{opacity:1;transform:scale(1) rotate(45deg)}90%{opacity:.8;transform:scale(.55) rotate(90deg)}}
+
+/* ======================= idle, one per symbol (every loop starts and ends at rest) ======================= */
+.ms-L1 .fx-sq{animation:fxbob 3.4s ease-in-out infinite}                         /* 10: floats on a swell */
+@keyframes fxbob{0%,100%{transform:none}50%{transform:translateY(-2.5%)}}
+.ms-L2 .fx-sq{transform-origin:50% 8%;animation:fxsway 3.8s ease-in-out infinite}  /* J: hangs and sways from its top */
+@keyframes fxsway{0%,100%{transform:none}25%{transform:rotate(-2.5deg)}75%{transform:rotate(2.5deg)}}
+.ms-L3 .fx-sq{transform-origin:50% 92%;animation:fxtilt 4.2s ease-in-out infinite} /* Q: rocks on its tail */
+@keyframes fxtilt{0%,100%{transform:none}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg) translateY(-1%)}}
+.ms-L4 .fx-sq{transform-origin:50% 100%;animation:fxlean 3.6s ease-in-out infinite} /* K: leans like it is about to kick */
+@keyframes fxlean{0%,100%{transform:none}50%{transform:skewX(-4deg)}}
+.ms-L5 .fx-sq{transform-origin:50% 100%;animation:fxbreath 3.1s ease-in-out infinite}/* A: breathes in and out */
+@keyframes fxbreath{0%,100%{transform:none}50%{transform:scale(.985,1.035)}}
+.ms-H1 .fx-sq{transform-origin:50% 96%;animation:fxwob 4.4s ease-in-out infinite}  /* coconut: a little wobble now and then */
+@keyframes fxwob{0%,58%,100%{transform:none}64%{transform:rotate(-4deg)}72%{transform:rotate(3deg)}80%{transform:rotate(-1.5deg)}88%{transform:rotate(.6deg)}}
+.ms-H2 .fx-sq{animation:fxroll 5s ease-in-out infinite}                          /* beach ball: rolls a bit and back */
+@keyframes fxroll{0%,100%{transform:none}25%{transform:rotate(-7deg) translateX(-1.5%)}75%{transform:rotate(9deg) translateX(1.5%)}}
+.ms-H3 .fx-sq{transform-origin:50% 95%;animation:fxsquish 3.3s ease-in-out infinite}/* mango: soft and juicy */
+@keyframes fxsquish{0%,100%{transform:none}45%{transform:scale(1.02,.975)}70%{transform:scale(.99,1.015)}}
+.ms-H3 .h3-leaf{transform-origin:72% 37%;animation:fxleaf 3.3s ease-in-out infinite}  /* the leaf flutters around its stem */
+@keyframes fxleaf{0%,100%{rotate:0deg}30%{rotate:-4deg}55%{rotate:2deg}75%{rotate:-1.5deg}}   /* rotate, not transform: the win flap (transform) adds to it */
+.ms-H3 .fx-spk{left:66%;top:29%;animation:fxtw 4.6s ease-out infinite}
+.ms-H4 .fx-sq{animation:fxfloat 3.9s ease-in-out infinite}                       /* surfboard: floats */
+@keyframes fxfloat{0%,100%{transform:none}25%{transform:translateY(-1.5%) rotate(-2deg)}75%{transform:translateY(-3%) rotate(2deg)}}
+.ms-W .fx-sq{transform-origin:50% 80%;animation:fxride 2.8s ease-in-out infinite} /* wild: rides its wave */
+@keyframes fxride{0%,100%{transform:none}25%{transform:rotate(-1.5deg) translateX(-1%)}75%{transform:rotate(1.5deg) translateX(1%) translateY(-1.5%)}}
+.ms-W .fx-spk{left:61%;top:38%;width:18%;margin:-9% 0 0 -9%;animation:fxtw 3.7s ease-out infinite}   /* the sunglasses glint */
+.ms-W .fx-water > i{animation-duration:6s}
+.fx-glow{inset:-6%;border-radius:50%;background:radial-gradient(circle,rgba(255,236,150,.85),rgba(255,190,60,.35) 45%,rgba(255,170,40,0) 70%);opacity:.18;animation:fxglow 2.8s ease-in-out infinite}
+@keyframes fxglow{0%,100%{opacity:.18;transform:scale(.92)}50%{opacity:.42;transform:scale(1.02)}}
+.ms-S1 .fx-sq{animation:fxpulse 2.6s ease-in-out infinite}                       /* BONUS badge: a slow pulse */
+@keyframes fxpulse{0%,100%{transform:none}50%{transform:scale(1.03)}}
+.fx-rays{left:-15%;top:-15%;width:130%;height:130%;border-radius:50%;opacity:.4;transition:opacity .3s;
+  background:repeating-conic-gradient(from 0deg,rgba(255,240,170,.85) 0 9deg,rgba(255,240,170,0) 9deg 24deg);
+  -webkit-mask:radial-gradient(circle,#000 22%,transparent 70%);mask:radial-gradient(circle,#000 22%,transparent 70%);animation:fxspin 18s linear infinite}
+@keyframes fxspin{to{transform:rotate(360deg)}}
+.ms-S1 .fx-spk.p1{left:24%;top:30%;animation:fxtw 3.2s ease-out infinite}
+.ms-S1 .fx-spk.p2{left:78%;top:24%;animation:fxtw 3.2s ease-out infinite}
+
+/* idle starts at rest after a short wait that differs per cell (--i, the cell's index, set by skin.js), so the board breathes
+   instead of pulsing, and a reel that lands shows its symbols exactly as they were in the strip (no jump on landing).
+   After the idle rules, so it wins over their animation shorthand */
+.fx .fx-sq,.fx .fx-sq *,.fx .fx-bk > *{animation-delay:calc(var(--i,0) * .23s)}
+.ms-S1 .fx .fx-spk.p2{animation-delay:calc(var(--i,0) * .23s + 1.6s)}
+
+/* ======================= win: one shared beat + each symbol's own part motion =======================
+   Beat measured from the reference (Treasure Hunt win loop, 10 s clip, ~54 real fps): one pulse every 0.672 s
+   (36 frames), every winning symbol in step. Inside a pulse: 0-22% the symbol grows to ~110% x 107%; 22-42% it flashes
+   (brightness up, warmer) while it widens to ~116% x 106%; it holds the flash to ~64%; 64-86% it drops back to rest
+   size and colour; 86-100% it rests. All winners share one clock: a symbol that joins starts on the clock's next beat
+   (--fxws / --fxws2 from sym-fx.js MangoSymFX.sync), at rest, so it never jumps and always pulses with the others. Part motion (leaf, tilt,
+   foam, drips) loops over two beats, peaks on the flashes and is back at rest on every beat boundary, so a symbol that
+   leaves the spotlight at the end of a beat (skin.js leave) stops without a snap. */
+:root{--fxbeat:.672s;--fxws:0s;--fxws2:0s}
+.fx-pop{transform-origin:50% 58%}
+/* idle pauses where it is (a few degrees at most) instead of snapping back; it carries on from there when the win ends */
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-sq{animation-play-state:paused}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-pop{animation:var(--fxpk,fxbeat) var(--fxbeat) linear infinite var(--fxws)}
+@keyframes fxbeat{
+  0%{transform:none;filter:brightness(1) saturate(1);animation-timing-function:ease-out}
+  22%{transform:scale(1.1,1.07);filter:brightness(1.02) saturate(1);animation-timing-function:ease-in-out}
+  42%{transform:scale(1.16,1.06);filter:brightness(1.36) saturate(1.28)}
+  64%{transform:scale(1.15,1.07);filter:brightness(1.33) saturate(1.25);animation-timing-function:ease-in}
+  86%{transform:scale(.99);filter:brightness(.97) saturate(1)}
+  100%{transform:none;filter:brightness(1) saturate(1)}}
+/* the flash per symbol: saturation is capped where a full boost changes the colour (the coconut went tomato red, the
+   ball's red went neon); the coconut brightens less and loses a little saturation, so it reads as a lit brown nut */
+.ms-H1{--fxpk:fxbeat-nut}.ms-H2,.ms-H3,.ms-H4{--fxpk:fxbeat-soft}
+@keyframes fxbeat-nut{
+  0%{transform:none;filter:brightness(1) saturate(1);animation-timing-function:ease-out}
+  22%{transform:scale(1.1,1.07);filter:brightness(1.02) saturate(1);animation-timing-function:ease-in-out}
+  42%{transform:scale(1.16,1.06);filter:brightness(1.16) saturate(.84)}
+  64%{transform:scale(1.15,1.07);filter:brightness(1.14) saturate(.86);animation-timing-function:ease-in}
+  86%{transform:scale(.99);filter:brightness(.97) saturate(1)}
+  100%{transform:none;filter:brightness(1) saturate(1)}}
+@keyframes fxbeat-soft{
+  0%{transform:none;filter:brightness(1) saturate(1);animation-timing-function:ease-out}
+  22%{transform:scale(1.1,1.07);filter:brightness(1.02) saturate(1);animation-timing-function:ease-in-out}
+  42%{transform:scale(1.16,1.06);filter:brightness(1.3) saturate(1.1)}
+  64%{transform:scale(1.15,1.07);filter:brightness(1.27) saturate(1.09);animation-timing-function:ease-in}
+  86%{transform:scale(.99);filter:brightness(.97) saturate(1)}
+  100%{transform:none;filter:brightness(1) saturate(1)}}
+/* a warm glow behind the symbol on every flash */
+.fx-flash{inset:-4%;border-radius:50%;background:radial-gradient(circle,rgba(255,236,150,.9),rgba(255,190,60,.45) 42%,rgba(255,170,40,0) 68%);opacity:0}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-flash{animation:fxflash var(--fxbeat) linear infinite var(--fxws)}
+@keyframes fxflash{0%,22%{opacity:0;transform:scale(.9)}42%,64%{opacity:.9;transform:scale(1.08)}86%,100%{opacity:0;transform:scale(.95)}}
+/* part motion: two beats per loop, at rest on 0%, 50% and 100% */
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-mv{animation:var(--wa) calc(var(--fxbeat) * 2) ease-in-out infinite var(--fxws2)}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-water > i{animation-duration:3s}
+/* letters stay upright and readable: small tilts and wiggles on the beat */
+.ms-L1{--wa:fxw-wig}                                  /* 10: wiggles left, right */
+@keyframes fxw-wig{0%,50%,100%{transform:none}26%{transform:rotate(-7deg)}76%{transform:rotate(7deg)}}
+.ms-L2{--wa:fxw-swing}.ms-L2 .fx-mv{transform-origin:50% 6%}   /* J: swings from its top */
+@keyframes fxw-swing{0%,50%,100%{transform:none}26%{transform:rotate(-10deg)}76%{transform:rotate(10deg)}}
+.ms-L3{--wa:fxw-tilt}.ms-L3 .fx-mv{transform-origin:50% 90%}   /* Q: rocks on its tail */
+@keyframes fxw-tilt{0%,50%,100%{transform:none}26%{transform:rotate(9deg)}76%{transform:rotate(-9deg)}}
+.ms-L4{--wa:fxw-kick}.ms-L4 .fx-mv{transform-origin:50% 100%}  /* K: kicks out, both ways */
+@keyframes fxw-kick{0%,50%,100%{transform:none}26%{transform:skewX(-9deg) rotate(2deg)}76%{transform:skewX(8deg) rotate(-2deg)}}
+.ms-L5{--wa:fxw-rock}.ms-L5 .fx-mv{transform-origin:50% 100%}  /* A: rocks on its feet */
+@keyframes fxw-rock{0%,50%,100%{transform:none}26%{transform:rotate(-8deg)}76%{transform:rotate(8deg)}}
+/* coconut: a juicy wobble, milk splashes out of the top on each flash */
+.ms-H1{--wa:fxw-nut}.ms-H1 .fx-mv{transform-origin:50% 92%}
+@keyframes fxw-nut{0%,50%,100%{transform:none}20%{transform:rotate(-9deg)}32%{transform:rotate(5deg)}43%{transform:rotate(-2deg)}70%{transform:rotate(9deg)}82%{transform:rotate(-5deg)}93%{transform:rotate(2deg)}}
+.fx-milk{width:7%;aspect-ratio:1;left:50%;top:18%;margin:-3.5% 0 0 -3.5%;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#eef6fa 60%,#cfe3ec);box-shadow:0 0 0 1.5px rgba(70,40,20,.45);opacity:0}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-milk{animation:fxmilk var(--fxbeat) ease-out infinite var(--fxws)}
+.fx-milk.p1{--mx:-260%;--my:-220%}.fx-milk.p2{--mx:-60%;--my:-330%}.fx-milk.p3{--mx:170%;--my:-300%}.fx-milk.p4{--mx:330%;--my:-160%}
+@keyframes fxmilk{0%,35%{opacity:0;transform:none}48%{opacity:1;transform:translate(calc(var(--mx) * .45),calc(var(--my) * .55)) scale(1.15)}75%{opacity:.9;transform:translate(var(--mx),var(--my)) scale(.85)}92%,100%{opacity:0;transform:translate(calc(var(--mx) * 1.15),calc(var(--my) * .6)) scale(.4)}}
+/* beach ball: a full spin per beat (round, so it always reads), a hop on each flash, its shadow on the sand */
+.ms-H2{--wa:fxw-spin}
+@keyframes fxw-spin{0%{transform:none}26%{transform:translateY(-6%) rotate(150deg)}50%{transform:rotate(360deg)}76%{transform:translateY(-6%) rotate(510deg)}100%{transform:rotate(720deg)}}
+.fx-shd{left:18%;right:18%;bottom:3%;height:10%;border-radius:50%;background:radial-gradient(closest-side,rgba(40,20,5,.35),rgba(40,20,5,0));opacity:0}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-shd{animation:fxw-shd var(--fxbeat) ease-in-out infinite var(--fxws)}
+@keyframes fxw-shd{0%,100%{opacity:0;transform:scale(1)}20%,80%{opacity:.7}55%{opacity:.35;transform:scale(.75)}}
+/* mango: tilts side to side, the leaf flaps on each flash, a glint on the skin */
+.ms-H3{--wa:fxw-mango}.ms-H3 .fx-mv{transform-origin:50% 95%}
+@keyframes fxw-mango{0%,50%,100%{transform:none}26%{transform:rotate(-8deg)}76%{transform:rotate(8deg)}}
+:is(.ms.win,.grid.focusing .c.focus .ms) .h3-leaf{animation-name:fxleaf,fxw-flap;animation-duration:3.3s,var(--fxbeat);animation-timing-function:ease-in-out;animation-iteration-count:infinite;
+  animation-play-state:paused,running;animation-delay:calc(var(--i,0) * .23s),var(--fxws)}   /* the idle flutter holds where it is, the flap adds to it */
+@keyframes fxw-flap{0%,100%{transform:none}45%{transform:rotate(-8deg)}70%{transform:rotate(5deg)}}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-spk{animation:fxw-tw calc(var(--fxbeat) * 2) ease-out infinite var(--fxws2)}
+@keyframes fxw-tw{0%,18%{opacity:0;transform:scale(0) rotate(0)}26%{opacity:1;transform:scale(1.5) rotate(60deg)}46%,100%{opacity:0;transform:scale(.2) rotate(140deg)}}
+/* surfboard: tips back and forth, drips fall off its tail on each flash */
+.ms-H4{--wa:fxw-board}.ms-H4 .fx-mv{transform-origin:30% 85%}
+@keyframes fxw-board{0%,50%,100%{transform:none}26%{transform:rotate(-11deg)}76%{transform:rotate(9deg)}}
+.fx-drp{width:6%;aspect-ratio:1;left:24%;top:86%;opacity:0}
+.fx-drp::before{content:"";position:absolute;inset:0;border-radius:0 50% 50% 50%;transform:rotate(45deg);background:linear-gradient(135deg,#f2fdff,#7fdcff 60%,#2ba4e0);box-shadow:0 0 0 1.5px rgba(10,50,80,.5)}
+.fx-drp.p2{left:31%;top:90%;--dd:.08s}.fx-drp.p3{left:19%;top:80%;--dd:.16s}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-drp{animation:fxdrip var(--fxbeat) ease-in infinite calc(var(--fxws) + var(--dd,0s))}
+@keyframes fxdrip{0%,40%{opacity:0;transform:translateY(0) scale(.4)}52%{opacity:1;transform:translateY(0) scale(1)}86%{opacity:1;transform:translateY(160%) scale(.9,1.1)}96%,100%{opacity:0;transform:translateY(200%) scale(.6)}}
+/* wild: carves left and right on its wave, foam sprays and the sun glows on each flash */
+.ms-W{--wa:fxw-surf}.ms-W .fx-mv{transform-origin:50% 80%}
+@keyframes fxw-surf{0%,50%,100%{transform:none}26%{transform:translate(-4%,-3%) rotate(-7deg)}76%{transform:translate(4%,-3%) rotate(7deg)}}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-glow{animation:fxflash var(--fxbeat) linear infinite var(--fxws)}
+.fx-foam{width:9%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#e6f8ff 60%,#b7e6fb);box-shadow:0 0 0 1.5px rgba(10,60,100,.35);opacity:0;left:50%;top:78%}
+.fx-foam.p1{--fx:-330%;--fy:-260%}.fx-foam.p2{--fx:-120%;--fy:-400%}.fx-foam.p3{--fx:140%;--fy:-380%}.fx-foam.p4{--fx:330%;--fy:-230%}.fx-foam.p5{--fx:450%;--fy:-60%}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-foam{animation:fxfoam var(--fxbeat) ease-out infinite var(--fxws)}
+@keyframes fxfoam{0%,35%{opacity:0;transform:none}50%{opacity:1;transform:translate(calc(var(--fx) * .45),calc(var(--fy) * .45)) scale(1.15)}78%{opacity:.85;transform:translate(var(--fx),var(--fy)) scale(.8)}94%,100%{opacity:0;transform:translate(var(--fx),calc(var(--fy) * .6)) scale(.4)}}
+/* BONUS badge: rocks, rays spin up and brighten, sparkles take turns on the flashes */
+.ms-S1{--wa:fxw-badge}
+@keyframes fxw-badge{0%,50%,100%{transform:none}26%{transform:rotate(-7deg)}76%{transform:rotate(7deg)}}
+:is(.ms.win,.grid.focusing .c.focus .ms) .fx-rays{opacity:.95;animation-duration:5s}
+.ms-S1 .fx-spk.p3{left:9%;top:50%}.ms-S1 .fx-spk.p4{left:86%;top:66%}
+:is(.ms-S1.win,.grid.focusing .c.focus .ms-S1) :is(.fx-spk.p2,.fx-spk.p4){animation-delay:calc(var(--fxws2) - var(--fxbeat))}
+
+/* no life where it would distract or cost: the spin strips (the reel is a blur, and a symbol must land exactly as it
+   was drawn in the strip), dimmed symbols, .fx-still, or when the player asks for less motion */
+.strip .fx,.strip .fx *,.ms.dim .fx *,.fx-still .fx,.fx-still .fx *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.fx,.fx *{animation:none!important}}
 
 /* ---------- HUD: the reference bar's layout in the bubble colours (cyan #00b3ff + white) ---------- */
 :root{--cy:#00b3ff;--cy2:#0093dd;--cy3:#0072b8;--cyd:#00508a}
@@ -1594,7 +1777,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 @keyframes sbump{0%{transform:scale(1.5)}100%{transform:none}}
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","frame-driftwood":"76ee142b","H1":"7152d20c","H2":"a59b553b","H3":"28d998d1","H4":"8e5ef9ef","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"8a1dd2c0","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","caustic":"f39ac984","frame-driftwood":"76ee142b","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"};</script>
 <script>
 /*
  * Mango Surf audio - synthesized Web Audio module (play money learning project).
@@ -2825,6 +3008,45 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
 
 </script>
 <script>
+// Mango Surf symbol life (anim-v2): the inside of a symbol (.ms) with its animation layers. Styles: sym-fx.css. Layers and the prototype: anim-v2/symbols/.
+// MangoSymFX.inner(k, src) returns the HTML that goes inside <div class="ms ms-K" style="--src:url(..)">, in place of the
+// plain <img>. src is the game's cache-busting src(name) (every picture goes through it). Particle classes are p1..p5
+// (never single letters: .c is the game's cell class).
+// MangoSymFX.win(ms, on) turns the win loop on or off for one symbol (the game's win walk uses its spotlight, .c.focus, and
+// MangoSymFX.sync(cell) instead), on the shared beat: every winner pulses together, even one that starts later, because
+// it starts on the next beat of one clock (performance.now()).
+(function(){
+  const BEAT = 672;   // ms, measured from the reference win loop (keep in step with --fxbeat in sym-fx.css)
+  const n = (cls, k) => Array.from({length: k}, (_, i) => `<i class="${cls} p${i + 1}"></i>`).join('');
+  const img = (src, k, cls) => `<img class="${cls}" src="${src(k)}" alt="" draggable="false" decoding="sync">`;
+  const WATER = {L1: 1, L2: 1, L3: 1, L4: 1, L5: 1, W: 1}, SHINE = {L1: 1, L2: 1, L3: 1, L4: 1, L5: 1, H2: 1, H4: 1, S1: 1};
+  function inner(k, src){
+    let back = '<i class="fx-flash"></i>', body = '', front = '';
+    body = k === 'H3' ? img(src, 'H3-body', 'h3-body') + img(src, 'H3-leaf', 'h3-leaf') : img(src, k, 'base');
+    if (WATER[k]) body += '<i class="fx-water"><i></i></i>';
+    if (SHINE[k]) body += '<i class="fx-shine"><i></i></i>';
+    if (k === 'W'){ back += '<i class="fx-glow"></i>'; front = '<i class="fx-spk"></i>' + n('fx-foam', 5); }
+    if (k === 'S1'){ back += '<i class="fx-rays"></i>'; front = n('fx-spk', 4); }
+    if (k === 'H3') front = '<i class="fx-spk"></i>';
+    if (k === 'H1') front = n('fx-milk', 4);
+    if (k === 'H2') back += '<i class="fx-shd"></i>';
+    if (k === 'H4') front = n('fx-drp', 3);
+    return `<span class="fx" aria-hidden="true"><span class="fx-bk">${back}</span><span class="fx-sq"><span class="fx-pop"><span class="fx-mv">${body}${front}</span></span></span></span>`;
+  }
+  // the shared beat: every winner pulses on one clock. A symbol that joins waits for the next beat boundary (the beat
+  // starts and ends at rest, so it never jumps): --fxws is that wait, --fxws2 the wait for the two-beat part motion (the
+  // next even beat, so its loops line up with everyone else's)
+  const sync = el => { if (!el) return; const now = performance.now(), t1 = Math.ceil(now / BEAT) * BEAT, d = t1 - now;
+    el.style.setProperty('--fxws', d.toFixed(0) + 'ms'); el.style.setProperty('--fxws2', (d + (Math.round(t1 / BEAT) % 2 ? BEAT : 0)).toFixed(0) + 'ms'); };
+  function win(ms, on){ if (!ms) return; if (on){ sync(ms); ms.classList.add('win'); } else ms.classList.remove('win'); }
+  // the water shimmer (two small pictures) switches on once the page has loaded, so it never delays the first paint
+  const live = () => setTimeout(() => document.documentElement.classList.add('fx-live'), 800);
+  if (document.readyState === 'complete') live(); else addEventListener('load', live);
+  window.MangoSymFX = {inner, win, sync, BEAT};
+})();
+
+</script>
+<script>
 // Mango Surf skin: runs before the Sk8 game script and stands in for its art (Sk8Art) and animation (Sk8Anim) modules.
 // The game, math and server are Sk8 Sesh's, unchanged. This file only changes what things look like and what they are called.
 (function(){
@@ -2836,7 +3058,10 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   // ---------- symbols ----------
   function symbol(id, o){
     o = o || {}; const k = IMG[id] || 'L1';
-    return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})"><img src="${src(k)}" alt="" draggable="false" decoding="sync">`
+    // the picture sits in its animation layers (sym-fx.js / sym-fx.css: each symbol's own idle and win motion); they move
+    // inside .ms only, never the cell or the .ms box, which the game measures
+    const art = window.MangoSymFX ? MangoSymFX.inner(k, src) : `<img src="${src(k)}" alt="" draggable="false" decoding="sync">`;
+    return `<div class="ms ms-${k}${o.dim ? ' dim' : ''}" style="--src:url(${src(k)})">${art}`
       // a plain wild says WILD. The closing </div> matters: without it every symbol in the spin strip nested inside the one
       // before, the strip lost its gaps, and the lower rows jumped down by a gap per row the moment a reel landed
       + (o.mult > 1 ? `<b class="mx">x${fmtM(o.mult)}</b>` : k === 'W' ? '<b class="mx plain">WILD</b>' : '')
@@ -2845,7 +3070,7 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   window.MangoArt = {symbol, skater: () => `<img class="mg" src="${src('H3')}" alt="">`};
   // every symbol picture stays loaded and decoded for the whole visit: a reel that lands swaps in new <img> tags, and one
   // whose picture had to be fetched or decoded again drew as an empty cell for a frame (the board blinked on landing)
-  const KEEP = window.MangoKeep = [...new Set(Object.values(IMG).concat(['wild-wave', 'wild-rider']))].map(k => { const im = new Image(); im.src = src(k); if (im.decode) im.decode().catch(() => {}); return im; });
+  const KEEP = window.MangoKeep = [...new Set(Object.values(IMG).concat(['wild-wave', 'wild-rider', 'H3-body', 'H3-leaf']))].map(k => { const im = new Image(); im.src = src(k); if (im.decode) im.decode().catch(() => {}); return im; });
 
   // ---------- mascot and celebration art: the mango, moving to the old trick names ----------
   // the big-win screen (#cel-art) plays the surfing wild doing tricks (img/surf-tricks.webp, an animated WebP made with
@@ -2928,20 +3153,21 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
     svg.querySelectorAll('.wl').forEach(p => p.classList.toggle('off', i >= 0 && +p.dataset.w !== i));
     grid.classList.toggle('focusing', i >= 0);
     if (i < 0) return;
-    // a symbol already dancing keeps its beat (a new delay would make it jump); the others start upright
-    [...next].forEach((c, r) => { if (c.classList.contains('focus')){ c.classList.remove('leaving'); return; } c.style.setProperty('--d', (r*0.09) + 's'); c.classList.add('focus'); });
+    // a symbol already dancing keeps its beat; the others join the one beat every winner shares (sym-fx.js sync), upright
+    [...next].forEach(c => { if (c.classList.contains('focus')){ c.classList.remove('leaving'); return; } if (window.MangoSymFX) MangoSymFX.sync(c); c.classList.add('focus'); });
     pill(wins[i], colors[i]);
   }
   // the spotlight moves on: the symbol finishes the hop it is in (back upright at its own size), then stops, so it never snaps
   function leave(c){
-    const ms = c.querySelector('.ms'), a = ms && ms.getAnimations().find(x => x.animationName === 'mdance');
+    // the symbol finishes the beat it is in (sym-fx.css: every beat ends back upright at its own size), then stops
+    const pop = c.querySelector('.ms .fx-pop'), a = pop && pop.getAnimations().find(x => /^fxbeat/.test(x.animationName));
     const done = () => { if (c.classList.contains('leaving')) c.classList.remove('focus', 'leaving'); };
     c.classList.add('leaving');
-    const P = 900, t = a ? (a.currentTime || 0) - (parseFloat(getComputedStyle(ms).animationDelay) || 0)*1000 : 0;
-    if (!a || t <= 0){ done(); return; }
-    let fired = false; const fin = () => { if (fired) return; fired = true; ms.removeEventListener('animationiteration', on); done(); };
-    const on = e => { if (e.animationName === 'mdance' && !e.pseudoElement) fin(); };
-    ms.addEventListener('animationiteration', on); setTimeout(fin, P - (t % P) + 80);
+    const P = (window.MangoSymFX && MangoSymFX.BEAT) || 672, ct = a && a.effect.getComputedTiming();
+    if (!ct || ct.progress == null || ct.localTime <= 0){ done(); return; }
+    let fired = false; const fin = () => { if (fired) return; fired = true; pop.removeEventListener('animationiteration', on); done(); };
+    const on = e => { if (e.target === pop && /^fxbeat/.test(e.animationName)) fin(); };
+    pop.addEventListener('animationiteration', on); setTimeout(fin, P*(1 - ct.progress) + 40);
   }
   function walkWins(wins, colors){
     stopWalk(); if (!wins || !wins.length) return;
@@ -3355,8 +3581,11 @@ header.slotbar{justify-content:space-between!important;padding:6px 12px!importan
   // ---------- server names for the modes shown in menus ----------
   function game(g){ return g; }   // labels from the server are renamed on screen by words()
 
+  // each cell's idle loop starts after its own short wait (sym-fx.css --i), so the board breathes instead of pulsing
+  function cellPhase(){ document.querySelectorAll('.grid .c').forEach((c, i) => c.style.setProperty('--i', (i*3) % 10)); }
+
   window.MangoSkin = {stack, afterLines, game, scene(){},
-    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} try { totalOnly(); } catch(e){} try { betPicker(); } catch(e){} }};
+    init(){ try { words(); } catch(e){} try { rain(); } catch(e){} try { watchLines(); } catch(e){} try { coconuts(); } catch(e){} try { hud(); } catch(e){} try { buySheet(); } catch(e){} try { drawerSkin(); } catch(e){} try { infoSettings(); } catch(e){} try { confirmSkin(); } catch(e){} try { liveScene(); } catch(e){} try { frameCrabs(); } catch(e){} try { totalOnly(); } catch(e){} try { betPicker(); } catch(e){} try { cellPhase(); } catch(e){} }};
   document.addEventListener('DOMContentLoaded', () => window.MangoSkin.init());
 })();
 
