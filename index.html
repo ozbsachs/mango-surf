@@ -1219,6 +1219,54 @@ body.chase .machine .stage{transition-delay:0s}
 /* a wild reel's tag fits inside a phone-width tower (it was wider than the reel and ran under the side plank) */
 @media (max-width:640px){.mstack .mx.big{font-size:12px!important;padding:3px 6px 4px!important}}
 
+/* ---------- held wilds, quick stop, honest tease (2026-10-15) ---------- */
+/* a held wild (Swell sticky wild, Kahuna pin) sits on a solid sand tile while its reel spins: the strip runs behind the tile,
+   never behind the see-through wild art (it used to look as if the new wilds dropped under the held one) */
+.grid .reel:has(> .strip) > .c:not(.spinning){z-index:4;background:linear-gradient(#f4e5c0,#ead5a6);border-radius:18%;
+  box-shadow:inset 0 0 0 2px rgba(255,200,60,.85),0 0 0 2px rgba(122,74,34,.55),0 0 12px 2px rgba(255,190,60,.5)}
+/* a folding Kahuna tower fades over its pinned wild, which shows at once (the pin is the cell now, no overlay copy) */
+.reel:has(> .stackov.folding) > .c{visibility:visible}
+/* winning cells: a higher row draws over a lower one, so a wild's tag (it hangs below the art) is never covered by the
+   symbol under it when both pop; the spotlight stays on top of everything */
+.grid .reel > .c.hit:nth-child(1){z-index:7}.grid .reel > .c.hit:nth-child(2){z-index:6}.grid .reel > .c.hit:nth-child(3){z-index:5}.grid .reel > .c.hit:nth-child(4){z-index:4}
+.grid.focusing .reel > .c.focus:nth-child(1){z-index:11}.grid.focusing .reel > .c.focus:nth-child(2){z-index:10}.grid.focusing .reel > .c.focus:nth-child(3){z-index:9}.grid.focusing .reel > .c.focus:nth-child(4){z-index:8}
+/* quick stop: while the reels turn, the spin button stays live (its arrows keep turning) and a tap brings them in */
+.mhud #spinbtn.slam::before{animation:spinicon .9s linear infinite}
+.mhud #spinbtn.slam{cursor:pointer}
+/* tease: the landed badges stay bright above the chase dim (they are the point) with a slow heartbeat, and thump each time a
+   teased reel stops; only the next reel to land has the strong glow and a light running down it, the others wait softly */
+body.chase .grid .c.tape{z-index:11}
+body.chase .grid .c.tape .ms{animation:hbeat .9s ease-in-out infinite}
+@keyframes hbeat{0%,100%{scale:1}14%{scale:1.1}28%{scale:1}42%{scale:1.06}}
+.grid .c.tape::before{background:radial-gradient(circle at 50% 52%,rgba(255,240,160,.95),rgba(255,190,60,.45) 45%,rgba(255,190,60,0) 72%)}
+.grid .c.tape.thump::before{animation:thump .5s ease-out}
+@keyframes thump{0%{opacity:0;transform:scale(.7)}25%{opacity:1;transform:scale(1.25)}100%{opacity:0;transform:scale(1.5)}}
+@media (prefers-reduced-motion:no-preference){
+  body.chase .grid .reel.tease:not(.next){--gl:rgba(59,227,255,.38)}
+}
+.grid .reel.tease.next::before{content:"";position:absolute;left:0;right:0;top:-40%;height:40%;z-index:9;pointer-events:none;border-radius:12px;
+  background:linear-gradient(rgba(140,240,255,0),rgba(140,240,255,.35),rgba(140,240,255,0));animation:runlight 1.1s linear infinite}
+@keyframes runlight{to{transform:translateY(350%)}}
+/* the 3rd badge lands: a gold ring bursts out of it */
+.grid .c.burst::after{content:"";position:absolute;inset:-6%;border-radius:50%;pointer-events:none;z-index:3;border:4px solid #ffd23f;
+  box-shadow:0 0 18px 6px rgba(255,200,60,.7);animation:burst .9s ease-out forwards}
+@keyframes burst{0%{opacity:1;transform:scale(.6)}100%{opacity:0;transform:scale(1.9)}}
+/* a tease that ends on two badges says so, plainly, then fades */
+.mcall{position:absolute;left:50%;top:50%;z-index:42;transform:translate(-50%,-50%);pointer-events:none;white-space:nowrap;
+  font:400 clamp(18px,3.4vw,34px)/1 "Lilita One",system-ui,sans-serif;color:#fff7d6;letter-spacing:.04em;padding:10px 18px 12px;border-radius:14px;
+  background:rgba(42,14,18,.78);border:3px solid #ffd23f;box-shadow:0 0 0 3px var(--outline),0 6px 0 3px var(--outline);text-shadow:0 2px 0 #2a0e12;
+  animation:mcall 1.5s ease-out forwards}
+@keyframes mcall{0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}24%{transform:translate(-50%,-50%) scale(1)}78%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+/* big win build-up: the board glows gold for a moment before the big-win screen opens */
+.machine .stage.bwup .gridbox::after{content:"";position:absolute;inset:-1%;z-index:40;pointer-events:none;border-radius:14px;
+  background:radial-gradient(ellipse at 50% 50%,rgba(255,236,150,.32),rgba(255,200,60,0) 70%);box-shadow:inset 0 0 44px 10px rgba(255,206,70,.7),0 0 26px 6px rgba(255,200,60,.55);
+  animation:bwup .45s ease-in forwards}
+@keyframes bwup{0%{opacity:0}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  body.chase .grid .c.tape .ms{animation:none}
+  .grid .reel.tease.next::before{animation:none;top:0;height:100%;background:rgba(140,240,255,.12)}
+}
+
 /* ---------- Mango Surf symbol life (anim-v2/symbols) ----------
    Every symbol has its own small idle loop and its own win loop. Only transform and opacity move, plus the win flash's
    brightness filter on .fx-pop. Nothing here changes the cell's (.c) or the symbol box's (.ms) layout or transform: all of
@@ -4932,7 +4980,7 @@ function symHTML(s, opts){
 const gridEl = $('grid'), cells = [], reelEls = [];
 for (let r=0; r<REELS; r++){ const col = document.createElement('div'); col.className = 'reel'; col.style.gridTemplateRows = `repeat(${ROWS},minmax(0,1fr))`; gridEl.appendChild(col); reelEls.push(col);
   for (let row=0; row<ROWS; row++){ const d = document.createElement('div'); d.className = 'c'; col.appendChild(d); cells[TT.cell(r,row)] = d; } }
-function paintCell(c, s, mult, sticky){ cells[c].innerHTML = symHTML(s, s===W ? {mult, sticky} : {}); cells[c].classList.toggle('tape', s===S1 || s===S2); cells[c].classList.toggle('legend', s===S2); }
+function paintCell(c, s, mult, sticky){ cells[c].dataset.h = s + '|' + (s === W ? (mult || 0) + '|' + !!sticky : ''); cells[c].innerHTML = symHTML(s, s===W ? {mult, sticky} : {}); cells[c].classList.toggle('tape', s===S1 || s===S2); cells[c].classList.toggle('legend', s===S2); }
 // Trick Combo ramp: a small orange quarter pipe in the bottom corner of its cell, with the combo steps it paid above it
 function rampSVG(svg, b, gb, steps){
   const x = b.left-gb.left, y = b.top-gb.top, w = b.width, h = b.height, s = Math.min(w, h)*.42, x0 = x + w - s - 4, y0 = y + h - 4;
@@ -5000,7 +5048,7 @@ async function growStack(r, M, sticky, rows){
   // the wild reel spreads up and down from the row(s) where the wilds landed
   let lo = rows ? rows[0] : ROWS-1, hi = rows ? rows[1] : ROWS-1;
   const clip = () => `inset(${(lo/ROWS*100).toFixed(1)}% 0 ${((ROWS-1-hi)/ROWS*100).toFixed(1)}% 0)`;
-  const steps = Math.max(lo, ROWS-1-hi), beat = T(180), box = (a, b) => `inset(${a}% -60% ${b}% -60%)`;
+  const steps = Math.max(lo, ROWS-1-hi), beat = T(140), box = (a, b) => `inset(${a}% -60% ${b}% -60%)`;
   const ov = setStack(r, M, sticky); ov.classList.remove('settle'); ov.classList.add('building');
   ov.style.transition = 'opacity .2s ease-out'; ov.style.clipPath = box((lo/ROWS*100).toFixed(2), ((ROWS-1-hi)/ROWS*100).toFixed(2)); void ov.offsetWidth;
   ov.style.transition = `clip-path ${beat*(steps+1)}ms cubic-bezier(.45,0,.25,1), opacity .2s ease-out`; ov.style.clipPath = box(-30, -30);
@@ -5008,7 +5056,8 @@ async function growStack(r, M, sticky, rows){
   ov.style.transition = ''; ov.classList.remove('building'); ov.style.clipPath = ''; void ov.offsetWidth; ov.classList.add('settle');
 }
 function clearStacks(){ reelEls.forEach(el=>{ el.querySelectorAll('.stackov,.pinov').forEach(o=>o.remove()); }); }
-function pinWild(c, m){ const r = Math.floor(c/ROWS), el = cells[c], p = document.createElement('div'); p.className = 'pinov'; p.style.top = el.offsetTop+'px'; p.style.height = el.offsetHeight+'px'; p.innerHTML = symHTML(W, {mult: m, sticky: true}); reelEls[r].appendChild(p); paintCell(c, W, m, true); }
+function pinWild(c, m){ paintCell(c, W, m, true); }
+function pinWild_sk8(c, m){ const r = Math.floor(c/ROWS), el = cells[c], p = document.createElement('div'); p.className = 'pinov'; p.style.top = el.offsetTop+'px'; p.style.height = el.offsetHeight+'px'; p.innerHTML = symHTML(W, {mult: m, sticky: true}); reelEls[r].appendChild(p); paintCell(c, W, m, true); }
 async function shrinkStacks(list, fast){
   // held Legend reels fold back into the one wild they grew from, so new wilds can land around it
   if (!list.length) return;
@@ -5025,17 +5074,17 @@ async function mergeAnim(merged, fast, sticky){
   // held reels with no new wild just grow back, all at once and without a banner
   const quiet = merged.filter(mg => mg.anchor && !mg.from.length), loud = merged.filter(mg => !quiet.includes(mg));
   if (quiet.length){ if (fast) quiet.forEach(mg=>setStack(mg.r, mg.M, sticky)); else await Promise.all(quiet.map(mg => growStack(mg.r, mg.M, sticky, [mg.anchor.c % ROWS, mg.anchor.c % ROWS]))); }
-  for (const mg of loud){
+  await Promise.all(loud.map(async (mg, li) => { if (!fast && li) await wait(T(110)*li);
     if (!fast){ const gb = gridEl.parentElement.getBoundingClientRect(), rb = reelEls[mg.r].getBoundingClientRect();
       const tag = document.createElement('div'); tag.className = 'mergetag';
       const fac = (mg.upgrade > 1 ? [mg.upgrade] : []).concat(mg.from.map(f=>f.m).filter(m=>m > 1));
       tag.textContent = mg.M > 1 && fac.length > 1 ? fac.map(m=>'x'+fx(m)).join(' × ') + ' = x' + fx(mg.M) : mg.M > 1 ? 'STACK x' + fx(mg.M) : 'WILD REEL';
       tag.style.left = (rb.left-gb.left+rb.width/2)+'px'; tag.style.top = (rb.top-gb.top+rb.height*.45)+'px'; gridEl.parentElement.appendChild(tag);
       const lit = mg.from.map(f=>f.c).concat(mg.anchor ? [mg.anchor.c] : []);
-      lit.forEach(c=>cells[c].classList.add('hit')); sfx('wildLand', mg.M); await wait(T(650)); tag.classList.add('out'); setTimeout(() => tag.remove(), 240); lit.forEach(c=>cells[c].classList.remove('hit')); }
+      lit.forEach(c=>cells[c].classList.add('hit')); sfx('wildLand', mg.M); await wait(T(400)); tag.classList.add('out'); setTimeout(() => tag.remove(), 240); lit.forEach(c=>cells[c].classList.remove('hit')); }
     if (fast) setStack(mg.r, mg.M, sticky); else { const rws = mg.from.map(f => f.c % ROWS).concat(mg.anchor ? [mg.anchor.c % ROWS] : []); await growStack(mg.r, mg.M, sticky, [Math.min(...rws), Math.max(...rws)]); }
-    if (!fast){ gridEl.classList.remove('shake'); void gridEl.offsetWidth; gridEl.classList.add('shake'); banner(mg.M > 1 ? `STACK! x${fx(mg.M)} ON REEL ${mg.r+1}` : `WILD REEL ON REEL ${mg.r+1}`); await wait(T(420)); }
-  }
+    if (!fast){ gridEl.classList.remove('shake'); void gridEl.offsetWidth; gridEl.classList.add('shake'); banner(mg.M > 1 ? `STACK! x${fx(mg.M)} ON REEL ${mg.r+1}` : `WILD REEL ON REEL ${mg.r+1}`); await wait(T(220)); }
+  }));
 }
 
 /* ---------- sound ---------- */
@@ -5061,54 +5110,109 @@ $('sfxvol').addEventListener('input', e => { if (soundOn && Snd && Snd.isReady &
 
 /* ---------- spin animation ---------- */
 const reelOff = r => reelEls[r].classList.remove('tease','legend');
+// Mango Surf spin helpers, put into the game's scope just before spinAnim (build.js). They only change how a spin looks
+// and when the player may hurry it; every result still comes from the server and is never changed.
+// - preSpin: the reels start the moment SPIN is pressed (blurred filler, never a badge or a wild) while the bet request is
+//   on its way; spinAnim takes over from it with the real result. If the request fails, the filler fades out and the
+//   previous board is back as it was, with the game's own notice. Bonus buys and replays do not use it.
+// - quick stop (slam): a second tap on SPIN, or Space, brings the reels still spinning in at once. Never the reels of a
+//   badge or x25 tease (they keep their slow-down), never with flags.disabledSlamstop. The round's minimum duration
+//   (flags.minimumRoundDuration, Stake) is applied after the animation as before, so a quick stop cannot get under it.
+// - thumpBadges / missCall: during a tease the landed badges thump as each teased reel stops; a tease that ends with two
+//   badges says so plainly (2 OF 3 BADGES), nothing more.
+var preSpin = null, slamK = 0;
+var slam = {on: false, req: false, tease: false};
+function slamUI(){ if (!slam) return; const b = $('spinbtn'); if (!b) return;
+  const ok = slam.on && !slam.req && !slam.tease && !flags.disabledSlamstop && !autoLeft;
+  b.classList.toggle('slam', ok); if (busy && !autoLeft) b.disabled = !ok; }
+function slamTry(){ if (!slam || !slam.on || slam.req || slam.tease || flags.disabledSlamstop || autoLeft) return false;
+  slam.req = true; slamK = 0; slamUI(); return true; }
+function preSpinStart(){
+  if (speed === 2 || preSpin) return;
+  const cellH = cells[0].getBoundingClientRect().height, gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, pitch = cellH + gap, N = ROWS + 10;
+  cells.forEach(c => c.classList.remove('hit')); $('lineov').innerHTML = '';
+  const strips = reelEls.map(col => { col.querySelectorAll('.pinov').forEach(o => o.remove());
+    const st = document.createElement('div'); st.className = 'strip blur'; const items = []; for (let i = 0; i < N; i++) items.push(symHTML(randInt(9)));
+    st.innerHTML = items.map(h => `<div class="sc" style="height:${cellH}px">${h}</div>`).join(''); st.style.transform = `translateY(${(-(N-ROWS)*pitch).toFixed(1)}px)`;
+    col.appendChild(st); return st; });
+  cells.forEach(c => c.classList.add('spinning'));
+  sfx('spinStart'); mascot('ollie');
+  const t0 = performance.now(), span = (N-ROWS)*pitch, v = pitch/T(24); let raf = 0, alive = true;
+  const frame = () => { if (!alive) return; const y = -span + ((performance.now()-t0)*v) % span; strips.forEach(st => { st.style.transform = `translateY(${y.toFixed(1)}px)`; }); raf = requestAnimationFrame(frame); };
+  raf = requestAnimationFrame(frame);
+  slam.on = true; slam.req = false; slam.tease = false; slamUI();
+  const stop = () => { alive = false; cancelAnimationFrame(raf); preSpin = null; };
+  preSpin = {age: () => performance.now() - t0,
+    // spinAnim takes over in the same task (no frame in between); release = it will not draw strips (super turbo / fast)
+    take(release){ stop(); strips.forEach(st => st.remove()); if (release){ cells.forEach(c => c.classList.remove('spinning')); slam.on = false; slam.req = false; slamUI(); } return this; },
+    // the bet request failed: the filler fades and the last board shows again, untouched
+    cancel(){ stop(); cells.forEach(c => c.classList.remove('spinning'));
+      strips.forEach(st => { st.style.transition = 'opacity .18s ease-out'; st.style.opacity = '0'; setTimeout(() => st.remove(), 200); });
+      slam.on = false; slam.req = false; slamUI(); }};
+}
+function thumpBadges(){ document.querySelectorAll('.grid .c.tape').forEach(c => { c.classList.remove('thump'); void c.offsetWidth; c.classList.add('thump'); }); }
+function missCall(){ const gb = gridEl.parentElement; if (!gb || speed === 2) return;
+  gb.querySelectorAll('.mcall').forEach(e => e.remove());
+  const el = document.createElement('div'); el.className = 'mcall'; el.textContent = '2 OF 3 BADGES'; gb.appendChild(el);
+  setTimeout(() => el.remove(), 1500); }
+
 async function spinAnim(g, mults, sticky, fast, isBonus, opt){
   opt = opt || {}; const merged = opt.merged || [], hold = opt.hold || [false,false,false,false,false];
+  const pre = preSpin ? preSpin.take(fast || speed === 2) : null; slam.tease = false;
   cells.forEach(c=>c.classList.remove('hit')); $('lineov').innerHTML = '';
   const dg = g.slice(), dm = mults.slice();
   merged.forEach(mg=>{ if (mg.upgrade && !mg.anchor) return; for (let row=0;row<ROWS;row++){ const c = TT.cell(mg.r,row), f = mg.from.find(x=>x.c===c); dg[c] = f ? W : mg.raw[row]; dm[c] = f ? f.m : mg.anchor && mg.anchor.c === c ? mg.anchor.m : 0; } });
   if (fast || speed === 2){ if (speed === 2 && !fast) mascot('ollie'); document.querySelectorAll('.pinov').forEach(o=>o.remove());
     // last spin's wild stacks go (the animated path drops them as each reel starts); held reels are redrawn from merged below
     reelEls.forEach((el, r) => { if (!hold[r]){ const o = el.querySelector('.stackov'); if (o) o.remove(); } }); for (let c=0;c<CELLS;c++){ if (hold[Math.floor(c/ROWS)]) continue; paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0); } merged.forEach(mg=>setStack(mg.r, mg.M, !!opt.lock)); return false; }
-  sfx('spinStart'); mascot('ollie');
+  if (!pre){ sfx('spinStart'); mascot('ollie'); }
   // anticipation: two tapes of a kind down means the later reels spin longer (the outcome is already fixed).
   // The rising tape chime only starts at the 2nd tape of a kind; the first one lands quietly.
   let a1 = 0, a2 = 0, antFrom = -1, antLegend = false;
   for (let r=0;r<REELS && !isBonus;r++){ if (r >= 2 && antFrom < 0 && (a1 >= 2 || a2 >= 2)){ antFrom = r; antLegend = a2 >= 2 && a1 < 2; } for (let row=0;row<ROWS;row++){ const x = g[TT.cell(r,row)]; if (x===S1) a1++; if (x===S2) a2++; } }
   let antWild = false; if (!isBonus){ for (let row=0;row<ROWS;row++){ const c = TT.cell(0,row); if (dg[c] === W && dm[c] >= 25) antWild = true; } if (merged.some(mg => mg.r === 0 && mg.from.some(f => f.m >= 25))) antWild = true; }
   if (antWild && antFrom < 0){ antFrom = 1; antLegend = false; }
-  const dur = [0,1,2,3,4].map(r => (isBonus ? 1000 : 850) + (isBonus ? 320 : 300)*r + (antFrom >= 0 && r >= antFrom ? 950*(r-antFrom+1) : 0)).map(T);
+  const antStep = antFrom <= 1 ? 450 : 650;
+  const dur = [0,1,2,3,4].map(r => (isBonus ? 700 : 620) + (isBonus ? 220 : 200)*r + (antFrom >= 0 && r >= antFrom ? antStep*(r-antFrom+1) : 0)).map(T);
   // the last reel that can still land the 3rd tape creeps in: about 3 s more after the reel before it lands
   const slowLast = antFrom >= 0;
-  if (slowLast) dur[REELS-1] = dur[REELS-2] + T(3500);
+  if (slowLast) dur[REELS-1] = dur[REELS-2] + T(1900);
   const cellH = cells[0].getBoundingClientRect().height, gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, pitch = cellH + gap;
   const finalHTML = c => symHTML(dg[c], dg[c]===W ? {mult: dm[c], sticky: !!(sticky && sticky[c])} : {});
   const reels = reelEls.map((col,r)=>{
     if (hold[r]) return {landed: true};
     const old = col.querySelector('.stackov'); if (old) old.remove();
-    const items = []; for (let row=0; row<ROWS; row++) items.push(finalHTML(TT.cell(r,row)));
+    const items = []; for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); items.push(sticky && sticky[c] ? symHTML(randInt(9)) : finalHTML(c)); }
     const crawl = slowLast && r === REELS-1;
     const nFill = Math.max(6, Math.round(dur[r]/(isBonus ? 85 : 70))); for (let i=0;i<nFill;i++) items.push(symHTML(randInt(9)));
-    for (let row=0; row<ROWS; row++) items.push(cells[TT.cell(r,row)].innerHTML);
+    for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); if (sticky && sticky[c] && cells[c].dataset.h === W + '|' + (dm[c] || 0) + '|false'){ const ms = cells[c].querySelector('.ms-W'); if (ms){ ms.insertAdjacentHTML('beforeend', '<i class="lk" aria-hidden="true"></i>'); cells[c].dataset.h = W + '|' + (dm[c] || 0) + '|true'; } }
+      items.push((sticky && sticky[c]) || pre ? symHTML(randInt(9)) : cells[c].innerHTML); }
     const st = document.createElement('div'); st.className = 'strip blur'; st.innerHTML = items.map(h=>`<div class="sc" style="height:${cellH}px">${h}</div>`).join('');
     const D = (items.length-ROWS)*pitch; st.style.transform = `translateY(${-D}px)`; col.appendChild(st);
     for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); if (!(sticky && sticky[c])) cells[c].classList.add('spinning'); }
-    return {st, D, landed: false, crawl};
+    return {st, D, landed: false, crawl, y: null, p0: crawl ? Math.max(.35, Math.min(.8, dur[REELS-2]/dur[REELS-1])) : 0};
   });
-  const over = .16*pitch, t0 = performance.now(); let antOn = false, n1 = 0, n2 = 0;
+  const over = .16*pitch, t0 = performance.now() - (pre ? Math.min(pre.age(), T(200)) : 0); let antOn = false, n1 = 0, n2 = 0;
+  slam.on = true; if (!pre) slam.req = false; slamUI();
   await new Promise(done => { const frame = () => { const t = performance.now()-t0; let all = true;
     reels.forEach((R,r)=>{ if (R.landed) return;
-      const p = Math.min(1, t/dur[r]); let y;
-      if (R.crawl){ const p0 = .72, v = 2/(.96+p0);   // steady full speed, then one smooth slow-down into the stop
-        if (p < p0) y = -R.D + (R.D+over)*v*p; else if (p < .96){ const q = (p-p0)/(.96-p0); y = -R.D + (R.D+over)*(v*p0 + (1-v*p0)*(1-(1-q)*(1-q))); } else { const q = (p-.96)/.04; y = over*Math.cos(q*Math.PI/2); } }
+      if (slam.req && R.slamAt == null && !(antFrom >= 0 && r >= antFrom) && t/dur[r] < .86){ R.slamAt = t; R.y0 = R.y == null ? -R.D : R.y; R.k = slamK++; }
+      let p = Math.min(1, t/dur[r]), y;
+      if (R.slamAt != null){ const S = T(150) + T(40)*R.k, B = T(110), q = (t - R.slamAt)/S;
+        if (q < 1){ y = R.y0 + (over - R.y0)*(1 - (1-q)*(1-q)); p = .45 + .2*q; } else { const q2 = Math.min(1, (t - R.slamAt - S)/B); y = over*Math.cos(q2*Math.PI/2); p = q2 >= 1 ? 1 : .9; } }
+      else if (R.crawl){ const p0 = R.p0, v = 3/(.96+2*p0);   // full speed, then one long smooth slow-down into the stop
+        if (p < p0) y = -R.D + (R.D+over)*v*p; else if (p < .96){ const q = (p-p0)/(.96-p0); y = -R.D + (R.D+over)*(v*p0 + (1-v*p0)*(1-Math.pow(1-q, 3))); } else { const q = (p-.96)/.04; y = over*Math.cos(q*Math.PI/2); } }
       else if (p < .86){ const q = p/.86; y = -R.D + (R.D+over)*(1 - Math.pow(1-q, 2.4)); } else { const q = (p-.86)/.14; y = over*Math.cos(q*Math.PI/2); }
-      R.st.style.transform = `translateY(${y.toFixed(1)}px)`; if (p > .55) R.st.classList.remove('blur');
+      R.y = y; R.st.style.transform = `translateY(${y.toFixed(1)}px)`; if (p > .55) R.st.classList.remove('blur');
       if (p >= 1){ R.landed = true; R.st.remove(); reelOff(r); reelEls[r].querySelectorAll('.pinov').forEach(o=>o.remove());
-        for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); cells[c].classList.remove('spinning'); paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0);
+        for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); cells[c].classList.remove('spinning'); if (!(sticky && sticky[c] > 0 && cells[c].dataset.h === dg[c] + '|' + (dm[c] || 0) + '|true')) paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0);
           { const sc = R.st.children[row], sm = sc && sc.firstElementChild, cm = cells[c].firstElementChild; if (sm && cm && sm.outerHTML === cm.outerHTML) cells[c].replaceChildren(sm); }
-          if (dg[c]===S1){ n1++; if (n1 >= 2) sfx('scatterLand', n1); if (r < REELS-1 && n1 === 3) banner('SESH BONUS! ONE MORE TAPE FOR LEGEND'); if (r < REELS-1 && n1 === 4) banner('LEGEND! ONE MORE TAPE FOR 12 SPINS'); } else if (dg[c]===S2){ n2++; if (n2 >= 2) sfx('scatterLand', n2); } else if (dg[c]===W && !(sticky && sticky[c])) sfx('wildLand', dm[c]); }
-        sfx('reelStop', r); if (r+1 === antFrom && !antOn){ antOn = true; sfx('anticipation', true); banner(antWild && n1 < 2 ? 'x25 WILD ON REEL 1...' : n1 >= 3 ? 'SESH BONUS! ONE MORE TAPE FOR LEGEND' : 'TWO SESH TAPES... ONE MORE!'); document.body.classList.add('chase'); for (let k=antFrom;k<REELS;k++){ reelEls[k].classList.add('tease'); reelEls[k].classList.toggle('legend', antLegend); } }
+          if (dg[c]===S1){ n1++; if (n1 >= 3){ const bc = cells[c]; bc.classList.add('burst'); setTimeout(() => bc.classList.remove('burst'), 1000); } if (n1 >= 2) sfx('scatterLand', n1); if (r < REELS-1 && n1 === 3) banner('SESH BONUS! ONE MORE TAPE FOR LEGEND'); if (r < REELS-1 && n1 === 4) banner('LEGEND! ONE MORE TAPE FOR 12 SPINS'); } else if (dg[c]===S2){ n2++; if (n2 >= 2) sfx('scatterLand', n2); } else if (dg[c]===W && !(sticky && sticky[c])) sfx('wildLand', dm[c]); }
+        sfx('reelStop', r); if (antOn) thumpBadges(); if (r+1 === antFrom && !antOn){ antOn = true; sfx('anticipation', true); banner(antWild && n1 < 2 ? 'x25 WILD ON REEL 1...' : n1 >= 3 ? 'SESH BONUS! ONE MORE TAPE FOR LEGEND' : 'TWO SESH TAPES... ONE MORE!'); document.body.classList.add('chase'); slam.tease = true; slamUI(); for (let k=antFrom;k<REELS;k++){ reelEls[k].classList.add('tease'); reelEls[k].classList.toggle('legend', antLegend); } }
       } else all = false; });
-    if (all){ if (antOn) sfx('anticipation', false); document.body.classList.remove('chase'); done(); } else requestAnimationFrame(frame); }; requestAnimationFrame(frame); });
+    if (antOn){ let f = false; reelEls.forEach(el => { const on = !f && el.classList.contains('tease'); if (on) f = true; el.classList.toggle('next', on); }); }
+    if (all){ slam.on = false; slam.req = false; slam.tease = false; slamUI(); if (antOn) sfx('anticipation', false); document.body.classList.remove('chase'); reelEls.forEach(el => el.classList.remove('next'));
+      if (antOn && n1 === 2 && !isBonus && !opt.paid) missCall(); done(); } else requestAnimationFrame(frame); }; requestAnimationFrame(frame); });
   if (merged.length) await mergeAnim(merged, false, !!opt.lock);
   return antOn;
 }
@@ -5124,9 +5228,10 @@ async function celebrate(x, amount, cost, unitLabel){
   if (x < 1){ if (amount > 0){ $('msg').innerHTML = `<span style="color:var(--muted)">+${fmt$(amount)}, under the ${fmt$(cost)} it cost.</span>`; sfx('win', x); } return; }
   sfx('win', x); const reached = LADDER.filter(([th])=>x >= th);
   if (!reached.length || speed === 2){ const top = reached[reached.length-1]; $('msg').innerHTML = `<strong class="good">${top ? top[1]+' ' : 'WIN '}${fmt$(amount)}</strong> (${fx(x)}x)`; mascot(top ? top[2] : 'kickflip'); return; }
+  $('stage').classList.add('bwup'); await wait(T(450)); $('stage').classList.remove('bwup');
   const cel = $('celebrate'), art = $('cel-art'), word = $('cel-t'); cel.hidden = false; word.textContent = 'SESSION...'; animInto(art, 'idle'); $('cel-x').textContent = ''; $('cel-bar').style.width = '0%';
   const bounds = [0].concat(reached.map(([th])=>th*cost), [amount]), weights = bounds.slice(1).map((v,i)=> i === 0 ? .7 : i === bounds.length-2 ? 1.2 : 1);
-  const beat = T(Math.min(2400, 1400 + 200*reached.length)), dur = weights.reduce((a,b)=>a+b,0)*beat, stop = sfx('countUp', dur, x);
+  const beat = T(Math.min(1600, 900 + 150*reached.length)), dur = weights.reduce((a,b)=>a+b,0)*beat, stop = sfx('countUp', dur, x);
   let tier = -1;
   const setTier = i => { tier = i; const [th, name, pose] = reached[i]; word.textContent = name; animInto(art, pose); mascot(pose);
     word.classList.remove('pop'); art.classList.remove('pop'); void word.offsetWidth; word.classList.add('pop'); art.classList.add('pop'); sfx('scatterLand', Math.min(5, i+2)); sfx('wildLand', th); };
@@ -5139,7 +5244,7 @@ async function celebrate(x, amount, cost, unitLabel){
       const next = LADDER.find(([th])=>th*cost > v + 1e-9), lo = tier >= 0 ? reached[tier][0]*cost : 0;
       if (next && next[0] <= x){ $('cel-bar').style.width = (Math.min(1,(v-lo)/(next[0]*cost-lo))*100).toFixed(0)+'%'; $('cel-next').textContent = `next trick: ${next[1]} at ${fmt$(next[0]*cost)}`; }
       else { $('cel-bar').style.width = '100%'; $('cel-next').textContent = tt >= dur ? 'landed it.' : ''; }
-      if (tt >= dur){ if (typeof stop === 'function' && fin) stop(); setTimeout(done, fin ? 400 : T(1300)); } else requestAnimationFrame(frame); };
+      if (tt >= dur){ if (typeof stop === 'function' && fin) stop(); setTimeout(done, fin ? 400 : T(800)); } else requestAnimationFrame(frame); };
     requestAnimationFrame(frame); });
   cel.hidden = true; skipCel = null; if (window.Sk8Anim) Sk8Anim.stop(art);
   $('msg').innerHTML = `<strong class="good">${reached[reached.length-1][1]} ${fmt$(amount)}</strong> (${fx(x)}x)`;
@@ -5147,7 +5252,7 @@ async function celebrate(x, amount, cost, unitLabel){
 $('celebrate').onclick = () => { if (skipCel) skipCel(); };
 // a plain count-up for a free spin's big hit or a bonus total
 async function plainCount(amount, title, dur){
-  dur = Math.max(dur, T(1600 + 1000*Math.log10(Math.max(1, amount/roundBet))));
+  dur = Math.max(dur, T(1100 + 700*Math.log10(Math.max(1, amount/roundBet))));
   if (speed === 2){ $('msg').innerHTML = `<strong class="good">${title} ${fmt$(amount)}</strong>`; return; }
   const cel = $('celebrate'), art = $('cel-art'); cel.hidden = false; $('cel-t').textContent = title; animInto(art, amount >= 25*roundBet ? 'treflip' : 'kickflip');
   $('cel-x').textContent = `${fx(amount/roundBet)}x YOUR BET`; $('cel-next').textContent = ''; $('cel-bar').style.width = '0%';
@@ -5155,7 +5260,7 @@ async function plainCount(amount, title, dur){
   await new Promise(done => { const t0 = performance.now(); let fin = false; skipCel = () => { fin = true; };
     const frame = () => { const tt = fin ? dur : Math.min(dur, performance.now()-t0), q = tt/dur, v = logLerp(0, amount, q);
       $('cel-v').textContent = fmt$(tt >= dur ? amount : cents(v)); $('cel-bar').style.width = (q*100).toFixed(0) + '%';
-      if (tt >= dur){ if (typeof stop === 'function' && fin) stop(); setTimeout(done, fin ? 250 : T(700)); } else requestAnimationFrame(frame); };
+      if (tt >= dur){ if (typeof stop === 'function' && fin) stop(); setTimeout(done, fin ? 250 : T(500)); } else requestAnimationFrame(frame); };
     requestAnimationFrame(frame); });
   cel.hidden = true; skipCel = null; if (window.Sk8Anim) Sk8Anim.stop(art);
 }
@@ -5190,7 +5295,7 @@ async function playBonus(B, cost, startWin){
   const name = BONUS[B.tier].name.toUpperCase(), N = B.nSpins || B.spins.length || 10;
   clearStacks(); $('stage').classList.add('bonus'); mascot('grind'); banner(`${name} BONUS! ${N} FREE SPINS`); sfx('bonusTrigger');
   $('totalbox').hidden = false; $('totalwin').textContent = fmt$((startWin || 0)*roundBet);
-  await wait(T(1400));
+  await wait(T(900));
   let run = 0;
   for (let i=0;i<B.spins.length;i++){
     const sp = B.spins[i], prev = i ? B.spins[i-1] : null; try { MangoExtras.spins(B.spins.length - i - 1); } catch(e){}
@@ -5207,7 +5312,7 @@ async function playBonus(B, cost, startWin){
     const steps = comboSteps(sp.wins);
     banner(steps.length ? `TRICK COMBO! ${stepText(steps)}` : `${name} · SPIN ${i+1} OF ${N} · ${fmt$(run*roundBet)}${sp.combo ? ` · COMBO ${sp.combo}` : ''}`);
     if (sp.win >= 5) await plainCount(sp.win*roundBet, bigHitTitle(sp.win), T(1300));   // 5x the bet or more
-    await wait(T(sp.win > 0 ? 1200 : 750));
+    await wait(T(sp.win > 0 ? 700 : 350));
   }
   if (B.topUp > 0){ run += B.topUp; $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     banner(`MIN WIN · TOPPED UP TO ${fmt$(B.total*roundBet)} (10% OF THE BONUS PRICE)`); await wait(T(1400)); }
@@ -5295,9 +5400,9 @@ async function animateRound(res, cost){
   let antOn = false;
   if (res.kind === 'buy'){ if (res.g){ await spinAnim(res.g, res.mults, null, false, false, {}); await wait(T(500)); } await playBonus(res.bonus, cost, 0); }
   else {
-    antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged});
+    antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged, paid: res.total > 0});
     drawLines(res.wins, res.ramps); $('lastwin').textContent = fmt$(res.lineWin*roundBet); await showTopUp(res);
-    if (res.bonus){ autoLeft = 0; await wait(T(700)); await playBonus(res.bonus, cost, res.lineWin); }
+    if (res.bonus){ autoLeft = 0; await wait(T(450)); await playBonus(res.bonus, cost, res.lineWin); }
   }
   const win = res.total*roundBet; $('lastwin').textContent = fmt$(win);
   if (win <= 0){ $('msg').textContent = 'No win.'; mascot(antOn ? 'bail' : 'idle'); if (antOn) sfx('bail'); }
@@ -5340,9 +5445,9 @@ async function playRound(name){
   busy = true; roundBet = amount/API; $('msg').textContent = ''; clearStacks(); resetWinBoxes(); meta();
   banner(name === 'BASE' ? '3 WILDS OR 3 SESH TAPES START A BONUS · 4 TAPES = LEGEND' : name === 'ANTE' ? 'BONUS BOOST' : name.startsWith('SPECIAL') ? `${TRICK[+name.slice(-1)-1]} · TRICK SPIN` : `${BONUS[+name.slice(-1)-1].name.toUpperCase()} BONUS`);
   const t0 = performance.now();
-  let d;
+  let d; if (!name.startsWith('BONUS') && !replay) preSpinStart();
   try { d = await RGS.play(amount, name); }
-  catch(e){ busy = false; meta(); showError(e); return; }
+  catch(e){ if (preSpin) preSpin.cancel(); busy = false; meta(); showError(e); return; }
   balance = d.balance.amount; meta();
   const res = ttFromBook(bookEvents(d.round)), win = await animateRound(res, cost);
   const minMs = +flags.minimumRoundDuration || 0, el = performance.now() - t0;
@@ -5351,7 +5456,7 @@ async function playRound(name){
   sess.spins++; sess.wag += cost; sess.won += win;
   $('spinsub').textContent = `${name === 'BASE' ? 'Spin' : name} · bet ${fmt$(cost)} · won ${fmt$(win)}`;
   busy = false; meta();
-  if (autoLeft > 0 && UI_MODES.some(m => m.id === name)){ autoLeft--; setTimeout(() => playRound(mode), [450, 150, 250][speed]); } else autoLeft = 0;
+  if (autoLeft > 0 && UI_MODES.some(m => m.id === name)){ autoLeft--; setTimeout(() => playRound(mode), [250, 120, 200][speed]); } else autoLeft = 0;
   meta();
 }
 // a round left open (closed tab, lost connection): show it, then close it so the win is paid
@@ -5425,7 +5530,7 @@ function meta(){
   $('balance').textContent = fmtBal(balance); $('cost').textContent = fmtBal(cost);
   $('bet').disabled = busy || autoLeft > 0;
   const can = !busy && balance >= cost && levels.length;
-  $('spinbtn').disabled = !can && !autoLeft; $('spinbtn').textContent = autoLeft ? `STOP (${autoLeft})` : mode === 'BASE' ? 'SPIN' : mode === 'ANTE' ? 'BOOST SPIN' : TRICK[+mode.slice(-1)-1] + ' SPIN';
+  $('spinbtn').disabled = !can && !autoLeft; slamUI(); $('spinbtn').textContent = autoLeft ? `STOP (${autoLeft})` : mode === 'BASE' ? 'SPIN' : mode === 'ANTE' ? 'BOOST SPIN' : TRICK[+mode.slice(-1)-1] + ' SPIN';
   $('autobtn').disabled = !can || autoLeft > 0;
   renderModes(); renderJuris(); slotChrome();
 }
@@ -5440,7 +5545,7 @@ function renderBets(){
   $('bet').innerHTML = levels.map((l, i) => `<option value="${i}">${fmtBal(l)}</option>`).join(''); $('bet').value = String(betIdx);
 }
 $('bet').onchange = e => { betIdx = +e.target.value; bet = levels[betIdx]/API; meta(); };
-$('spinbtn').onclick = () => { if (autoLeft){ autoLeft = 0; meta(); return; } playRound(mode); };
+$('spinbtn').onclick = () => { if (slamTry()) return; if (autoLeft){ autoLeft = 0; meta(); return; } playRound(mode); };
 $('autobtn').onclick = async () => {
   if (busy || flags.disabledAutoplay) return;
   const n = await modal('AUTOPLAY', `<p style="margin:0">Play automatically at <strong>${fmtBal(levels[betIdx]*costOf(mode))}</strong> per spin. Autoplay stops when a bonus starts, when you press STOP, or when the balance runs low.</p><p class="sub" style="margin:8px 0 0">How many spins?</p>`,
@@ -5457,6 +5562,7 @@ document.addEventListener('keydown', e => {
   if (/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement.tagName)) return;
   e.preventDefault();
   if (skipCel){ if (!flags.disabledSlamstop) skipCel(); return; }
+  if (slamTry()) return;
   if (autoLeft){ autoLeft = 0; meta(); return; }
   playRound(mode);
 });
