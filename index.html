@@ -3829,7 +3829,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
         el.style.left = (cx - rr) + 'px'; el.style.top = (cy - rr) + 'px'; el.style.width = el.style.height = (2*rr) + 'px'; });
     }
     function tick(){ if (document.hidden) return; const live = !!(window.MangoPreview && MangoPreview.ready()); box.classList.toggle('live', live); if (live) place(); }
-    addEventListener('resize', place); place(); setInterval(tick, 400);
+    // first placing waits for the next frame: measuring here, in the middle of the skin's start-up, forced the page's first
+    // full layout on its own (400 ms on a 4x-slowed phone); one frame later it reads the layout the browser does anyway
+    addEventListener('resize', place); requestAnimationFrame(place); setInterval(tick, 400);
   }
 
   // ---------- HUD: one rounded control bar (menu | balance | bet with up/down | round spin | autoplay, turbo, mode) ----------
@@ -4046,7 +4048,8 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;   // soft motion: the crabs stand still on the plank
         el._walk = el.animate([{transform: at(0), offset: 0}, {transform: at(0), offset: .12}, {transform: at(dx), offset: .45}, {transform: at(dx), offset: .62}, {transform: at(0), offset: .95}, {transform: at(0), offset: 1}],
           {duration: c.t * 1000, iterations: Infinity, easing: 'ease-in-out', delay: (c.d || 0) * 1000}); }); };
-    fit(); new ResizeObserver(fit).observe(st);
+    // the observer's first report (next frame) does the first fit: no separate forced layout at start-up
+    new ResizeObserver(fit).observe(st);
   }
 
   // ---------- TOTAL WIN only: outside a bonus it shows the round's win (the game only fills it during bonuses) ----------
@@ -4129,7 +4132,8 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     const world = box.firstElementChild, sea = box.querySelector('.sc-sea');
     const fit = () => { const R = host.getBoundingClientRect(), k = Math.max(R.width / 2000, R.height / 1125);
       world.style.transform = `translate(${(R.width - 2000*k)/2}px, ${R.height - 1125*k}px) scale(${k})`; };
-    fit(); addEventListener('resize', fit);
+    // first fit on the next frame, with the rest of the start-up measuring (no forced layout of its own; still under the loader)
+    requestAnimationFrame(fit); addEventListener('resize', fit);
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     // a dolphin jump every 20-60 s (the whale breach is retired)
     let n = 0;
@@ -5567,9 +5571,10 @@ function startSocial(){
 async function bootPlay(){
   $('calib').textContent = 'connecting...';
   const authP = RGS.authenticate(); authP.catch(() => {});
-  try { Object.assign(GAME, await RGS.game()); renderRules(); } catch(e) {}
+  let gameIn = false; try { Object.assign(GAME, await RGS.game()); gameIn = true; } catch(e) {}
+  const rulesNow = () => { if (gameIn) setTimeout(() => { try { renderRules(); } catch(e) {} }, 0); };
   let a;
-  try { a = await authP; } catch(e){ $('calib').textContent = ''; showError(e); return; }
+  try { a = await authP; } catch(e){ $('calib').textContent = ''; rulesNow(); showError(e); return; }
   balance = a.balance.amount; currency = (a.balance.currency || currency).toUpperCase();
   const c = a.config || {}; flags = c.jurisdiction || {};
   if (flags.socialCasino) social = true;
@@ -5578,7 +5583,7 @@ async function bootPlay(){
   if (flags.disabledAutoplay) $('autobtn').hidden = true;
   if (flags.disabledSlamstop) $('cel-skip').hidden = true;
   if (social) startSocial();
-  renderBets(); renderSpeed(); $('calib').textContent = ''; meta();
+  renderBets(); renderSpeed(); $('calib').textContent = ''; meta(); rulesNow();
   if (flags.displaySessionTimer) setInterval(renderJuris, 1000);
   deposits = (c.deposits && c.deposits.length) ? c.deposits : deposits; renderWallet();
   playerName = (a.player && a.player.name) || ''; renderName(); if ($('namebtn')) $('namebtn').onclick = () => { openLayer(null); askName(false); };
