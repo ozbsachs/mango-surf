@@ -2671,10 +2671,12 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
  * Mango Surf audio - Web Audio module (play money learning project).
  * Fork of sk8-audio.js: same public API. Defines exactly one global: window.MangoAudio.
  *
- * Music: one recorded loop, Sunlit Lagoon (audio/sunlit-lagoon-v1.m4a / .webm, 68.571 s, gapless; see "music" below).
- *   It is the only file this module loads, after the loading screen, at low priority. Base game: as mastered. Bonus:
- *   it dips under the trigger's wave, then swells +2 dB for the free spins and settles back after the bonus-end stinger.
- * Effects: synthesized, G major / G major pentatonic (win stingers, chimes, plops, ticks, the bonus tension loop).
+ * Music: one recorded loop, surf theme v2 (audio/surf-theme-v2.*, 85.618 s, gapless; see "music" below): a mellow
+ *   tropical groove in G major (G C Em D), ~112 bpm, staccato mallets, round sub bass. The only file this module loads,
+ *   after the loading screen, at low priority. Bonus: it dips under the trigger's wave, swells +2 dB for the free spins
+ *   and settles back after the bonus-end stinger.
+ * Effects: synthesized to sit in that track: G major / pentatonic, its mallet timbre, a sub G under big stingers, and
+ *   every rhythmic part on its tempo, locked to its beat while it plays (grid()).
  *
  * Graph:
  *   music loop (AudioBufferSource, loop points) -> fade -> musicMode -> musicBus -> duck -> musicLP -> musicVol --\
@@ -2689,7 +2691,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 
   // ---------- config ----------
   var MASTER = 0.9;          // master gain when unmuted
-  var MUSIC_LEVEL = 0.42;    // music bus scaler: the track sits as loud (RMS) as the old synth music did, peaks ~ -17 dBFS at 0.8
+  var MUSIC_LEVEL = 0.154;   // music bus scaler: the track is mastered at -15.5 LUFS; this keeps the old in-game loudness
   var TICK_MS = 25;          // count-up tick scheduler interval
   var CAP = { sfx: 40, music: 96 };  // max simultaneous voices per pool (oldest is stolen)
   var LP_OPEN = 20000, LP_DUCK = 4500;   // music low-pass: open (the track is mixed and mastered), muffled under a win
@@ -2876,7 +2878,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var out = ctx.createGain(); out.gain.value = wet * 0.3;
     var lpo = ctx.createBiquadFilter(); lpo.type = 'lowpass'; lpo.frequency.value = 3600; lpo.Q.value = 0.5;
     inp.connect(hp); hp.connect(ap1); ap1.connect(ap2);
-    var times = [0.029, 0.041, 0.053];
+    var times = [1 / mf(31), 1 / mf(26), 1 / mf(14)];   // periods of G1, D1, D0: the spring rings on G and D harmonics
     for (var k = 0; k < times.length; k++) {
       var d = ctx.createDelay(0.2); d.delayTime.value = times[k];
       var damp = ctx.createBiquadFilter(); damp.type = 'lowpass'; damp.frequency.value = 2600; damp.Q.value = 0.5;
@@ -2888,33 +2890,42 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   }
 
   // ---------- shared SFX building blocks ----------
-  // steel drum: strong 2nd and 3rd partials, soft mallet ping
+  // steel pan, voiced like the track's lead mallet: fundamental, a strong octave (-7 dB), a faint twelfth (-20 dB)
+  // and a soft stick ping
   function pan(v, t, f, dur, peak) {
     var g1 = gn(v, v.out); envAD(g1.gain, t, 0.003, peak * 0.7, dur);
-    var g2 = gn(v, v.out); envAD(g2.gain, t, 0.003, peak * 0.32, dur * 0.6);
-    var g3 = gn(v, v.out); envAD(g3.gain, t, 0.002, peak * 0.14, dur * 0.3);
-    var g4 = gn(v, v.out); envAD(g4.gain, t, 0.001, peak * 0.1, 0.03);
+    var g2 = gn(v, v.out); envAD(g2.gain, t, 0.003, peak * 0.31, dur * 0.6);
+    var g3 = gn(v, v.out); envAD(g3.gain, t, 0.002, peak * 0.07, dur * 0.3);
+    var g4 = gn(v, v.out); envAD(g4.gain, t, 0.001, peak * 0.05, 0.025);
     osc(v, 'sine', f, t, t + dur + 0.05, g1);
     osc(v, 'sine', f * 2, t, t + dur * 0.6 + 0.05, g2, 0, 0, 4);
     osc(v, 'sine', f * 3, t, t + dur * 0.3 + 0.05, g3, 0, 0, -5);
-    osc(v, 'triangle', f * 4.2, t, t + 0.06, g4);
+    osc(v, 'triangle', f * 4, t, t + 0.05, g4);
   }
-  // marimba: fundamental plus the 4th-ish partial and a felt-mallet tap
-  function mar(v, dest, t, f, peak, dur) {
+  // the track's staccato mallet/pluck: round fundamental, octave a little shorter, a felt tap; no inharmonic partials
+  function mallet(v, dest, t, f, peak, dur) {
     var g1 = gn(v, dest); envAD(g1.gain, t, 0.002, peak, dur);
-    var g2 = gn(v, dest); envAD(g2.gain, t, 0.001, peak * 0.25, dur * 0.2);
-    var g3 = gn(v, dest); envAD(g3.gain, t, 0.001, peak * 0.15, 0.012);
+    var g2 = gn(v, dest); envAD(g2.gain, t, 0.002, peak * 0.42, dur * 0.55);
+    var g3 = gn(v, dest); envAD(g3.gain, t, 0.001, peak * 0.12, 0.012);
     osc(v, 'sine', f, t, t + dur + 0.05, g1);
-    osc(v, 'sine', f * 3.93, t, t + dur * 0.2 + 0.05, g2);
-    noise(v, t, t + 0.03, filt(v, 'bandpass', f * 2, 2, g3));
+    osc(v, 'sine', f * 2, t, t + dur * 0.55 + 0.05, g2, 0, 0, 3);
+    noise(v, t, t + 0.03, filt(v, 'bandpass', Math.min(f * 3, 6000), 2, g3));
+  }
+  // a short sub-bass note under the big moments, like the track's round bass (G1 = midi 31)
+  function sub(v, t, midi, peak, dur) {
+    var g = gn(v, v.out); envAHR(g.gain, t, 0.008, peak, dur * 0.5, 0.5, dur * 0.5);
+    osc(v, 'sine', mf(midi), t, t + dur + 0.05, g);
+    osc(v, 'sine', mf(midi + 12), t, t + dur * 0.5 + 0.05, gc(v, 0.25, g));
   }
   function bell(v, t, f, peak, dur) {
     var g1 = gn(v, v.out); envAD(g1.gain, t, 0.002, peak, dur);
     var g2 = gn(v, v.out); envAD(g2.gain, t, 0.002, peak * 0.3, dur * 0.35);
-    var g3 = gn(v, v.out); envAD(g3.gain, t, 0.001, peak * 0.12, dur * 0.12);
+    var g3 = gn(v, v.out); envAD(g3.gain, t, 0.001, peak * 0.06, dur * 0.1);
+    var g4 = gn(v, v.out); envAD(g4.gain, t, 0.002, peak * 0.25, dur * 0.5);
     osc(v, 'sine', f, t, t + dur + 0.05, g1);
     osc(v, 'sine', f * 2.76, t, t + dur * 0.35 + 0.05, g2);
-    osc(v, 'sine', f * 5.4, t, t + dur * 0.12 + 0.05, g3);
+    osc(v, 'sine', f * 5.4, t, t + dur * 0.1 + 0.05, g3);
+    osc(v, 'sine', f * 2, t, t + dur * 0.5 + 0.05, g4, 0, 0, 3);
   }
   function cymbal(v, t, peak, dur) {
     var g = gn(v, v.out); envAD(g.gain, t, 0.003, peak, dur);
@@ -2924,7 +2935,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   }
   function thump(v, t, peak) {
     var g = gn(v, v.out); envAD(g.gain, t, 0.002, peak, 0.2);
-    osc(v, 'sine', 160, t, t + 0.25, g, 48, 0.1);
+    osc(v, 'sine', 160, t, t + 0.25, g, mf(31), 0.1);
   }
   // water splash: falling band of noise, a hiss of spray and a low plunk
   function splash(v, t, peak, dur) {
@@ -2950,7 +2961,8 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var g3 = gn(v, v.out); envAD(g3.gain, t, 0.02, peak * 0.7, dur * 0.7);
     noise(v, t, t + dur * 0.7 + 0.05, filt(v, 'lowpass', 180, 0.7, g3));
   }
-  // twangy surf-guitar pluck: saw + a little square through a mid peak and a closing low-pass.
+  // surf-guitar pluck, warmed to the track's soft mix: saw + a little square through a gentle mid peak and a closing
+  // low-pass (rounder and darker than Sk8's twang).
   // o: { bright, from (start freq for a slide), glide, sus, det }
   function pluck(v, dest, t, f, len, peak, o) {
     o = o || {};
@@ -2958,20 +2970,20 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var g = gn(v, dest);
     envAHR(g.gain, t, 0.003, peak, len, o.sus || 0.3, 0.18);
     var pk = v.add(ctx.createBiquadFilter());
-    pk.type = 'peaking'; pk.frequency.value = 1400; pk.Q.value = 1.2; pk.gain.value = 5; pk.connect(g);
-    var top = o.bright ? 4400 : 3200;
-    var lp = filt(v, 'lowpass', top, 1.4, pk);
+    pk.type = 'peaking'; pk.frequency.value = 1000; pk.Q.value = 1; pk.gain.value = 3; pk.connect(g);
+    var top = o.bright ? 3400 : 2400;
+    var lp = filt(v, 'lowpass', top, 1.2, pk);
     lp.frequency.setValueAtTime(hz(top), t);
-    lp.frequency.exponentialRampToValueAtTime(o.bright ? 1300 : 900, t + len + 0.1);
+    lp.frequency.exponentialRampToValueAtTime(o.bright ? 1000 : 700, t + len + 0.1);
     var end = t + len + 0.2, f0 = o.from || f * 0.988, gl = o.from ? (o.glide || Math.min(0.25, len * 0.6)) : 0.035;
     osc(v, 'sawtooth', f0, t, end, lp, f, gl, o.det || 0);
-    osc(v, 'square', f0, t, end, gc(v, 0.3, lp), f, gl, 5);
+    osc(v, 'square', f0, t, end, gc(v, 0.15, lp), f, gl, 5);
   }
-  // strummed surf-guitar chord with a tremolo bar and spring
+  // strummed surf-guitar chord with a spring and a tremolo in sixteenth notes of the track's tempo
   function gchord(v, t, notes, dur, peak, rate) {
     var trem = gc(v, 0.8, v.out);
     send(v, trem, 0.6);
-    osc(v, 'sine', rate || 6.5, t, t + dur + 0.6, gc(v, 0.2, trem.gain));
+    osc(v, 'sine', rate || 4 / BEAT, t, t + dur + 0.6, gc(v, 0.2, trem.gain));
     var sh = shaper(v, curveSoft, trem);
     var p = peak / Math.sqrt(notes.length);
     for (var i = 0; i < notes.length; i++) pluck(v, sh, t + i * 0.012, mf(notes[i]), dur, p, { sus: 0.55 });
@@ -2983,7 +2995,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   function neutralTick() {
     var v = sfxVoice(), t = tNow();
     var g = gn(v, v.out); envAD(g.gain, t, 0.001, 0.1, 0.035);
-    osc(v, 'triangle', 1050, t, t + 0.06, filt(v, 'bandpass', 1400, 1, g));
+    osc(v, 'triangle', mf(83), t, t + 0.06, filt(v, 'bandpass', 1400, 1, g));   // B5, in the key, no fanfare
   }
   // gentle wipe-out: guitar slide falling with a wobble, then a splash
   function wipe(v, t, k) {
@@ -2993,17 +3005,20 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     g.gain.linearRampToValueAtTime(0.14 * k, t + 0.55);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
     send(v, g, 0.7);
-    var lp = filt(v, 'lowpass', 2600, 1, g);
+    var lp = filt(v, 'lowpass', 2000, 1, g);
     var o = ctx.createOscillator(), o2 = ctx.createOscillator();
     o.type = 'sawtooth'; o2.type = 'square';
-    var fs = [o.frequency, o2.frequency];
+    var fs = [o.frequency, o2.frequency], fall = [74, 72, 71, 69, 67, 66, 64, 62, 60, 59, 57, 55, 54, 52, 50];
+    var st = Math.min(0.75 / fall.length, beatLen(t) / 12);   // down the G major scale, D5 to D3, in 32nd triplets
     for (var i = 0; i < 2; i++) {
       fs[i].setValueAtTime(mf(74), t);
-      fs[i].exponentialRampToValueAtTime(mf(74) * 1.03, t + 0.06);
-      fs[i].exponentialRampToValueAtTime(mf(50), t + 0.8);
+      for (var j = 1; j < fall.length; j++) {
+        fs[i].setValueAtTime(mf(fall[j - 1]), t + j * st - 0.012);
+        fs[i].exponentialRampToValueAtTime(mf(fall[j]), t + j * st);
+      }
     }
     o.connect(lp); o2.connect(gc(v, 0.3, lp));
-    var lfo = ctx.createOscillator(); lfo.frequency.value = 6;
+    var lfo = ctx.createOscillator(); lfo.frequency.value = 3 / BEAT;   // wobble in eighth-note triplets
     var depth = gc(v, 9, o.frequency); lfo.connect(depth); depth.connect(o2.frequency);
     v.play(lfo, t, t + 0.9); v.play(o, t, t + 0.9); v.play(o2, t, t + 0.9);
     splash(v, t + 0.72, 0.17 * k, 0.5);
@@ -3056,15 +3071,19 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   }
 
   // ---------- music: one recorded loop, gapless ----------
-  // Sunlit Lagoon (audio/sunlit-lagoon-v1.m4a AAC 128k for every browser, .webm Opus 80k where Opus decodes; made from
-  // audio-src/*.wav). Each file holds the 68.571 s loop with PAD samples of wrap-around on both sides (the loop's own tail
-  // before it, its head after it), and it plays from one AudioBufferSourceNode with loop points on the original sample
-  // range. Encoder priming and end padding sit outside the loop points, and a decoder that trims a few samples more or
-  // less only shifts where the loop starts, never the seam: there is real music on both sides of it.
+  // Surf theme v2 (audio/surf-theme-v2.m4a AAC 128k for every browser, .webm Opus 80k where Opus decodes): 40 bars of
+  // audio-src/newslotmusic.mpeg with a one-beat crossfade into the seam (how and why: tools/music-loop.py). Each file holds
+  // the 85.618 s loop with PAD samples of wrap-around on both sides, and it plays from one AudioBufferSourceNode with loop
+  // points on the original sample range. Encoder priming and end padding sit outside the loop points, and a decoder that
+  // trims a few samples more or less only shifts where the loop starts, never the seam.
   // Bytes: fetched at low priority a few seconds after the loading screen has gone ('mango:shown' from loader.js), or at
   // once when the music is switched on first. Decoded on first need (the first MUSIC: ON); if that is before the file is
   // in, the music fades in as soon as it decodes.
-  var MUSIC = { url: 'audio/sunlit-lagoon-v1', rate: 48000, pad: 24000, len: 3291429, prime: { m4a: 1024, webm: 312 } };
+  // beats: beat k (0..n) sits at b0 + p*k + c*k*k s into the loop (the tempo creeps up; fit error 3 ms median)
+  var MUSIC = { url: 'audio/surf-theme-v2', rate: 48000, pad: 24000, len: 4109664, prime: { m4a: 1024, webm: 312 },
+                beats: { b0: 0.00325, p: 0.5378486, c: -1.74927e-5, n: 160 } };
+  var BEAT = MUSIC.len / MUSIC.rate / MUSIC.beats.n;   // 0.5351 s: 112.1 bpm, the loop's average; the effects' tempo
+  var S16 = BEAT / 4, S32 = BEAT / 8, S16T = BEAT / 6, S32T = BEAT / 12;
   var BONUS_LIFT = 1.26;     // bonus (sunset): the track swells +2 dB, after dipping under the trigger's wave
   var mus = { fmts: null, bytes: null, decoding: null, buf: null, fmt: '', off: 0, loopStart: 0, loopEnd: 0,
               src: null, srcGain: null, startedAt: 0, startPos: 0, pos: 0, fetched: false, err: '' };
@@ -3175,6 +3194,29 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     s.onended = function () { try { s.disconnect(); g.disconnect(); } catch (e) { /* ignore */ } };
     try { s.stop(t + fade + 0.02); } catch (e) { /* ignore */ }
   }
+  // ---------- the music's beat grid ----------
+  // grid(t, div, maxWait): the first 1/div-beat line of the playing track at or after context time t, or t itself when
+  // the music is off (or the next line is more than maxWait away). Rhythmic effects start on it, so they land in time.
+  function beatIndex(pos) {             // fractional beat at loop position pos (inverse of b0 + p*k + c*k*k)
+    var B = MUSIC.beats, a = B.b0 - pos;
+    return Math.abs(B.c) < 1e-12 ? -a / B.p : (-B.p + Math.sqrt(B.p * B.p - 4 * B.c * a)) / (2 * B.c);
+  }
+  function beatPos(k) { var B = MUSIC.beats; return B.b0 + B.p * k + B.c * k * k; }
+  function grid(t, div, maxWait) {
+    if (!mus.src || !mus.buf || t < mus.startedAt) return t;
+    var L = loopLen(), n = MUSIC.beats.n;
+    var pos = ((mus.startPos + t - mus.startedAt) % L + L) % L;
+    var k = beatIndex(pos), kn = Math.ceil(k * div - 1e-6) / div;
+    var dt = kn >= n ? (L - pos) + beatPos(kn - n) : beatPos(kn) - pos;
+    return dt >= 0 && dt <= (maxWait == null ? 1 / div * BEAT + 0.01 : maxWait) ? t + dt : t;
+  }
+  // the length of one beat right now (the track's tempo creeps up across the loop), or the average when it is off
+  function beatLen(t) {
+    if (!mus.src || !mus.buf || t < mus.startedAt) return BEAT;
+    var L = loopLen(), pos = ((mus.startPos + t - mus.startedAt) % L + L) % L, k = beatIndex(pos), B = MUSIC.beats;
+    return B.p + 2 * B.c * Math.min(k, B.n);
+  }
+
   // the mode level (base 1, bonus BONUS_LIFT) rides on N.musicMode, between the track and the musicBus
   function modeLevel() { return curMode === 'bonus' ? BONUS_LIFT : 1; }
   function modeTo(at, level, ramp) {
@@ -3284,9 +3326,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     g.gain.linearRampToValueAtTime(0.34, t + 0.16);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.48);
     var bp = filt(v, 'bandpass', 350, 0.8, g);
-    bp.frequency.setValueAtTime(350, t);
-    bp.frequency.exponentialRampToValueAtTime(1500, t + 0.18);
-    bp.frequency.exponentialRampToValueAtTime(600, t + 0.46);
+    bp.frequency.setValueAtTime(mf(67), t);                   // the sweep's centre moves G4 -> G6 -> D5
+    bp.frequency.exponentialRampToValueAtTime(mf(91), t + 0.18);
+    bp.frequency.exponentialRampToValueAtTime(mf(74), t + 0.46);
     noise(v, t, t + 0.5, bp);
     var lg = gn(v, v.out);                                   // body of the water
     lg.gain.setValueAtTime(0.0001, t);
@@ -3298,17 +3340,20 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   }
 
   var PLOP = [62, 64, 67, 69, 71];   // D E G A B: G major pentatonic, one per reel
+  var THUD = [43, 45, 47, 48, 50];   // G2 A2 B2 C3 D3: the low thud climbs the scale too (it was chromatic)
   function reelStop(i) {   // soft water plop on a wooden knock
     if (!ok()) return;
     i = Math.round(clamp(i, 0, 4));
     var v = sfxVoice(), t = tNow();
-    var f = mf(PLOP[i]) * (1 + (Math.random() - 0.5) * 0.02);
-    var g = gn(v, v.out); envAD(g.gain, t, 0.002, 0.15, 0.07);            // bubble: pitch rises like a drop
-    osc(v, 'sine', f * 0.7, t, t + 0.1, g, f * 1.25, 0.05);
+    var f = mf(PLOP[i]) * (1 + (Math.random() - 0.5) * 0.008);   // +-7 cents of life, still in tune
+    var g = gn(v, v.out); envAD(g.gain, t, 0.002, 0.15, 0.07);            // bubble: rises a fourth onto the reel's note
+    osc(v, 'sine', f * 0.75, t, t + 0.1, g, f, 0.04);
     var wg = gn(v, v.out); envAD(wg.gain, t, 0.002, 0.11, 0.06);          // soft wooden knock
-    osc(v, 'triangle', f / 2, t, t + 0.09, filt(v, 'lowpass', 1200, 0.7, wg));
+    var kl = filt(v, 'lowpass', 1200, 0.7, wg);                           // (sines: a triangle's 5th harmonic sat off the key)
+    osc(v, 'sine', f / 2, t, t + 0.09, kl);
+    osc(v, 'sine', f, t, t + 0.06, gc(v, 0.3, kl));
     var tg = gn(v, v.out); envAD(tg.gain, t, 0.002, 0.14, 0.08);          // low thud
-    osc(v, 'sine', 110 * Math.pow(2, i / 12), t, t + 0.11, tg, 70, 0.06);
+    osc(v, 'sine', mf(THUD[i]), t, t + 0.11, tg, mf(THUD[i] - 12), 0.06);   // drops an octave, stays on the note
     var ng = gn(v, v.out); envAD(ng.gain, t + 0.02, 0.001, 0.03, 0.02);   // droplet
     noise(v, t + 0.02, t + 0.06, filt(v, 'bandpass', f * 3, 2, ng));
   }
@@ -3331,56 +3376,55 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   }
 
   // Tension loop while the last reels spin after 2 bonus badges: the main music dips and a tense surf groove
-  // plays until the last reel lands (anticipation(false)). A tremolo-picked guitar on the F#-C tritone over a
-  // pulsing D pedal (D7: it wants to resolve but never does) rubbing up to Eb, a heartbeat kick, ticking hats
-  // and a wave noise that keeps rising. Hard stop after 12 s in case nobody calls off.
+  // plays until the last reel lands (anticipation(false)), on the track's grid from its next sixteenth: a steel-pan roll
+  // in 32nds on the F#-C tritone over a pulsing D pedal dipping to C (D7: it wants to resolve to G but never does), a
+  // heartbeat on every beat, sixteenth hats and a rising wave noise. Hard stop after 12 s in case nobody calls off.
   function anticipation(on) {
     if (!on) { if (ctx) stopAntic(0.25); return; }
     if (!ok() || antic) return;
-    var v = sfxVoice(), t = tNow(), MAX = 12, end = t + MAX, step = 60 / 152 / 2;   // eighth notes at 152 bpm
-    var pick = 60 / 152 / 6;                                                         // sextuplet tremolo picks
+    var v = sfxVoice(), t = tNow(), MAX = 12, end = t + MAX;
+    var t1 = grid(t, 4), step = beatLen(t1) / 2, pick = step / 4;   // eighths, and thirty-second rolls
     var grp = gc(v, 1, v.out), rel = acquireDuck();
     send(v, grp, 0.35);
-    // pulsing bass pedal: D2 D2 D2 Eb2
+    // pulsing bass pedal: D2 D2 D2 C2 (the D7's seventh in the bass, in the key), round like the track's bass
     var bg = gn(v, grp);
-    var bo = osc(v, 'sawtooth', mf(38), t, end, filt(v, 'lowpass', 480, 4, bg));
-    // tremolo-picked guitar: F#4 + C5, opening up over ~4 s
+    var bo = osc(v, 'sawtooth', mf(38), t, end, filt(v, 'lowpass', 420, 2.5, bg));
+    // steel-pan roll: F#4 + C5 (fundamental + octave, the track's mallet colour), opening up over ~4 s
     var gg = gn(v, grp);
-    var pk = v.add(ctx.createBiquadFilter());
-    pk.type = 'peaking'; pk.frequency.value = 1400; pk.Q.value = 1.2; pk.gain.value = 5; pk.connect(gg);
-    var glp = filt(v, 'lowpass', 900, 1.2, pk);
-    glp.frequency.setValueAtTime(900, t); glp.frequency.exponentialRampToValueAtTime(3200, t + 4);
-    osc(v, 'sawtooth', mf(66), t, end, glp, 0, 0, -6);
-    osc(v, 'sawtooth', mf(72), t, end, glp, 0, 0, 6);
-    osc(v, 'square', mf(66), t, end, gc(v, 0.25, glp));
-    // rising wave noise with a slow swell
+    var ns = [66, 72];
+    for (var q = 0; q < ns.length; q++) {
+      osc(v, 'sine', mf(ns[q]), t, end, gg, 0, 0, q ? 4 : -4);
+      osc(v, 'sine', mf(ns[q] + 12), t, end, gc(v, 0.45, gg), 0, 0, 3);
+    }
+    // rising wave noise with a slow swell, one per bar
     var wg = gn(v, grp);
     wg.gain.setValueAtTime(0.0001, t); wg.gain.linearRampToValueAtTime(0.06, t + 6);
     var wsw = gc(v, 0.7, wg);
-    osc(v, 'sine', 0.6, t, end, gc(v, 0.3, wsw.gain));
+    osc(v, 'sine', 1 / (4 * step * 2), t, end, gc(v, 0.3, wsw.gain));
     var wbp = filt(v, 'bandpass', 250, 1.2, wsw);
     wbp.frequency.setValueAtTime(250, t); wbp.frequency.exponentialRampToValueAtTime(2600, t + 8);
     noise(v, t, end, wbp);
-    // ticking hats and a heartbeat kick
+    // ticking hats in sixteenths and a heartbeat kick on every beat, landing on G1
     var hg = gn(v, grp);
     noise(v, t, end, filt(v, 'highpass', 7000, 0.7, hg));
     var hb = gn(v, grp);
     var ho = osc(v, 'sine', 60, t, end, filt(v, 'lowpass', 400, 0.7, hb));
-    var i = 0, tp = t;
+    var i = 0, tp = t1, G1 = mf(31);
     while (tp < end - 0.05) {
       var onBeat = i % 2 === 0, prog = Math.min(1, (tp - t) / 4);
-      bo.frequency.setValueAtTime(mf(i % 4 === 3 ? 39 : 38), tp);
+      bo.frequency.setValueAtTime(mf(i % 4 === 3 ? 36 : 38), tp);
       envAD(bg.gain, tp, 0.005, (onBeat ? 0.22 : 0.15) * (0.8 + 0.35 * prog), step * 0.8);
-      envAD(hg.gain, tp, 0.001, onBeat ? 0.075 : 0.04, 0.035);
-      if (i % 4 === 0) {
-        ho.frequency.setValueAtTime(95, tp); ho.frequency.exponentialRampToValueAtTime(48, tp + 0.09);
-        ho.frequency.setValueAtTime(85, tp + 0.16); ho.frequency.exponentialRampToValueAtTime(46, tp + 0.24);
-        envAD(hb.gain, tp, 0.006, 0.26, 0.13); envAD(hb.gain, tp + 0.16, 0.006, 0.17, 0.12);
+      envAD(hg.gain, tp, 0.001, onBeat ? 0.075 : 0.045, 0.035);
+      if (tp + step / 2 < end - 0.05) envAD(hg.gain, tp + step / 2, 0.001, 0.028, 0.025);
+      if (onBeat) {
+        ho.frequency.setValueAtTime(95, tp); ho.frequency.exponentialRampToValueAtTime(G1, tp + 0.09);
+        ho.frequency.setValueAtTime(85, tp + 0.15); ho.frequency.exponentialRampToValueAtTime(G1 * 0.95, tp + 0.23);
+        envAD(hb.gain, tp, 0.006, 0.24, 0.12); envAD(hb.gain, tp + 0.15, 0.006, 0.15, 0.11);
       }
-      for (var p = 0; p < 3; p++) {
+      for (var p = 0; p < 4; p++) {
         var tq = tp + p * pick;
         if (tq >= end - 0.05) break;
-        envAD(gg.gain, tq, 0.002, (p === 0 ? 0.06 : 0.046) * (0.35 + 0.65 * prog), pick * 0.9);
+        envAD(gg.gain, tq, 0.002, (p === 0 ? 0.085 : 0.06) * (0.35 + 0.65 * prog), pick * 0.95);
       }
       tp += step; i++;
     }
@@ -3400,8 +3444,16 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var g = gn(v, v.out); envAD(g.gain, t, 0.01, 0.13 + 0.012 * p, dur);
     send(v, g, 0.5);
     var lp = filt(v, 'lowpass', 1600 * Math.pow(2, p * 0.4), 1.2, g);
-    osc(v, 'triangle', f * 0.75, t, t + dur + 0.05, lp, f * 2, gl);
-    osc(v, 'sawtooth', f * 0.75, t, t + dur + 0.05, gc(v, 0.35, lp), f * 2, gl, 6);
+    // the splashy rise runs up the G pentatonic, a fourth below the note to its octave (a free glide hit every pitch)
+    var m0 = Math.round(12 * log2(f / 440) + 69), steps = [];
+    for (var q = m0 - 5; q <= m0 + 12; q++) if ([7, 9, 11, 2, 4].indexOf(((q % 12) + 12) % 12) >= 0) steps.push(q);
+    var o1 = osc(v, 'triangle', mf(steps[0]), t, t + dur + 0.05, lp);
+    var o2 = osc(v, 'sawtooth', mf(steps[0]), t, t + dur + 0.05, gc(v, 0.35, lp), 0, 0, 6);
+    var sd = gl / Math.max(1, steps.length - 1);
+    for (var j = 1; j < steps.length; j++) {
+      o1.frequency.setValueAtTime(mf(steps[j - 1]), t + j * sd - 0.008); o1.frequency.exponentialRampToValueAtTime(mf(steps[j]), t + j * sd);
+      o2.frequency.setValueAtTime(mf(steps[j - 1]), t + j * sd - 0.008); o2.frequency.exponentialRampToValueAtTime(mf(steps[j]), t + j * sd);
+    }
     if (p >= 2) pan(v, t + gl, f * 2, 0.4 + 0.05 * p, 0.12);
     if (p >= 4) { pan(v, t + gl + 0.04, f * 3, 0.4, 0.08); cymbal(v, t + gl, 0.07, 0.5); }
   }
@@ -3411,16 +3463,17 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     x = +x;
     if (!(x > 0) || !isFinite(x)) return;
     if (x < 1) { neutralTick(); return; }   // honest design: a net loss never gets a celebration
-    var s = log10(x), t = tNow();
-    if (x < 5) {
-      arp(t, 0, 3 + Math.floor(s * 3), 0.085 - 0.012 * s, 0.26, 0.25 + 0.35 * s);
+    var s = log10(x), t = grid(tNow(), 8), bl = beatLen(t);   // starts on the track's next 32nd (<= 67 ms)
+    if (x < 5) {                                                 // a run in sixteenth-note triplets
+      arp(t, 0, 3 + Math.floor(s * 3), bl / 6, 0.26, 0.25 + 0.35 * s);
       return;
     }
-    if (x < 20) {
-      var a = arp(t, Math.floor(s), Math.min(8, 5 + Math.floor((s - 0.7) * 5)), 0.07 - 0.008 * s, 0.24, 0.5);
+    if (x < 20) {                                                // a run in 32nds onto a G chord, sub G under it
+      var a = arp(t, Math.floor(s), Math.min(8, 5 + Math.floor((s - 0.7) * 5)), bl / 8, 0.24, 0.5);
       var v = sfxVoice();
       panChord(v, a.tEnd, 12 * Math.floor((a.lastMidi - 7) / 12) + 7, 0.5 + 0.3 * s, 0.08);
       cymbal(v, a.tEnd, 0.16, 1.2 + 0.3 * s);
+      sub(v, a.tEnd, 31, 0.08, 0.5 + 0.2 * s);
       return;
     }
     bigWin(s, t);
@@ -3428,30 +3481,32 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 
   function bigWin(s, t) {
     var L = Math.min(3.2, 1.4 + 0.55 * (s - 1.3));
-    var v = sfxVoice();
+    var v = sfxVoice(), st = beatLen(t) / 8;                   // the steel-pan run goes in the track's 32nds
     duckFor(L + 0.4);
     thump(v, t, 0.3);
+    sub(v, t, 31, 0.22, L * 0.6);
     splash(v, t, 0.16, 0.6);
     cymbal(v, t, 0.18, 2 + 0.3 * s);
     gchord(v, t, [43, 50, 55, 59, 62, 67], L * 0.55, 0.26);
     var start = Math.min(2 + Math.floor(s - 1.3), 4);
     var cnt = Math.min(LADDER.length - start, 5 + Math.round(s * 1.5));
-    for (var k = 0; k < cnt; k++) pan(v, t + 0.1 + k * 0.055, mf(LADDER[start + k]), 0.12, 0.14);
-    var tf = t + 0.1 + cnt * 0.055 + 0.05;
+    for (var k = 0; k < cnt; k++) pan(v, t + 2 * st + k * st, mf(LADDER[start + k]), 0.12, 0.14);
+    var tf = t + 2 * st + cnt * st;
     var ring = Math.max(0.8, L - (tf - t) + 0.8);
     var bells = [79, 83, 86, 91];
     for (var b = 0; b < bells.length; b++) bell(v, tf + b * 0.02, mf(bells[b]), 0.07, ring);
     if (s >= 2) {
       gchord(v, tf, [55, 59, 62, 67, 71], Math.max(0.4, L - (tf - t)), 0.2);
       cymbal(v, tf, 0.12, 1.6);
+      sub(v, tf, 31, 0.18, Math.max(0.6, L - (tf - t)));
     }
   }
 
   var TICKS = [67, 69, 71, 74, 76, 79, 81, 83, 86, 88, 91, 93, 95];   // G major pentatonic, G4 up
   function coinTick(dest, t, midi, peak, accent) {
     var v = newVoice('sfx', dest), f = mf(midi);
-    mar(v, v.out, t, f, peak * 0.9, 0.09);
-    if (accent) {                                         // steel-drum shimmer every 4th tick
+    mallet(v, v.out, t, f, peak * 0.8, 0.08);            // the track's mallet, played in its 32nds
+    if (accent) {                                         // steel-drum shimmer on every eighth note
       var g = gn(v, v.out); envAD(g.gain, t, 0.002, peak * 0.3, 0.12);
       osc(v, 'sine', f * 2, t, t + 0.15, g, 0, 0, 4);
     }
@@ -3460,7 +3515,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var v = sfxVoice(), ns = [67, 71, 74, 79];
     for (var i = 0; i < ns.length; i++) pan(v, t + i * 0.015, mf(ns[i]), 1.3, 0.12);
     bell(v, t, mf(91), 0.05, 1.2);
-    if (x >= 5) { cymbal(v, t, 0.12, 1.2); splash(v, t, 0.08, 0.5); }
+    if (x >= 5) { cymbal(v, t, 0.12, 1.2); splash(v, t, 0.08, 0.5); sub(v, t, 31, 0.08, 0.9); }
     if (x >= 20) thump(v, t, 0.25);
   }
 
@@ -3469,7 +3524,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var D = clamp((+durationMs || 0) / 1000, 0.2, 30);
     x = +x || 0;
     var s = x > 1 ? Math.min(log10(x), 3) : 0;
-    var t0 = tNow(0.03), end = t0 + D, next = t0, done = false, n = 0;
+    // ticks on the track's grid: 32nd notes, then 32nd triplets for the last third (they speed up), accent on each eighth
+    var t0 = grid(tNow(0.03), 8), end = t0 + D, next = t0, done = false, n = 0, m = 0, fast = false;
+    var bl = beatLen(t0);
     var i0 = Math.round(s * 2);                // bigger wins start higher on the ladder
     var grp = ctx.createGain(); grp.gain.value = 1; grp.connect(N.sfxBus);
     var releaseDuck = acquireDuck();
@@ -3490,11 +3547,12 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
         while (next < lim && next < end) {
           var p = (next - t0) / D;
           var idx = Math.min(TICKS.length - 1, i0 + Math.floor(p * 7.99));   // climbs ~1.5 octaves
-          if (!muted) coinTick(grp, next, TICKS[idx],0.13 + 0.03 * p, (n & 3) === 0);
-          n++;
-          next += 0.075 - 0.028 * p;   // ticks speed up slightly
+          if (!fast && p >= 0.65 && m % 4 === 0) { fast = true; m = 0; }   // switch on an eighth-note line
+          if (!muted) coinTick(grp, next, TICKS[idx], 0.13 + 0.03 * p, m % (fast ? 3 : 4) === 0);
+          n++; m++;
+          next += bl / (fast ? 12 : 8);
         }
-        if (next >= end) finish(end, true);
+        if (next >= end) finish(grid(end, 8), true);   // the resolve chord lands on the grid too
       } catch (e) { done = true; clearInterval(timer); releaseDuck(); }
     }
     timer = setInterval(pump, TICK_MS);
@@ -3511,7 +3569,10 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 
   function bonusTrigger() {   // a wave builds, a guitar slides up and runs, then the wave crashes on a G chord
     if (!ok()) return;
-    var v = sfxVoice(), t = tNow(0.02), T = 1.25, h = t + T;
+    // the crash lands on one of the track's beats (1.15 to 1.7 s in; 1.25 s with the music off)
+    var t = tNow(0.02), h = grid(t + 1.15, 1, BEAT + 0.01), T = h > t + 1.15 ? h - t : 1.25, v = sfxVoice();
+    h = t + T;
+    var st = beatLen(h) / 8;
     var rg = gn(v, v.out);                                   // wave building
     rg.gain.setValueAtTime(0.0001, t);
     rg.gain.linearRampToValueAtTime(0.22, h);
@@ -3524,17 +3585,19 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     send(v, gv, 0.6);
     pluck(v, gv, t + 0.3, mf(67), 0.42, 0.13, { from: mf(50), glide: 0.38, sus: 0.6 });
     var run = [62, 64, 67, 69, 71, 74, 76, 79];
-    for (var k = 0; k < run.length; k++) pluck(v, gv, h - 0.48 + k * 0.06, mf(run[k]), 0.06, 0.09, { bright: true });
+    for (var k = 0; k < run.length; k++) pluck(v, gv, h - (run.length - k) * st, mf(run[k]), 0.06, 0.09, { bright: true });
     thump(v, h, 0.4);                                        // the crash
     waveCrash(v, h, 0.3, 2.2);
     cymbal(v, h, 0.16, 1.8);
-    var sv = sfxVoice();
-    var g = gn(sv, sv.out); envAD(g.gain, h, 0.004, 0.22, 1.2);
-    send(sv, g, 0.5);
-    var slp = filt(sv, 'lowpass', 3500, 1, g);
-    var dr = gc(sv, 0.4, shaper(sv, curveHard, slp));
-    var power = [43, 50, 55, 62, 67];                        // G5 power chord
-    for (var i = 0; i < power.length; i++) osc(sv, 'sawtooth', mf(power[i]), h, h + 1.3, dr);
+    var sv = sfxVoice();                                     // a warm G chord (was a hard-clipped power chord):
+    var g = gn(sv, sv.out); envAD(g.gain, h, 0.004, 0.2, 1.3);   // softly driven saws, dark like the track's mix,
+    send(sv, g, 0.5);                                        // a steel-pan G chord on top and the sub G under it
+    var slp = filt(sv, 'lowpass', 2400, 0.8, g);
+    var dr = gc(sv, 0.45, shaper(sv, curveSoft, slp));
+    var power = [43, 50, 55, 59, 62, 67];
+    for (var i = 0; i < power.length; i++) osc(sv, 'sawtooth', mf(power[i]), h, h + 1.4, dr, 0, 0, i % 2 ? 5 : -5);
+    panChord(sv, h, 67, 1.1, 0.1);
+    sub(sv, h, 31, 0.2, 1.3);
     // the music dips while the wave builds, then swells back up (+2 dB) on the crash and stays there for the bonus
     curMode = 'bonus';
     modeTo(t, 0.35, T);
@@ -3546,8 +3609,8 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     x = +x;
     if (!(x > 0) || !isFinite(x)) return;
     if (x < 1) { neutralTick(); return; }
-    var s = log10(x), t = tNow();
-    arp(t, Math.min(1 + Math.floor(s), 4), Math.min(5, 2 + Math.floor(s * 2)), 0.06, 0.18, 0.2 + 0.2 * s);
+    var s = log10(x), t = grid(tNow(), 8);
+    arp(t, Math.min(1 + Math.floor(s), 4), Math.min(5, 2 + Math.floor(s * 2)), beatLen(t) / 8, 0.18, 0.2 + 0.2 * s);
     if (x >= 20) { var v = sfxVoice(); cymbal(v, t, 0.1, 0.8); }
   }
 
@@ -3562,28 +3625,31 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
         L = 1.2;
       } else {
         var gv = gc(v, 1, v.out); send(v, gv, 0.5);
-        var tr = 0.11;                                       // triplet pickup D D D
-        for (var k = 0; k < 3; k++) pluck(v, gv, t + k * tr, mf(62), 0.07, 0.14, { bright: true });
-        var tm = t + 3 * tr, h1 = 0.5 + 0.2 * s;
+        // sixteenth pickup D D D into a chord on the track's next beat (up to one beat later); holds of whole beats
+        var bl = beatLen(t), tr = bl / 4, tm = grid(t + 3 * tr, 1, bl + 0.01), tp = tm - 3 * tr;
+        for (var k = 0; k < 3; k++) pluck(v, gv, tp + k * tr, mf(62), 0.07, 0.14, { bright: true });
+        var h1 = Math.max(1, Math.round((0.5 + 0.2 * s) / bl)) * bl;
         gchord(v, tm, [55, 59, 62, 67], h1, 0.28);
         thump(v, tm, 0.3);
+        sub(v, tm, 31, 0.2, h1 + 0.2);
         splash(v, tm, 0.1, 0.5);
         cymbal(v, tm, 0.14 + 0.02 * s, 1.2 + 0.3 * s);
-        L = 3 * tr + h1 + 0.4;
+        L = tm - t + h1 + 0.4;
         if (s >= 1) {                                        // x >= 10: climb to the octave
-          var t2 = tm + h1;
+          var t2 = tm + h1 - 3 * tr;                         // D E F# in sixteenths, up to G on the beat
           pluck(v, gv, t2, mf(62), 0.08, 0.14, { bright: true });
-          pluck(v, gv, t2 + 0.1, mf(64), 0.08, 0.14, { bright: true });
-          pluck(v, gv, t2 + 0.2, mf(66), 0.08, 0.14, { bright: true });
-          var t3 = t2 + 0.3, h2 = 0.7 + 0.3 * s;
+          pluck(v, gv, t2 + tr, mf(64), 0.08, 0.14, { bright: true });
+          pluck(v, gv, t2 + 2 * tr, mf(66), 0.08, 0.14, { bright: true });
+          var t3 = tm + h1, h2 = 0.7 + 0.3 * s;
           gchord(v, t3, [67, 71, 74, 79], h2, 0.3);
           thump(v, t3, 0.32);
+          sub(v, t3, 31, 0.22, h2);
           cymbal(v, t3, 0.18, 1.8 + 0.3 * s);
           L = t3 - t + h2 + 0.5;
           if (s >= 2) {                                      // x >= 100: tom roll + steel-drum sparkle
             var v2 = sfxVoice();
-            for (var r = 0; r < 10; r++) thump(v2, t3 + r * 0.07, 0.08 + 0.015 * r);
-            for (var b = 0; b < 6; b++) pan(v2, t3 + 0.1 + b * 0.05, mf(LADDER[4 + b]), 0.1, 0.1);
+            for (var r = 0; r < 10; r++) thump(v2, t3 + r * bl / 8, 0.08 + 0.015 * r);
+            for (var b = 0; b < 6; b++) pan(v2, t3 + bl / 4 + b * bl / 12, mf(LADDER[4 + b]), 0.1, 0.1);
           }
         }
       }
