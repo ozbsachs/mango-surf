@@ -1650,6 +1650,12 @@ html.turbo .grid .c.tape.thump::before{animation-duration:.3s}
     text-align:center!important;overflow:hidden!important;overflow-wrap:anywhere}
 }
 
+/* one-row bar (desktop + tablets): it was a fixed 780px, so a long balance ("$1,479,445.38") pushed MODE: BONUS BOOST
+   past the bar's right edge. The bar now grows to fit its contents (never narrower than before, never wider than the screen) */
+@media (min-width:760px) and (min-height:501px){
+  html body .ctrlbar.mhud{width:max-content!important;min-width:min(780px,calc(100% - 20px))!important;max-width:calc(100% - 20px)!important}
+}
+
 /* ---------- big slot on desktop (like Sweet Bonanza: the reels fill ~70% of the width and nearly all the height) ----------
    The stage takes the height between the top bar and the control bar, and up to 70% of the width; cells may be wider
    than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
@@ -5016,14 +5022,14 @@ const W = TT.W, S1 = TT.S1, S2 = TT.S2, ROWS = TT.ROWS, REELS = TT.REELS, CELLS 
 const NAMES = ['10','J','Q','K','A','Coconut','Beach ball','Mango','Surfboard','Wild','SURF badge','KAHUNA badge'];
 const SHORT = ['CAS','SNK','SPR','LTR','CAP','WHL','TRK','SKTR','BRD','W','SESH','LGND'];
 const BONUS = [
-  {name:'Crew', trig:'3 wilds', desc:'10 free spins. Plain wilds (no multiplier) land often on reels 2-4 and always fill the whole reel.'},
+  {name:'Crew', trig:'3 wilds', desc:'10 free spins. Plain wilds (no multiplier) land often on reels 2-4 and always fill the whole reel. In rare hot rounds a wild can also land on reel 1 or 5.'},
   {name:'Sesh', trig:'3 SESH tapes', desc:'10 free spins. Wilds land on reels 2-4 and fill the whole reel.'},
   {name:'Legend', trig:'4 SESH tapes (5 for 12 spins)', desc:'10 free spins. Every wild on reels 2-4 fills its reel and stays, and new wilds multiply it up.'}];
 const LINE_COLORS = ['#FFD23F','#FF4F8B','#3BE3FF','#7DFF6B','#FF8A1F','#C77DFF','#FF5D5D','#00F5B4','#FFB627','#5AA9FF','#FF7AE0','#B8FF3B','#FF6B3D','#2EE6C8','#FFE14D','#9C8CFF'];
 const MODE = name => GAME.modes.find(m => m.name === name);
 const UI_MODES = [
   {id:'BASE', label:'NORMAL', sub: () => '1x'},
-  {id:'ANTE', label:'BONUS BOOST', sub: () => `${MODE('ANTE').cost}x · ~${Math.round(MODE('BASE').bonusOneIn/MODE('ANTE').bonusOneIn)}x bonus chance`},
+  {id:'ANTE', label:'BONUS BOOST', sub: () => `${MODE('ANTE').cost}x · ~${+(MODE('BASE').bonusOneIn/MODE('ANTE').bonusOneIn).toFixed(1)}x bonus chance`},
   {id:'SPECIAL1', label:'OLLIE', sub: () => `${MODE('SPECIAL1').cost}x · 1 guaranteed wild`},
   {id:'SPECIAL2', label:'GRIND', sub: () => `${MODE('SPECIAL2').cost}x · 2 guaranteed wilds`},
   {id:'SPECIAL3', label:'KICKFLIP', sub: () => `${MODE('SPECIAL3').cost}x · 3 guaranteed wilds`}];
