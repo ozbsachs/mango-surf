@@ -1656,6 +1656,15 @@ html.turbo .grid .c.tape.thump::before{animation-duration:.3s}
   html body .ctrlbar.mhud{width:max-content!important;min-width:min(780px,calc(100% - 20px))!important;max-width:calc(100% - 20px)!important}
 }
 
+/* phones with the browser bars showing (iPhone Safari is ~660-740px tall): the spin button rose into the TOTAL WIN sign.
+   The button is a little smaller there, so the sign never covers it */
+@media (max-width:640px) and (orientation:portrait) and (max-height:780px){
+  html body .ctrlbar.mhud{--spin:min(24vw,98px)}
+}
+@media (max-width:640px) and (orientation:portrait) and (max-height:700px){
+  html body .ctrlbar.mhud{--spin:min(21vw,86px)}
+}
+
 /* ---------- big slot on desktop (like Sweet Bonanza: the reels fill ~70% of the width and nearly all the height) ----------
    The stage takes the height between the top bar and the control bar, and up to 70% of the width; cells may be wider
    than tall (the symbols stay square, centred). Last win sits on the stage's bottom edge as a tab instead of its own row. */
