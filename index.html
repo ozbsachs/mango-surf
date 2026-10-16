@@ -5125,8 +5125,8 @@ async function mergeAnim(merged, fast, sticky){
   await Promise.all(loud.map(async (mg, li) => { if (!fast && li) await wait(T(110)*li);
     if (!fast){ const gb = gridEl.parentElement.getBoundingClientRect(), rb = reelEls[mg.r].getBoundingClientRect();
       const tag = document.createElement('div'); tag.className = 'mergetag';
-      const fac = (mg.upgrade > 1 ? [mg.upgrade] : []).concat(mg.from.map(f=>f.m).filter(m=>m > 1));
-      tag.textContent = mg.M > 1 && fac.length > 1 ? fac.map(m=>'x'+fx(m)).join(' × ') + ' = x' + fx(mg.M) : mg.M > 1 ? 'STACK x' + fx(mg.M) : 'WILD REEL';
+      const fac = (mg.upgrade > 1 ? [mg.upgrade] : []).concat(mg.from.map(f=>f.m).filter(m=>m > 1)), prod = fac.reduce((a, m) => a*m, 1);
+      tag.textContent = mg.M > 1 && fac.length > 1 ? fac.map(m=>'x'+fx(m)).join(' × ') + (prod === mg.M ? ' = x' : ' → x') + fx(mg.M) : mg.M > 1 ? 'STACK x' + fx(mg.M) : 'WILD REEL';
       tag.style.left = (rb.left-gb.left+rb.width/2)+'px'; tag.style.top = (rb.top-gb.top+rb.height*.45)+'px'; gridEl.parentElement.appendChild(tag);
       const lit = mg.from.map(f=>f.c).concat(mg.anchor ? [mg.anchor.c] : []);
       lit.forEach(c=>cells[c].classList.add('hit')); sfx('wildLand', mg.M); await wait(T(400)); tag.classList.add('out'); setTimeout(() => tag.remove(), 240); lit.forEach(c=>cells[c].classList.remove('hit')); }
@@ -5666,14 +5666,14 @@ function renderRules(){
     <p style="margin-top:0">Pick a bet and spin. The game has 5 reels, 4 rows and 16 fixed lines. Three or more matching symbols on a line, starting from the leftmost reel, win the amount in the paytable times your bet. Only the highest win on each line pays, and wins on different lines add up.</p>
     <p><strong>Wilds</strong> substitute for every paying symbol. In the base game many wilds are plain (no multiplier); the rest carry a multiplier. When wilds help make a line win, their multipliers are added together and the line win is multiplied by that total. Five wilds on a line pay ${fx(GAME.pays[9][2])}x bet times their total multiplier.</p>
     <p>Wild multipliers you can land: ${GAME.multipliers.map(x => 'x' + x).join(', ')}. Blue wilds show x2 to x4, green x5 to x20, purple x25 and up.</p>
-    <p><strong>Full wild reels</strong> (bonuses and Trick Spins): wilds on reels 2, 3 and 4 fill their whole reel. If several wilds land on one reel, their multipliers are multiplied together first. Full wild reels on the same line add their multipliers.</p>
+    <p><strong>Full wild reels</strong> (bonuses and Trick Spins): wilds on reels 2, 3 and 4 fill their whole reel. If several wilds land on one reel, their multipliers are multiplied together first, then rounded up to the next of x2, x3, x4, x5, x10, x15, x20, x25, x50, x75, x100, x250 (x250 at most). Full wild reels on the same line add their multipliers.</p>
     <p>Wins are capped at ${fx(GAME.maxWin)}x your bet, except the Sesh bonus, capped at ${fx(GAME.maxWinSesh)}x, and the Legend bonus, capped at ${fx(GAME.maxWinLegend)}x. When a round reaches the cap it ends and pays the cap. The highest win possible in each mode is listed under Game modes.</p>
     <p><strong>Minimum win:</strong> every bonus (bought or triggered) and every Trick Spin pays at least 10% of its price: Crew ${fx(MODE('BONUS1').cost/10)}x, Sesh ${fx(MODE('BONUS2').cost/10)}x and Legend ${fx(MODE('BONUS3').cost/10)}x your bet, Trick Spins ${fx(MODE('SPECIAL1').cost/10)}x, ${fx(MODE('SPECIAL2').cost/10)}x and ${fx(MODE('SPECIAL3').cost/10)}x. A round that would pay less is played again until it reaches that, so the low end lands anywhere from 10% up rather than on an exact amount.</p>
   </div></div>
   <div class="win"><div class="bar"><span>BONUSES</span></div><div class="body">
     <p style="margin-top:0"><strong>Crew</strong>: land 3 or more wilds with multipliers anywhere on a normal spin. 10 free spins. Wilds land often on reels 2-4 (about 1.6 times per spin on average) and always fill the whole reel. Crew wilds carry no multiplier: a line through them pays its normal amount.</p>
     <p><strong>Sesh</strong>: land 3 SESH tapes ${ico(10)}. 10 free spins. Wilds land only on reels 2-4, and a wild fills its whole reel when that reel can be part of a win.</p>
-    <p><strong>Legend</strong>: land 4 SESH tapes. 10 free spins, or 12 free spins with 5 tapes. Every wild on reels 2-4 fills its reel and stays for the rest of the bonus. A new wild landing on a filled reel multiplies its multiplier.</p>
+    <p><strong>Legend</strong>: land 4 SESH tapes. 10 free spins, or 12 free spins with 5 tapes. Every wild on reels 2-4 fills its reel and stays for the rest of the bonus. A new wild landing on a filled reel multiplies its multiplier, rounded up the same way (x250 at most).</p>
     <p>SESH tapes appear only on normal and Bonus Boost spins, at most one per reel. If tapes and wilds both trigger on the same spin, the tapes win (Legend beats Sesh beats Crew). Bonuses cannot be retriggered. A bought bonus plays exactly like one won on a spin.</p>
   </div></div>
   <div class="win"><div class="bar"><span>PAYTABLE</span></div><div class="body">
