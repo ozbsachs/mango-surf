@@ -1269,9 +1269,8 @@ html.turbo .grid .c.tape.thump::before{animation-duration:.3s}
    The board keeps a band above and below the four rows (--pkT / --pkB: row edge to the beam's inner edge; spin-inject.js
    reelLayout sets them, with the grid's own top/bottom padding --pgT / --pgB that makes the room). While a reel spins its
    strip shows through the bands and is cut only by the wood. At rest each band shows the reel's real next symbol on the
-   strip (the round's padding), but only when that is a wild or a SURF badge (.pk.hot); every other neighbour fades out
-   (.pk.cold), and html.peeks-off fades them all out. Rounds without padding (free spins, bought boards, books without it)
-   show nothing there. A soft shade toward the beams (.cyl) gives the drum its curve. */
+   strip (the round's padding), whatever it is (.pk.hot marks a wild or a badge); html.peeks-off fades them all out (.pk.cold).
+   Rounds without padding (free spins, bought boards, books without it) show neutral filler there, never a wild or a badge. A soft shade toward the beams (.cyl) gives the drum its curve. */
 .machine .stage .grid{box-sizing:border-box;padding:var(--pgT,0px) 0 var(--pgB,0px)}
 .grid .reel:has(> .strip){overflow:visible;clip-path:inset(calc(-1 * var(--pkT,0px)) -40px calc(-1 * var(--pkB,0px)) -40px)}
 .grid .reel::after{top:calc(-1 * var(--pkT,0px));bottom:calc(-1 * var(--pkB,0px))}
@@ -1293,6 +1292,26 @@ html.turbo .grid .c.tape.thump::before{animation-duration:.3s}
     rgba(6,30,52,0) calc(100% - var(--pkB,0px) - var(--ch,0px) * .3),rgba(6,30,52,.16) calc(100% - var(--pkB,0px)),rgba(6,30,52,.5))}
 .strip .sc > .pkin{display:block;height:100%;animation:pkin .16s ease-out both}
 @keyframes pkin{from{opacity:0}}
+/* the reel glow (tease / chase, the purple Kahuna one, bonus spins) lights the WHOLE reel, beam to beam, bands included
+   (Oz 2026-10-16). It was the reel's own box-shadow, which only framed the four rows; it is now .rglow, a layer under the
+   symbols that spans the bands and is cut at the beams (its clip keeps the outer glow off the wood, sideways it may spread).
+   Same --gl colour and pulse as before; the running light on the next reel also runs from beam to beam. */
+.grid .reel,.grid .reel.tease{animation:none!important;box-shadow:none!important}
+.grid .reel > .rglow{position:absolute;left:0;right:0;top:calc(-1 * var(--pkT,0px));bottom:calc(-1 * var(--pkB,0px));z-index:0;pointer-events:none;
+  border-radius:10px;clip-path:inset(0 -40px 0 -40px);animation:tease .42s ease-in-out infinite alternate paused}
+.grid .reel.tease > .rglow{animation-play-state:running}
+@media (prefers-reduced-motion:reduce){.grid .reel > .rglow{animation:none}.grid .reel.tease > .rglow{animation:tease .9s ease-in-out infinite alternate}}
+.grid .reel.tease.next::before{top:calc(-40% - var(--pkT,0px));animation-name:runlight-full}
+@keyframes runlight-full{to{transform:translateY(calc(350% + var(--pkT,0px) + var(--pkB,0px)))}}
+@media (prefers-reduced-motion:reduce){.grid .reel.tease.next::before{top:calc(-1 * var(--pkT,0px));height:auto;bottom:calc(-1 * var(--pkB,0px))}}
+
+/* spin smoothness (Olly 2026-10-16, option 1): each strip item is its own layer, so the drum squash moves layers instead of
+   repainting the strip every frame (38 -> 50 fps on the laptop in his runs) */
+.strip > .sc{will-change:transform}
+/* the next spin's strips wait in their reels, hidden (spin-inject.js preMake): laid out like a strip, nothing animates, no paint */
+.strip-park{position:absolute;left:0;right:0;top:0;z-index:1;display:flex;flex-direction:column;gap:var(--gap);visibility:hidden;pointer-events:none;will-change:transform}
+.strip-park > .sc{flex:0 0 auto;background:transparent;line-height:0;transform-origin:50% 0;will-change:transform}
+.strip-park .fx,.strip-park .fx *{animation:none!important}
 
 /* ---------- Mango Surf symbol life (anim-v2/symbols) ----------
    Every symbol has its own small idle loop and its own win loop. Only transform and opacity move, plus the win flash's
@@ -1476,6 +1495,9 @@ html.turbo .grid .c.tape.thump::before{animation-duration:.3s}
 /* no life where it would distract or cost: the spin strips (the reel is a blur, and a symbol must land exactly as it
    was drawn in the strip), dimmed symbols, .fx-still, or when the player asks for less motion */
 .strip .fx,.strip .fx *,.ms.dim .fx *,.fx-still .fx,.fx-still .fx *{animation:none!important}
+/* spin smoothness (Olly 2026-10-16): a reel cell is hidden while its strip spins and gets new content when it lands, so its
+   idle loops stop meanwhile: fewer moving layers to update on every spin frame (pixel-identical: the cell is not shown) */
+.grid .c.spinning .fx,.grid .c.spinning .fx *{animation:none!important}
 /* soft motion (prefers-reduced-motion: reduce, e.g. iOS Reduce Motion): the board must never look dead, so light still
    moves but nothing travels, bobs or spins. Idle: symbols stand still; only the slow water shimmer, the shine, the
    sparkles, the wild's glow and the badge rays (very slow) stay. Win: the same shared beat, but the pop stays at or under
@@ -3829,7 +3851,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
       if (node.id === 'cel-art'){ if (!node.querySelector('img.msurf')) node.innerHTML = `<img class="msurf" src="${SURF}" alt="">`; return; }
       let im = node.querySelector('img.mg');
       if (!im){ node.innerHTML = `<img class="mg" src="${src('H3')}" alt="">`; im = node.firstChild; }
-      im.className = 'mg'; void im.offsetWidth; im.classList.add('p-' + (pose || 'idle')); },
+      // a fresh copy restarts the pose animation: the old class reset + offsetWidth forced a full-page style and layout on
+      // every spin tap (24 ms at 1x, ~100 ms on a 4x-slowed CPU), for a mascot that is not even shown in Mango Surf
+      const n2 = im.cloneNode(false); n2.className = 'mg p-' + (pose || 'idle'); im.replaceWith(n2); },
     stop(node){ if (node && node.id === 'cel-art'){ node.innerHTML = ''; return; } const im = node && node.querySelector('img.mg'); if (im) im.className = 'mg'; },
     tricks: ['idle','ollie','kickflip','treflip','grind','spin900','hype','bail']
   };
@@ -5284,64 +5308,118 @@ function slamUI(){ if (!slam) return; const b = $('spinbtn'); if (!b) return;
   b.classList.toggle('slam', ok); if (busy && !autoLeft) b.disabled = !ok; }
 function slamTry(){ if (!slam || !slam.on || slam.req || slam.tease || flags.disabledSlamstop || autoLeft) return false;
   slam.req = true; slamK = 0; slamUI(); return true; }
+// spin timing (build.js spinAnim): reel r stops SPIN_MS(r) after the tap (NORMAL 1.6 s + 0.5 s a reel; turbo 0.45 + 0.05)
+const SPIN_MS = (r, turbo) => turbo ? 450 + 50*r : 1600 + 500*r;
+// strip fillers (Olly 2026-10-16, option 2): light markup. A filler only ever shows frozen in a blurred strip, where every
+// sym-fx animation is off; it keeps just the layers that are visible frozen (the picture(s) and the water shimmer, inside the
+// same wrappers, so it is drawn the same), not the flash, shine, glow and particle layers that sit at zero opacity there.
+// Fillers are the paying symbols only (never W, S1, S2). Result rows and peeks keep the full markup (they land in the cells).
+const LITE_WATER = {L1: 1, L2: 1, L3: 1, L4: 1, L5: 1};
+function symLite(s){ const k = typeof TT_SYMN !== 'undefined' ? TT_SYMN[s] : null; if (!window.MangoSymFX || !k || s > 8) return symHTML(s);
+  const V = window.MANGO_IMG_V || {}, src = n => 'img/' + n + '.webp' + (V[n] ? '?v=' + V[n] : '');
+  const im = (n, c) => `<img class="${c}" src="${src(n)}" alt="" draggable="false" decoding="sync">`;
+  const body = (k === 'H3' ? im('H3-body', 'h3-body') + im('H3-leaf', 'h3-leaf') : im(k, 'base')) + (LITE_WATER[k] ? '<i class="fx-water"><i></i></i>' : '');
+  return `<div class="ms ms-${k}" style="--src:url(${src(k)})"><span class="fx" aria-hidden="true"><span class="fx-sq"><span class="fx-pop"><span class="fx-mv">${body}</span></span></span></span></div>`; }
+// the next spin's pre-spin strips are built while the game is idle (after a landing, or after a resize), so the tap only
+// fills in the board it rolls away from; the same strips then carry the result when the server answers (spinAnim reuses
+// them: one build per spin, not two). Each strip: 6 result rows (peek, 4 rows, peek) + filler + 6 rows of the board now.
+let preBuilt = null, preIdle = 0;
+function preMake(){ const ch = RL.ch, pitch = ch + RL.gap, turbo = speed === 1;
+  return {ch, strips: reelEls.map((col, r) => { const nFill = Math.max(6, Math.round(SPIN_MS(r, turbo)/70)) + 4, N = 6 + nFill + 6;
+    const st = document.createElement('div'); st.className = 'strip blur'; st.style.top = (-pitch).toFixed(1) + 'px';
+    let h = ''; for (let i = 0; i < N; i++) h += `<div class="sc" style="height:${ch}px">${symLite(randInt(9))}</div>`; st.innerHTML = h;
+    // parked in its reel, hidden (.strip-park, skin.css), at the place it starts from: its style, layout and layers are done
+    // now, at idle, not on the tap
+    const y0 = -(N-ROWS-2)*pitch; st.classList.replace('strip', 'strip-park'); st.classList.remove('blur'); st.style.transform = `translateY(${y0.toFixed(1)}px)`;
+    pkCyl(st, y0, pitch, ch); col.appendChild(st);
+    return {st, nFill, N, y: 0}; })}; }
+// a parked set that will not be used (resize, a bonus coming) goes
+function preDrop(){ if (preBuilt){ preBuilt.strips.forEach(o => o.st.remove()); preBuilt = null; } }
+function preSoon(){ if (preBuilt || preIdle) return; preIdle = (window.requestIdleCallback || setTimeout)(() => { preIdle = 0;
+  try { if (!preBuilt && !preSpin && RL.ch) preBuilt = preMake(); } catch(e){} }, {timeout: 2500}); }
 function preSpinStart(){
   if (preSpin) return;
-  const cellH = cells[0].getBoundingClientRect().height, gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, pitch = cellH + gap, N = ROWS + 12;   // + one row in each band (real reels)
+  if (!RL.ch) reelLayout();
+  const cellH = RL.ch, pitch = cellH + RL.gap;
+  let pb = preBuilt; preBuilt = null; if (!pb || Math.abs(pb.ch - cellH) > .5){ if (pb) pb.strips.forEach(o => o.st.remove()); pb = preMake(); }
   cells.forEach(c => c.classList.remove('hit')); $('lineov').innerHTML = '';
   // (real reels) the strip ends with what the reel shows now: its peeks and its four rows, so the board rolls away from the
-  // tap instead of switching to filler; the rest is filler, and once the loop comes round that tail turns to filler too
-  const strips = reelEls.map((col, r) => { col.querySelectorAll('.pinov').forEach(o => o.remove());
-    const st = document.createElement('div'); st.className = 'strip blur'; const items = []; for (let i = 0; i < N - ROWS - 2; i++) items.push(symHTML(randInt(9)));
-    items.push(pkOldHTML(r, 0)); for (let row = 0; row < ROWS; row++) items.push(cells[TT.cell(r, row)].innerHTML || symHTML(randInt(9))); items.push(pkOldHTML(r, 1));
-    st.innerHTML = items.map(h => `<div class="sc" style="height:${cellH}px">${h}</div>`).join(''); st.style.top = (-pitch).toFixed(1) + 'px'; st.style.transform = `translateY(${(-(N-ROWS-2)*pitch).toFixed(1)}px)`; pkCyl(st, -(N-ROWS-2)*pitch, pitch, cellH);
-    col.appendChild(st); return st; });
+  // tap instead of switching to filler; once the loop comes round, that tail turns to filler too
+  const strips = pb.strips.map((o, r) => { const col = reelEls[r], kids = o.st.children, N = o.N; col.querySelectorAll('.pinov').forEach(x => x.remove());
+    // the board's own pictures move into the strip (no copies to build, style and paint on the tap); the cells and peeks are
+    // hidden while the reel spins and get new content when it lands; a failed request moves them back (cancel)
+    o.back = []; const move = (from, to, wrap) => { const nodes = [...from.childNodes]; if (!nodes.length){ to.innerHTML = symLite(randInt(9)); return; }
+      o.back.push([from, nodes]); if (wrap){ const w = document.createElement('div'); w.className = 'pkin'; w.append(...nodes); to.replaceChildren(w); } else to.replaceChildren(...nodes); };
+    move(pkEls[r][0], kids[N-6], pkEls[r][0].classList.contains('cold')); for (let row = 0; row < ROWS; row++) move(cells[TT.cell(r, row)], kids[N-5+row]);
+    move(pkEls[r][1], kids[N-1], pkEls[r][1].classList.contains('cold'));
+    o.y0 = o.y = -(N-ROWS-2)*pitch; o.st.style.transform = `translateY(${o.y.toFixed(1)}px)`; pkCyl(o.st, o.y, pitch, cellH);
+    o.st.className = 'strip blur'; return o; });
   cells.forEach(c => c.classList.add('spinning'));
   sfx('spinStart'); mascot('ollie');
-  const t0 = performance.now(), span = (N-ROWS-2)*pitch, v = pitch/T(24); let raf = 0, alive = true;
-  let fresh = false; const frame = () => { if (!alive) return; const d = (performance.now()-t0)*v, y = -span + d % span;
-    if (!fresh && d >= span){ fresh = true; strips.forEach(st => { for (let i = N - ROWS - 2; i < N; i++) st.children[i].innerHTML = symHTML(randInt(9)); }); } strips.forEach(st => { st.style.transform = `translateY(${y.toFixed(1)}px)`; pkCyl(st, y, pitch, cellH); }); raf = requestAnimationFrame(frame); };
+  // filler runs past at one row per 24 ms; it never reaches the result rows at the top: 8 rows short of them it loops back
+  const t0 = performance.now(), v = pitch/T(24); let raf = 0, alive = true, fresh = false;
+  const frame = () => { if (!alive) return; const d = (performance.now()-t0)*v;
+    strips.forEach(o => { const span = Math.max(pitch, -(o.y0 + 8*pitch)), k = Math.floor(d/span);
+      if (k >= 1 && !fresh){ fresh = true; strips.forEach(q => { for (let i = q.N - 6; i < q.N; i++) q.st.children[i].innerHTML = symLite(randInt(9)); }); }
+      o.y = o.y0 + d - k*span; o.st.style.transform = `translateY(${o.y.toFixed(1)}px)`; pkCyl(o.st, o.y, pitch, cellH); });
+    raf = requestAnimationFrame(frame); };
   raf = requestAnimationFrame(frame);
   slam.on = true; slam.req = false; slam.tease = false; slamUI();
   const stop = () => { alive = false; cancelAnimationFrame(raf); preSpin = null; };
   preSpin = {age: () => performance.now() - t0,
-    // spinAnim takes over in the same task (no frame in between); release = it will not draw strips (super turbo / fast)
-    take(release){ stop(); strips.forEach(st => st.remove()); if (release){ cells.forEach(c => c.classList.remove('spinning')); slam.on = false; slam.req = false; slamUI(); } return this; },
+    // spinAnim takes over in the same task (no frame in between) and keeps the strips (strip(r): the strip, its filler count
+    // and where it is now); release = it will not draw strips (fast): they go
+    take(release){ stop(); if (release){ strips.forEach(o => o.st.remove()); cells.forEach(c => c.classList.remove('spinning')); slam.on = false; slam.req = false; slamUI(); } return this; },
+    strip: r => strips[r],
     // the bet request failed: the filler fades and the last board shows again, untouched
-    cancel(){ stop(); cells.forEach(c => c.classList.remove('spinning'));
-      strips.forEach(st => { st.style.transition = 'opacity .18s ease-out'; st.style.opacity = '0'; setTimeout(() => st.remove(), 200); });
-      slam.on = false; slam.req = false; slamUI(); }};
+    cancel(){ stop(); strips.forEach(o => (o.back || []).forEach(([from, nodes]) => from.replaceChildren(...nodes))); cells.forEach(c => c.classList.remove('spinning'));
+      strips.forEach(o => { o.st.style.transition = 'opacity .18s ease-out'; o.st.style.opacity = '0'; setTimeout(() => o.st.remove(), 200); });
+      slam.on = false; slam.req = false; slamUI(); preSoon(); }};
 }
 function thumpBadges(){ document.querySelectorAll('.grid .c.tape').forEach(c => { c.classList.remove('thump'); void c.offsetWidth; c.classList.add('thump'); }); }
 // ---------- real reels (skin.css "real reels"): the bands above and below the rows, and the true neighbours peeking there ----------
 // reelLayout: the visible band between the rows and each beam shows about a fifth of the next symbol (plus the row gap and any
 // empty room the symbol art has inside a tall cell). The room comes out of the grid's own height (its top/bottom padding),
 // so nothing outside the board moves. Run on every resize of the board.
-// Peeks: pkSet puts a symbol into a band; only a wild or a badge that is REALLY the next symbol on the strip (the round's
-// padding, from the server) stays visible at rest. Rounds without padding put neutral filler in the strip (never a wild or
-// a badge) and leave the bands empty at rest. html.peeks-off fades every peek at rest (the strip still runs through the bands).
+// Peeks (Oz 2026-10-16: "keep all symbol peek on"): each band shows the reel's next symbol on the strip, above and below,
+// at rest too. With the round's padding (the casino server sends each paid spin's true strip neighbours) that is the REAL
+// symbol, whatever it is. Without padding (free spins, bought boards, Stake books, the first board) it is neutral filler:
+// a random low or high symbol, NEVER a wild or a badge, so nothing suggests a near miss that is not there.
+// html.peeks-off fades every peek at rest (the strip still runs through the bands while spinning).
 var PK_HOT = s => s === W || s === S1 || s === S2;
 const pkOff = () => document.documentElement.classList.contains('peeks-off');
-const pkEls = reelEls.map(col => { col.insertAdjacentHTML('afterbegin', '<i class="cyl" aria-hidden="true"></i>');
+const pkFill = () => symHTML(randInt(9));   // 0..8: the paying symbols only (never W, S1, S2)
+const pkEls = reelEls.map(col => { col.insertAdjacentHTML('beforeend', '<i class="rglow" aria-hidden="true"></i><i class="cyl" aria-hidden="true"></i>');   // after the cells: they stay children 1-4 (skin.css nth-child)
   const up = document.createElement('div'), dn = document.createElement('div'); up.className = 'pkw up'; dn.className = 'pkw dn';
   up.setAttribute('aria-hidden', 'true'); dn.setAttribute('aria-hidden', 'true');
-  up.innerHTML = dn.innerHTML = '<div class="pk cold" data-s="-1"></div>'; col.appendChild(up); col.appendChild(dn);
+  const cold = pkOff() ? ' cold' : '';
+  up.innerHTML = `<div class="pk${cold}" data-s="-1">${pkFill()}</div>`; dn.innerHTML = `<div class="pk${cold}" data-s="-1">${pkFill()}</div>`;
+  col.appendChild(up); col.appendChild(dn);
   return [up.firstElementChild, dn.firstElementChild]; });
 // the symbol a band shows: k 0 above, 1 below; pad = per reel [above, below] symbol ids, or null (no padding: neutral filler)
 const pkSym = (pad, r, k) => pad && pad[r] && pad[r][k] >= 0 ? pad[r][k] : -1;
 const pkPadIds = p => { if (!Array.isArray(p) || p.length !== REELS || typeof TT_SYMN === 'undefined') return null;
   const ids = p.map(a => Array.isArray(a) ? [TT_SYMN.indexOf(a[0]), TT_SYMN.indexOf(a[1])] : [-1, -1]);
   return ids.every(a => a[0] >= 0 && a[1] >= 0) ? ids : null; };
-// a band settles: node (a symbol already drawn in the strip, moved over so nothing is redrawn) or a fresh symbol s
-function pkSet(r, k, s, node){ const pk = pkEls[r][k], hot = s >= 0 && PK_HOT(s) && !pkOff();
+// a band settles: node (the symbol already drawn in the strip, moved over so nothing is redrawn) or a fresh one.
+// s >= 0: the true neighbour; s = -1: filler (a filler node that were somehow a wild or a badge is replaced, never shown)
+function pkSet(r, k, s, node){ const pk = pkEls[r][k];
+  if (s < 0 && node && node.querySelector && (node.matches('.ms-W,.ms-S1,.ms-S2') || node.querySelector('.ms-W,.ms-S1,.ms-S2'))) node = null;
   pk.classList.add('notr'); pk.classList.remove('cold');
-  if (node) pk.replaceChildren(node); else pk.innerHTML = s >= 0 ? symHTML(s, s === W ? {mult: 0} : {}) : '';
-  pk.dataset.s = s; pk.classList.toggle('hot', hot); void pk.offsetWidth; pk.classList.remove('notr');
-  if (!hot) pk.classList.add('cold'); }
-// what the strip carries in a band position as a spin starts: the peek shown there now (a cold one fades in as it moves off)
-function pkOldHTML(r, k){ const pk = pkEls[r][k]; if (!pk.firstElementChild) return symHTML(randInt(9));
+  if (node) pk.replaceChildren(node); else pk.innerHTML = s >= 0 ? symHTML(s, s === W ? {mult: 0} : {}) : pkFill();
+  if (pk._fade){ pk._fade.cancel(); pk._fade = null; }
+  pk.dataset.s = s; pk.classList.toggle('hot', s >= 0 && PK_HOT(s));
+  // (Olly 2026-10-16, P1) shown at once, then with peeks off the same fade as the CSS transition (.32s ease-out after .06s),
+  // run by the Web Animations API instead of a forced reflow (void offsetWidth) at every landing
+  if (pkOff()){ pk.classList.add('cold'); pk._fade = pk.animate([{opacity: 1}, {opacity: 0}], {duration: 320, delay: 60, easing: 'ease-out', fill: 'backwards'}); }
+  requestAnimationFrame(() => requestAnimationFrame(() => pk.classList.remove('notr'))); }
+// what the strip carries in a band position as a spin starts: the peek shown there now (a hidden one fades in as it moves off)
+function pkOldHTML(r, k){ const pk = pkEls[r][k]; if (!pk.firstElementChild) return pkFill();
   return pk.classList.contains('cold') ? `<div class="pkin">${pk.innerHTML}</div>` : pk.innerHTML; }
-function pkToggle(){ pkEls.forEach(pair => pair.forEach(pk => { const s = +pk.dataset.s, hot = s >= 0 && PK_HOT(s) && !pkOff(); pk.classList.toggle('hot', hot); pk.classList.toggle('cold', !hot); })); }
-window.MangoPeeks = {toggle(on){ document.documentElement.classList.toggle('peeks-off', !on); pkToggle(); }, state: () => pkEls.map(p => p.map(pk => ({s: +pk.dataset.s, shown: !pk.classList.contains('cold')})))};
+function pkToggle(){ pkEls.forEach(pair => pair.forEach(pk => { if (pk._fade){ pk._fade.cancel(); pk._fade = null; } pk.classList.toggle('cold', pkOff()); })); }
+// state for the QA: s = the true neighbour id (-1 = filler), shown, and the symbol actually drawn (its .ms-<key> class)
+window.MangoPeeks = {toggle(on){ document.documentElement.classList.toggle('peeks-off', !on); pkToggle(); },
+  state: () => pkEls.map(p => p.map(pk => { const m = pk.querySelector('.ms'); return {s: +pk.dataset.s, shown: !pk.classList.contains('cold'), drawn: m ? ([...m.classList].find(c => c.startsWith('ms-')) || '').slice(3) : ''}; }))};
 // the drum: past the window's edge a symbol is squashed to PK_K of its height (it turns away on the cylinder), so the band shows
 // PK_SHOW of the next symbol's art in a little room. Inside the window nothing is squashed: the board at rest is unchanged.
 const PK_K = .55, PK_SHOW = .36;
@@ -5349,9 +5427,10 @@ const PK_K = .55, PK_SHOW = .36;
 // sits at (i-1)*pitch + y from the window top (the strip starts one row above it)
 function pkCyl(st, y, pitch, cellH){ const Hr = ROWS*pitch - (pitch - cellH), f = x => x < 0 ? PK_K*x : x > Hr ? Hr + PK_K*(x - Hr) : x, kids = st.children;
   for (let i = 0; i < kids.length; i++){ const a = (i-1)*pitch + y, b = a + cellH, el = kids[i];
-    if (a >= 0 && b <= Hr){ if (el._cy){ el.style.transform = ''; el._cy = 0; } continue; }
+    if (a >= 0 && b <= Hr){ if (el._cy){ el.style.transform = 'translateY(0px)'; el._cy = 0; } continue; }   // identity, not '': no layer is made or dropped per frame (Olly P2)
     if (b < -3*pitch || a > Hr + 3*pitch) continue;
     const fa = f(a), sc = (f(b) - fa)/cellH; el.style.transform = `translateY(${(fa - a).toFixed(1)}px) scaleY(${sc.toFixed(3)})`; el._cy = 1; } }
+var RL = {ch: 0, gap: 0};
 function reelLayout(){
   const st = gridEl.closest('.stage'), box = gridEl.parentElement; if (!st || !box || !box.clientHeight) return;
   const cs = getComputedStyle(st), lap = parseFloat(getComputedStyle(st.closest('.machine') || st).getPropertyValue('--lap')) || 0;
@@ -5365,6 +5444,7 @@ function reelLayout(){
   const sb = st.getBoundingClientRect(), rb = reelEls[0].getBoundingClientRect(), cb = cells[0].getBoundingClientRect();
   gridEl.style.setProperty('--pkT', Math.max(0, rb.top - sb.top - lap).toFixed(1) + 'px');
   gridEl.style.setProperty('--pkB', Math.max(0, sb.bottom - lap - rb.bottom).toFixed(1) + 'px');
+  RL.ch = cb.height; RL.gap = gap; preDrop(); preSoon();   // cached for preSpinStart: no forced style at the tap (Olly P3)
   gridEl.style.setProperty('--ch', cb.height.toFixed(1) + 'px'); gridEl.style.setProperty('--pg', (PK_K*gap).toFixed(1) + 'px'); gridEl.style.setProperty('--pkk', PK_K);
 }
 try { new ResizeObserver(() => reelLayout()).observe(gridEl.parentElement); } catch(e){}
@@ -5387,33 +5467,40 @@ async function spinAnim(g, mults, sticky, fast, isBonus, opt){
   for (let r=0;r<REELS && !isBonus;r++){ if (r >= 2 && antFrom < 0 && (a1 >= 2 || a2 >= 2)){ antFrom = r; antLegend = a2 >= 2 && a1 < 2; } for (let row=0;row<ROWS;row++){ const x = g[TT.cell(r,row)]; if (x===S1) a1++; if (x===S2) a2++; } }
   let antWild = false; if (!isBonus){ for (let row=0;row<ROWS;row++){ const c = TT.cell(0,row); if (dg[c] === W && dm[c] >= 25) antWild = true; } if (merged.some(mg => mg.r === 0 && mg.from.some(f => f.m >= 25))) antWild = true; }
   if (antWild && antFrom < 0){ antFrom = 1; antLegend = false; }
-  const turbo = speed === 1, antStep = turbo ? 0 : antFrom <= 1 ? 380 : 550;
-  const dur = turbo ? [0,1,2,3,4].map(r => 450 + 50*r) : [0,1,2,3,4].map(r => (isBonus ? 820 : 780) + (isBonus ? 250 : 265)*r + (antFrom >= 0 && r >= antFrom ? antStep*(r-antFrom+1) : 0));
+  const turbo = speed === 1, antStep = turbo ? 0 : antFrom <= 1 ? 300 : 450;
+  const dur = turbo ? [0,1,2,3,4].map(r => SPIN_MS(r, true)) : [0,1,2,3,4].map(r => SPIN_MS(r, false) + (antFrom >= 0 && r >= antFrom ? antStep*(r-antFrom+1) : 0));
   // the last reel that can still land the 3rd tape creeps in: about 3 s more after the reel before it lands
   const slowLast = antFrom >= 0;
   if (slowLast) dur[REELS-1] = dur[REELS-2] + (turbo ? 700 : 1700);
   const cellH = cells[0].getBoundingClientRect().height, gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, pitch = cellH + gap;
   const finalHTML = c => symHTML(dg[c], dg[c]===W ? {mult: dm[c], sticky: !!(sticky && sticky[c])} : {});
+  const preAge = pre ? Math.min(pre.age(), turbo ? 300 : 700) : 0;
   const reels = reelEls.map((col,r)=>{
     if (hold[r]) return {landed: true};
     const old = col.querySelector('.stackov'); if (old) old.remove();
-    const items = [pkNewHTML(r, 0)]; for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); items.push(sticky && sticky[c] ? symHTML(randInt(9)) : finalHTML(c)); } items.push(pkNewHTML(r, 1));
-    const crawl = slowLast && r === REELS-1;
-    const nFill = Math.max(6, Math.round(dur[r]/(isBonus ? 85 : 70))); for (let i=0;i<nFill;i++) items.push(symHTML(randInt(9)));
+    const crawl = slowLast && r === REELS-1, nFill = Math.max(6, Math.round(dur[r]/(isBonus ? 85 : 70)));
+    const items = [pkNewHTML(r, 0)]; for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); items.push(sticky && sticky[c] ? symLite(randInt(9)) : finalHTML(c)); } items.push(pkNewHTML(r, 1));
+    const ps = pre && pre.strip(r);
+    for (let i=0;i<nFill && !ps;i++) items.push(symLite(randInt(9)));
     for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); if (sticky && sticky[c] && cells[c].dataset.h === W + '|' + (dm[c] || 0) + '|false'){ const ms = cells[c].querySelector('.ms-W'); if (ms){ ms.insertAdjacentHTML('beforeend', '<i class="lk" aria-hidden="true"></i>'); cells[c].dataset.h = W + '|' + (dm[c] || 0) + '|true'; } }
-      items.push((sticky && sticky[c]) || pre ? symHTML(randInt(9)) : cells[c].innerHTML); }
-    items.splice(items.length - ROWS, 0, pre ? symHTML(randInt(9)) : pkOldHTML(r, 0)); items.push(pre ? symHTML(randInt(9)) : pkOldHTML(r, 1));
-    const st = document.createElement('div'); st.className = 'strip blur'; st.innerHTML = items.map(h=>`<div class="sc" style="height:${cellH}px">${h}</div>`).join('');
-    const D = (items.length-ROWS-2)*pitch; st.style.top = (-pitch).toFixed(1) + 'px'; st.style.transform = `translateY(${-D}px)`; pkCyl(st, -D, pitch, cellH); col.appendChild(st);
+      if (!ps) items.push(sticky && sticky[c] ? symLite(randInt(9)) : cells[c].innerHTML); }
+    let st, D, a = 0;
+    if (ps){ st = ps.st; for (let i=0;i<6;i++) st.children[i].innerHTML = items[i];
+      // a tease spins its reels longer: more filler goes in above the board, and the reel moves back by as much (no jump)
+      const extra = Math.max(0, nFill - ps.nFill); if (extra) st.children[5].insertAdjacentHTML('afterend', Array.from({length: extra}, () => `<div class="sc" style="height:${cellH}px">${symLite(randInt(9))}</div>`).join(''));
+      D = -(ps.y - extra*pitch); a = preAge; st.style.transform = `translateY(${(-D).toFixed(1)}px)`; pkCyl(st, -D, pitch, cellH); }
+    else { items.splice(items.length - ROWS, 0, pkOldHTML(r, 0)); items.push(pkOldHTML(r, 1));
+      st = document.createElement('div'); st.className = 'strip blur'; st.innerHTML = items.map(h=>`<div class="sc" style="height:${cellH}px">${h}</div>`).join('');
+      D = (items.length-ROWS-2)*pitch; st.style.top = (-pitch).toFixed(1) + 'px'; st.style.transform = `translateY(${-D}px)`; pkCyl(st, -D, pitch, cellH); col.appendChild(st); }
     for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); if (!(sticky && sticky[c])) cells[c].classList.add('spinning'); }
-    return {st, D, landed: false, crawl, y: null, p0: crawl ? Math.max(.35, Math.min(.8, dur[REELS-2]/dur[REELS-1])) : 0};
+    return {st, D, a, landed: false, crawl, y: null, p0: crawl ? Math.max(.35, Math.min(.8, dur[REELS-2]/dur[REELS-1])) : 0};
   });
-  const over = (turbo ? .08 : .16)*pitch, t0 = performance.now() - (pre ? Math.min(pre.age(), turbo ? 300 : 200) : 0); let antOn = false, n1 = 0, n2 = 0;
+  const over = (turbo ? .08 : .16)*pitch, t0 = performance.now() - preAge; let antOn = false, n1 = 0, n2 = 0;
   slam.on = true; if (!pre) slam.req = false; slamUI();
   await new Promise(done => { const frame = () => { const t = performance.now()-t0; let all = true;
     reels.forEach((R,r)=>{ if (R.landed) return;
       if (slam.req && R.slamAt == null && !(antFrom >= 0 && r >= antFrom) && t/dur[r] < .86){ R.slamAt = t; R.y0 = R.y == null ? -R.D : R.y; R.k = slamK++; }
-      let p = Math.min(1, t/dur[r]), y;
+      let p = Math.min(1, Math.max(0, (t - R.a)/(dur[r] - R.a))), y;
       if (R.slamAt != null){ const S = T(150) + T(40)*R.k, B = T(110), q = (t - R.slamAt)/S;
         if (q < 1){ y = R.y0 + (over - R.y0)*(1 - (1-q)*(1-q)); p = .45 + .2*q; } else { const q2 = Math.min(1, (t - R.slamAt - S)/B); y = over*Math.cos(q2*Math.PI/2); p = q2 >= 1 ? 1 : .9; } }
       else if (R.crawl){ const p0 = R.p0, v = 3/(.96+2*p0);   // full speed, then one long smooth slow-down into the stop
@@ -5428,7 +5515,7 @@ async function spinAnim(g, mults, sticky, fast, isBonus, opt){
       } else all = false; });
     if (antOn){ let f = false; reelEls.forEach(el => { const on = !f && el.classList.contains('tease'); if (on) f = true; el.classList.toggle('next', on); }); }
     if (all){ slam.on = false; slam.req = false; slam.tease = false; slamUI(); if (antOn) sfx('anticipation', false); document.body.classList.remove('chase'); reelEls.forEach(el => el.classList.remove('next'));
-      done(); } else requestAnimationFrame(frame); }; requestAnimationFrame(frame); });
+      done(); preSoon(); } else requestAnimationFrame(frame); }; requestAnimationFrame(frame); });
   if (merged.length) await mergeAnim(merged, false, !!opt.lock);
   return antOn;
 }
