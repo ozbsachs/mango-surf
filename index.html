@@ -1265,6 +1265,35 @@ html.turbo .grid .c.hit .ms{animation-duration:.32s}
 html.turbo .grid .c.burst::after{animation-duration:.5s}
 html.turbo .grid .c.tape.thump::before{animation-duration:.3s}
 
+/* ---------- real reels (Oz 2026-10-16): the reels are cylinders that run on under the beams ----------
+   The board keeps a band above and below the four rows (--pkT / --pkB: row edge to the beam's inner edge; spin-inject.js
+   reelLayout sets them, with the grid's own top/bottom padding --pgT / --pgB that makes the room). While a reel spins its
+   strip shows through the bands and is cut only by the wood. At rest each band shows the reel's real next symbol on the
+   strip (the round's padding), but only when that is a wild or a SURF badge (.pk.hot); every other neighbour fades out
+   (.pk.cold), and html.peeks-off fades them all out. Rounds without padding (free spins, bought boards, books without it)
+   show nothing there. A soft shade toward the beams (.cyl) gives the drum its curve. */
+.machine .stage .grid{box-sizing:border-box;padding:var(--pgT,0px) 0 var(--pgB,0px)}
+.grid .reel:has(> .strip){overflow:visible;clip-path:inset(calc(-1 * var(--pkT,0px)) -40px calc(-1 * var(--pkB,0px)) -40px)}
+.grid .reel::after{top:calc(-1 * var(--pkT,0px));bottom:calc(-1 * var(--pkB,0px))}
+.grid .reel > .pkw{position:absolute;left:0;right:0;z-index:1;overflow:hidden;pointer-events:none}
+.grid .reel > .pkw.up{bottom:100%;height:var(--pkT,0px)}
+.grid .reel > .pkw.dn{top:100%;height:var(--pkB,0px)}
+.grid .reel:has(> .strip) > .pkw{visibility:hidden}
+.pkw > .pk{position:absolute;left:0;right:0;height:var(--ch,0px);line-height:0;opacity:1;transition:opacity .32s ease-out .06s}
+.pkw.up > .pk{bottom:var(--pg,0px);transform:scaleY(var(--pkk,1));transform-origin:50% 100%}
+.pkw.dn > .pk{top:var(--pg,0px);transform:scaleY(var(--pkk,1));transform-origin:50% 0}
+.strip > .sc{transform-origin:50% 0}
+.pkw > .pk.cold{opacity:0}
+.pkw > .pk.notr{transition:none}
+.pkw > .pk > .ms .mx,.pkw > .pk .lk{display:none}
+.grid .reel > .cyl{position:absolute;left:0;right:0;top:calc(-1 * var(--pkT,0px));bottom:calc(-1 * var(--pkB,0px));z-index:3;pointer-events:none;
+  background:linear-gradient(rgba(48,24,6,.55),rgba(48,24,6,.18) var(--pkT,0px),rgba(48,24,6,0) calc(var(--pkT,0px) + var(--ch,0px) * .3),
+    rgba(48,24,6,0) calc(100% - var(--pkB,0px) - var(--ch,0px) * .3),rgba(48,24,6,.18) calc(100% - var(--pkB,0px)),rgba(48,24,6,.55))}
+.reels-glass .grid .reel > .cyl{background:linear-gradient(rgba(6,30,52,.5),rgba(6,30,52,.16) var(--pkT,0px),rgba(6,30,52,0) calc(var(--pkT,0px) + var(--ch,0px) * .3),
+    rgba(6,30,52,0) calc(100% - var(--pkB,0px) - var(--ch,0px) * .3),rgba(6,30,52,.16) calc(100% - var(--pkB,0px)),rgba(6,30,52,.5))}
+.strip .sc > .pkin{display:block;height:100%;animation:pkin .16s ease-out both}
+@keyframes pkin{from{opacity:0}}
+
 /* ---------- Mango Surf symbol life (anim-v2/symbols) ----------
    Every symbol has its own small idle loop and its own win loop. Only transform and opacity move, plus the win flash's
    brightness filter on .fx-pop. Nothing here changes the cell's (.c) or the symbol box's (.ms) layout or transform: all of
@@ -4980,7 +5009,7 @@ function ttFromBook(events){
       if (e.gameType === 'special'){ res.kind = 'special'; res.n = e.special; }
       if (e.bought) res.kind = 'buy';
       res.reelSet = e.reelSet;
-      res.g = b.g; res.mults = b.m; res.ramps = unramps(e);
+      res.g = b.g; res.mults = b.m; res.ramps = unramps(e); res.pad = e.padding || null;
     } else if (e.type === 'freeSpinTrigger'){
       if (res.kind === 'spin' && !res.g) res.kind = 'buy';
       if (!res.g) res.kind = 'buy';
@@ -4989,7 +5018,7 @@ function ttFromBook(events){
       const plain = e.wilds === 'plain', start = tier === 0 && res.g && !plain ? res.g.map((x,c)=>x===W ? res.mults[c] : 0) : null;
       bonus = {tier, plain, nSpins: e.totalFs || 10, spins: [], total: 0, capped: false, start}; res.bonus = bonus; stacks = [0,0,0,0,0];
     } else if (e.type === 'reveal' && e.gameType === 'freegame'){
-      const b = flat(e.board); spin = {landed: b, held: e.heldReels || [], sticky: e.sticky || [], ramps: unramps(e), merged: [], wins: [], win: 0};
+      const b = flat(e.board); spin = {landed: b, held: e.heldReels || [], sticky: e.sticky || [], ramps: unramps(e), merged: [], wins: [], win: 0, pad: e.padding || null};
       // sticky wilds (Crew) keep their multiplier from the board
     } else if (e.type === 'expand'){
       const target = spin || cur;
@@ -5006,7 +5035,7 @@ function ttFromBook(events){
         spin.merged.forEach(mg=>{ if (mg.anchor) stickySet.add(mg.anchor.c); });
         const fresh = []; spin.landed.g.forEach((x,c)=>{ if (x === W && !stickySet.has(c) && !heldOnly.has(Math.floor(c/4))) fresh.push(c); });
         bonus.combo = (bonus.combo || 0) + spin.wins.filter(w=>w.combo).length;
-        bonus.spins.push({g: s.g, mults: s.m, fresh, merged: spin.merged, stacks: stacks.slice(), ramps: spin.ramps, combo: bonus.combo, wins: spin.wins, win: spin.win, left: bonus.nSpins - bonus.spins.length - 1});
+        bonus.spins.push({g: s.g, mults: s.m, fresh, merged: spin.merged, stacks: stacks.slice(), ramps: spin.ramps, pad: spin.pad, combo: bonus.combo, wins: spin.wins, win: spin.win, left: bonus.nSpins - bonus.spins.length - 1});
         spin = null;
       } else if (cur){
         const s = settle(cur.landed, cur.merged || [], null);
@@ -5257,16 +5286,20 @@ function slamTry(){ if (!slam || !slam.on || slam.req || slam.tease || flags.dis
   slam.req = true; slamK = 0; slamUI(); return true; }
 function preSpinStart(){
   if (preSpin) return;
-  const cellH = cells[0].getBoundingClientRect().height, gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, pitch = cellH + gap, N = ROWS + 10;
+  const cellH = cells[0].getBoundingClientRect().height, gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, pitch = cellH + gap, N = ROWS + 12;   // + one row in each band (real reels)
   cells.forEach(c => c.classList.remove('hit')); $('lineov').innerHTML = '';
-  const strips = reelEls.map(col => { col.querySelectorAll('.pinov').forEach(o => o.remove());
-    const st = document.createElement('div'); st.className = 'strip blur'; const items = []; for (let i = 0; i < N; i++) items.push(symHTML(randInt(9)));
-    st.innerHTML = items.map(h => `<div class="sc" style="height:${cellH}px">${h}</div>`).join(''); st.style.transform = `translateY(${(-(N-ROWS)*pitch).toFixed(1)}px)`;
+  // (real reels) the strip ends with what the reel shows now: its peeks and its four rows, so the board rolls away from the
+  // tap instead of switching to filler; the rest is filler, and once the loop comes round that tail turns to filler too
+  const strips = reelEls.map((col, r) => { col.querySelectorAll('.pinov').forEach(o => o.remove());
+    const st = document.createElement('div'); st.className = 'strip blur'; const items = []; for (let i = 0; i < N - ROWS - 2; i++) items.push(symHTML(randInt(9)));
+    items.push(pkOldHTML(r, 0)); for (let row = 0; row < ROWS; row++) items.push(cells[TT.cell(r, row)].innerHTML || symHTML(randInt(9))); items.push(pkOldHTML(r, 1));
+    st.innerHTML = items.map(h => `<div class="sc" style="height:${cellH}px">${h}</div>`).join(''); st.style.top = (-pitch).toFixed(1) + 'px'; st.style.transform = `translateY(${(-(N-ROWS-2)*pitch).toFixed(1)}px)`; pkCyl(st, -(N-ROWS-2)*pitch, pitch, cellH);
     col.appendChild(st); return st; });
   cells.forEach(c => c.classList.add('spinning'));
   sfx('spinStart'); mascot('ollie');
-  const t0 = performance.now(), span = (N-ROWS)*pitch, v = pitch/T(24); let raf = 0, alive = true;
-  const frame = () => { if (!alive) return; const y = -span + ((performance.now()-t0)*v) % span; strips.forEach(st => { st.style.transform = `translateY(${y.toFixed(1)}px)`; }); raf = requestAnimationFrame(frame); };
+  const t0 = performance.now(), span = (N-ROWS-2)*pitch, v = pitch/T(24); let raf = 0, alive = true;
+  let fresh = false; const frame = () => { if (!alive) return; const d = (performance.now()-t0)*v, y = -span + d % span;
+    if (!fresh && d >= span){ fresh = true; strips.forEach(st => { for (let i = N - ROWS - 2; i < N; i++) st.children[i].innerHTML = symHTML(randInt(9)); }); } strips.forEach(st => { st.style.transform = `translateY(${y.toFixed(1)}px)`; pkCyl(st, y, pitch, cellH); }); raf = requestAnimationFrame(frame); };
   raf = requestAnimationFrame(frame);
   slam.on = true; slam.req = false; slam.tease = false; slamUI();
   const stop = () => { alive = false; cancelAnimationFrame(raf); preSpin = null; };
@@ -5279,16 +5312,74 @@ function preSpinStart(){
       slam.on = false; slam.req = false; slamUI(); }};
 }
 function thumpBadges(){ document.querySelectorAll('.grid .c.tape').forEach(c => { c.classList.remove('thump'); void c.offsetWidth; c.classList.add('thump'); }); }
+// ---------- real reels (skin.css "real reels"): the bands above and below the rows, and the true neighbours peeking there ----------
+// reelLayout: the visible band between the rows and each beam shows about a fifth of the next symbol (plus the row gap and any
+// empty room the symbol art has inside a tall cell). The room comes out of the grid's own height (its top/bottom padding),
+// so nothing outside the board moves. Run on every resize of the board.
+// Peeks: pkSet puts a symbol into a band; only a wild or a badge that is REALLY the next symbol on the strip (the round's
+// padding, from the server) stays visible at rest. Rounds without padding put neutral filler in the strip (never a wild or
+// a badge) and leave the bands empty at rest. html.peeks-off fades every peek at rest (the strip still runs through the bands).
+var PK_HOT = s => s === W || s === S1 || s === S2;
+const pkOff = () => document.documentElement.classList.contains('peeks-off');
+const pkEls = reelEls.map(col => { col.insertAdjacentHTML('afterbegin', '<i class="cyl" aria-hidden="true"></i>');
+  const up = document.createElement('div'), dn = document.createElement('div'); up.className = 'pkw up'; dn.className = 'pkw dn';
+  up.setAttribute('aria-hidden', 'true'); dn.setAttribute('aria-hidden', 'true');
+  up.innerHTML = dn.innerHTML = '<div class="pk cold" data-s="-1"></div>'; col.appendChild(up); col.appendChild(dn);
+  return [up.firstElementChild, dn.firstElementChild]; });
+// the symbol a band shows: k 0 above, 1 below; pad = per reel [above, below] symbol ids, or null (no padding: neutral filler)
+const pkSym = (pad, r, k) => pad && pad[r] && pad[r][k] >= 0 ? pad[r][k] : -1;
+const pkPadIds = p => { if (!Array.isArray(p) || p.length !== REELS || typeof TT_SYMN === 'undefined') return null;
+  const ids = p.map(a => Array.isArray(a) ? [TT_SYMN.indexOf(a[0]), TT_SYMN.indexOf(a[1])] : [-1, -1]);
+  return ids.every(a => a[0] >= 0 && a[1] >= 0) ? ids : null; };
+// a band settles: node (a symbol already drawn in the strip, moved over so nothing is redrawn) or a fresh symbol s
+function pkSet(r, k, s, node){ const pk = pkEls[r][k], hot = s >= 0 && PK_HOT(s) && !pkOff();
+  pk.classList.add('notr'); pk.classList.remove('cold');
+  if (node) pk.replaceChildren(node); else pk.innerHTML = s >= 0 ? symHTML(s, s === W ? {mult: 0} : {}) : '';
+  pk.dataset.s = s; pk.classList.toggle('hot', hot); void pk.offsetWidth; pk.classList.remove('notr');
+  if (!hot) pk.classList.add('cold'); }
+// what the strip carries in a band position as a spin starts: the peek shown there now (a cold one fades in as it moves off)
+function pkOldHTML(r, k){ const pk = pkEls[r][k]; if (!pk.firstElementChild) return symHTML(randInt(9));
+  return pk.classList.contains('cold') ? `<div class="pkin">${pk.innerHTML}</div>` : pk.innerHTML; }
+function pkToggle(){ pkEls.forEach(pair => pair.forEach(pk => { const s = +pk.dataset.s, hot = s >= 0 && PK_HOT(s) && !pkOff(); pk.classList.toggle('hot', hot); pk.classList.toggle('cold', !hot); })); }
+window.MangoPeeks = {toggle(on){ document.documentElement.classList.toggle('peeks-off', !on); pkToggle(); }, state: () => pkEls.map(p => p.map(pk => ({s: +pk.dataset.s, shown: !pk.classList.contains('cold')})))};
+// the drum: past the window's edge a symbol is squashed to PK_K of its height (it turns away on the cylinder), so the band shows
+// PK_SHOW of the next symbol's art in a little room. Inside the window nothing is squashed: the board at rest is unchanged.
+const PK_K = .55, PK_SHOW = .36;
+// cylinder look for a moving strip (spinAnim, preSpin): each item is squashed by its part past the window edges. Item i of a strip
+// sits at (i-1)*pitch + y from the window top (the strip starts one row above it)
+function pkCyl(st, y, pitch, cellH){ const Hr = ROWS*pitch - (pitch - cellH), f = x => x < 0 ? PK_K*x : x > Hr ? Hr + PK_K*(x - Hr) : x, kids = st.children;
+  for (let i = 0; i < kids.length; i++){ const a = (i-1)*pitch + y, b = a + cellH, el = kids[i];
+    if (a >= 0 && b <= Hr){ if (el._cy){ el.style.transform = ''; el._cy = 0; } continue; }
+    if (b < -3*pitch || a > Hr + 3*pitch) continue;
+    const fa = f(a), sc = (f(b) - fa)/cellH; el.style.transform = `translateY(${(fa - a).toFixed(1)}px) scaleY(${sc.toFixed(3)})`; el._cy = 1; } }
+function reelLayout(){
+  const st = gridEl.closest('.stage'), box = gridEl.parentElement; if (!st || !box || !box.clientHeight) return;
+  const cs = getComputedStyle(st), lap = parseFloat(getComputedStyle(st.closest('.machine') || st).getPropertyValue('--lap')) || 0;
+  const padT = parseFloat(cs.paddingTop) || 0, padB = parseFloat(cs.paddingBottom) || 0, H = box.clientHeight;
+  const gap = parseFloat(getComputedStyle(reelEls[0]).rowGap) || 0, cw = reelEls[0].clientWidth;
+  // the band each side: gap + empty room in the cell + PK_SHOW of the art; the cell height depends on the band, so settle it
+  let band = 0; for (let i = 0; i < 4; i++){ const ch = (H - 2*band + (padT + padB - 2*lap) - 3*gap)/ROWS, art = Math.min(ch, cw);
+    band = PK_K*(gap + Math.max(0, (ch - art)/2) + PK_SHOW*art); }
+  const pgT = Math.max(0, band - (padT - lap)), pgB = Math.max(0, band - (padB - lap));
+  gridEl.style.setProperty('--pgT', pgT.toFixed(1) + 'px'); gridEl.style.setProperty('--pgB', pgB.toFixed(1) + 'px');
+  const sb = st.getBoundingClientRect(), rb = reelEls[0].getBoundingClientRect(), cb = cells[0].getBoundingClientRect();
+  gridEl.style.setProperty('--pkT', Math.max(0, rb.top - sb.top - lap).toFixed(1) + 'px');
+  gridEl.style.setProperty('--pkB', Math.max(0, sb.bottom - lap - rb.bottom).toFixed(1) + 'px');
+  gridEl.style.setProperty('--ch', cb.height.toFixed(1) + 'px'); gridEl.style.setProperty('--pg', (PK_K*gap).toFixed(1) + 'px'); gridEl.style.setProperty('--pkk', PK_K);
+}
+try { new ResizeObserver(() => reelLayout()).observe(gridEl.parentElement); } catch(e){}
+reelLayout(); addEventListener('resize', reelLayout);
 
 async function spinAnim(g, mults, sticky, fast, isBonus, opt){
   opt = opt || {}; const merged = opt.merged || [], hold = opt.hold || [false,false,false,false,false];
   const pre = preSpin ? preSpin.take(fast || speed === 2) : null; slam.tease = false;
+  const pad = pkPadIds(opt.pad), pkNewHTML = (r, k) => { const s = pkSym(pad, r, k); return s >= 0 ? symHTML(s, s === W ? {mult: 0} : {}) : symHTML(randInt(9)); };
   cells.forEach(c=>c.classList.remove('hit')); $('lineov').innerHTML = '';
   const dg = g.slice(), dm = mults.slice();
   merged.forEach(mg=>{ if (mg.upgrade && !mg.anchor) return; for (let row=0;row<ROWS;row++){ const c = TT.cell(mg.r,row), f = mg.from.find(x=>x.c===c); dg[c] = f ? W : mg.raw[row]; dm[c] = f ? f.m : mg.anchor && mg.anchor.c === c ? mg.anchor.m : 0; } });
   if (fast || speed === 2){ if (speed === 2 && !fast) mascot('ollie'); document.querySelectorAll('.pinov').forEach(o=>o.remove());
     // last spin's wild stacks go (the animated path drops them as each reel starts); held reels are redrawn from merged below
-    reelEls.forEach((el, r) => { if (!hold[r]){ const o = el.querySelector('.stackov'); if (o) o.remove(); } }); for (let c=0;c<CELLS;c++){ if (hold[Math.floor(c/ROWS)]) continue; paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0); } merged.forEach(mg=>setStack(mg.r, mg.M, !!opt.lock)); return false; }
+    reelEls.forEach((el, r) => { if (!hold[r]){ const o = el.querySelector('.stackov'); if (o) o.remove(); } }); for (let c=0;c<CELLS;c++){ if (hold[Math.floor(c/ROWS)]) continue; paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0); } for (let r=0;r<REELS;r++) if (!hold[r]){ pkSet(r, 0, pkSym(pad, r, 0)); pkSet(r, 1, pkSym(pad, r, 1)); } merged.forEach(mg=>setStack(mg.r, mg.M, !!opt.lock)); return false; }
   if (!pre){ sfx('spinStart'); mascot('ollie'); }
   // anticipation: two tapes of a kind down means the later reels spin longer (the outcome is already fixed).
   // The rising tape chime only starts at the 2nd tape of a kind; the first one lands quietly.
@@ -5306,13 +5397,14 @@ async function spinAnim(g, mults, sticky, fast, isBonus, opt){
   const reels = reelEls.map((col,r)=>{
     if (hold[r]) return {landed: true};
     const old = col.querySelector('.stackov'); if (old) old.remove();
-    const items = []; for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); items.push(sticky && sticky[c] ? symHTML(randInt(9)) : finalHTML(c)); }
+    const items = [pkNewHTML(r, 0)]; for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); items.push(sticky && sticky[c] ? symHTML(randInt(9)) : finalHTML(c)); } items.push(pkNewHTML(r, 1));
     const crawl = slowLast && r === REELS-1;
     const nFill = Math.max(6, Math.round(dur[r]/(isBonus ? 85 : 70))); for (let i=0;i<nFill;i++) items.push(symHTML(randInt(9)));
     for (let row=0; row<ROWS; row++){ const c = TT.cell(r,row); if (sticky && sticky[c] && cells[c].dataset.h === W + '|' + (dm[c] || 0) + '|false'){ const ms = cells[c].querySelector('.ms-W'); if (ms){ ms.insertAdjacentHTML('beforeend', '<i class="lk" aria-hidden="true"></i>'); cells[c].dataset.h = W + '|' + (dm[c] || 0) + '|true'; } }
       items.push((sticky && sticky[c]) || pre ? symHTML(randInt(9)) : cells[c].innerHTML); }
+    items.splice(items.length - ROWS, 0, pre ? symHTML(randInt(9)) : pkOldHTML(r, 0)); items.push(pre ? symHTML(randInt(9)) : pkOldHTML(r, 1));
     const st = document.createElement('div'); st.className = 'strip blur'; st.innerHTML = items.map(h=>`<div class="sc" style="height:${cellH}px">${h}</div>`).join('');
-    const D = (items.length-ROWS)*pitch; st.style.transform = `translateY(${-D}px)`; col.appendChild(st);
+    const D = (items.length-ROWS-2)*pitch; st.style.top = (-pitch).toFixed(1) + 'px'; st.style.transform = `translateY(${-D}px)`; pkCyl(st, -D, pitch, cellH); col.appendChild(st);
     for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); if (!(sticky && sticky[c])) cells[c].classList.add('spinning'); }
     return {st, D, landed: false, crawl, y: null, p0: crawl ? Math.max(.35, Math.min(.8, dur[REELS-2]/dur[REELS-1])) : 0};
   });
@@ -5327,10 +5419,10 @@ async function spinAnim(g, mults, sticky, fast, isBonus, opt){
       else if (R.crawl){ const p0 = R.p0, v = 3/(.96+2*p0);   // full speed, then one long smooth slow-down into the stop
         if (p < p0) y = -R.D + (R.D+over)*v*p; else if (p < .96){ const q = (p-p0)/(.96-p0); y = -R.D + (R.D+over)*(v*p0 + (1-v*p0)*(1-Math.pow(1-q, 3))); } else { const q = (p-.96)/.04; y = over*Math.cos(q*Math.PI/2); } }
       else if (p < .86){ const q = p/.86; y = -R.D + (R.D+over)*(1 - Math.pow(1-q, 2.4)); } else { const q = (p-.86)/.14; y = over*Math.cos(q*Math.PI/2); }
-      R.y = y; R.st.style.transform = `translateY(${y.toFixed(1)}px)`; if (p > .55) R.st.classList.remove('blur');
-      if (p >= 1){ R.landed = true; R.st.remove(); reelOff(r); reelEls[r].querySelectorAll('.pinov').forEach(o=>o.remove());
+      R.y = y; R.st.style.transform = `translateY(${y.toFixed(1)}px)`; pkCyl(R.st, y, pitch, cellH); if (p > .55) R.st.classList.remove('blur');
+      if (p >= 1){ R.landed = true; R.st.remove(); for (const k of [0, 1]){ const sc = R.st.children[k ? ROWS+1 : 0]; pkSet(r, k, pkSym(pad, r, k), sc && sc.firstElementChild); } reelOff(r); reelEls[r].querySelectorAll('.pinov').forEach(o=>o.remove());
         for (let row=0;row<ROWS;row++){ const c = TT.cell(r,row); cells[c].classList.remove('spinning'); if (!(sticky && sticky[c] > 0 && cells[c].dataset.h === dg[c] + '|' + (dm[c] || 0) + '|true')) paintCell(c, dg[c], dm[c], sticky && sticky[c] > 0);
-          { const sc = R.st.children[row], sm = sc && sc.firstElementChild, cm = cells[c].firstElementChild; if (sm && cm && sm.outerHTML === cm.outerHTML) cells[c].replaceChildren(sm); }
+          { const sc = R.st.children[row+1], sm = sc && sc.firstElementChild, cm = cells[c].firstElementChild; if (sm && cm && sm.outerHTML === cm.outerHTML) cells[c].replaceChildren(sm); }
           if (dg[c]===S1){ n1++; if (n1 >= 3){ const bc = cells[c]; bc.classList.add('burst'); setTimeout(() => bc.classList.remove('burst'), 1000); } if (n1 >= 2) sfx('scatterLand', n1); if (r < REELS-1 && n1 === 3) banner('SESH BONUS! ONE MORE TAPE FOR LEGEND'); if (r < REELS-1 && n1 === 4) banner('LEGEND! ONE MORE TAPE FOR 12 SPINS'); } else if (dg[c]===S2){ n2++; if (n2 >= 2) sfx('scatterLand', n2); } else if (dg[c]===W && !(sticky && sticky[c])) sfx('wildLand', dm[c]); }
         sfx('reelStop', r); if (antOn) thumpBadges(); if (r+1 === antFrom && !antOn){ antOn = true; sfx('anticipation', true); banner(antWild && n1 < 2 ? 'x25 WILD ON REEL 1...' : n1 >= 3 ? 'SESH BONUS! ONE MORE TAPE FOR LEGEND' : 'TWO SESH TAPES... ONE MORE!'); document.body.classList.add('chase'); slam.tease = true; slamUI(); for (let k=antFrom;k<REELS;k++){ reelEls[k].classList.add('tease'); reelEls[k].classList.toggle('legend', antLegend); } }
       } else all = false; });
@@ -5430,7 +5522,7 @@ async function playBonus(B, cost, startWin){
     // held Legend stacks fold back to their one sticky wild, then the reel spins around it
     const pins = sp.merged.filter(mg=>mg.anchor).map(mg=>mg.anchor);
     if (pins.length){ pins.forEach(a=>{ st[a.c] = 1; hold[Math.floor(a.c/ROWS)] = false; }); await shrinkStacks(pins, speed === 2); }
-    await spinAnim(sp.g, sp.mults, st, false, true, {merged: sp.merged, hold, lock: B.tier === 2});
+    await spinAnim(sp.g, sp.mults, st, false, true, {merged: sp.merged, hold, lock: B.tier === 2, pad: sp.pad});
     drawLines(sp.wins, sp.ramps); run += sp.win; if (sp.win > 0) sfx('bonusSpinWin', sp.win*roundBet/Math.max(cost,1e-9));
     $('lastwin').textContent = fmt$(sp.win*roundBet); $('totalwin').textContent = fmt$(((startWin || 0) + run)*roundBet);
     const steps = comboSteps(sp.wins);
@@ -5524,7 +5616,7 @@ async function animateRound(res, cost){
   let antOn = false;
   if (res.kind === 'buy'){ if (res.g){ await spinAnim(res.g, res.mults, null, false, false, {}); await wait(T(500)); } await playBonus(res.bonus, cost, 0); }
   else {
-    antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged});
+    antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged, pad: res.pad});
     drawLines(res.wins, res.ramps); $('lastwin').textContent = fmt$(res.lineWin*roundBet); await showTopUp(res);
     if (res.bonus){ autoLeft = 0; await wait(T(450)); await playBonus(res.bonus, cost, res.lineWin); }
   }
