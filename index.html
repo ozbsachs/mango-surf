@@ -4500,7 +4500,8 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     if (document.readyState === 'complete') go(); else addEventListener('load', go); };
   // (2026-10-19: with the cinematic layer (cine.js, MangoCine) the big-win card shows its own surfing mango, fx-hero, so the
   // clip is only fetched where that layer is missing)
-  if (!window.MangoCine) afterLoad(() => setTimeout(() => { const im = new Image(); im.fetchPriority = 'low'; im.decoding = 'async'; im.src = SURF; }, 1000));
+  // (asked when it runs: cine.js loads after this script)
+  afterLoad(() => setTimeout(() => { if (window.MangoCine) return; const im = new Image(); im.fetchPriority = 'low'; im.decoding = 'async'; im.src = SURF; }, 1000));
   window.MangoAnim = {
     play(node, pose){ if (!node) return;
       if (node.id === 'cel-art'){ if (window.MangoCine && MangoCine.hero){ MangoCine.hero(node, pose); return; }
