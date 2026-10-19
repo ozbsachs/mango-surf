@@ -438,6 +438,7 @@
     for (var i = 0; i < WARM.length; i++) for (var vi = 0; vi < 2; vi++) q.push([WARM[i], vi]);
     (function next() {
       if (!ctx || !q.length) return;
+      if (held()) { setTimeout(next, 250); return; }
       var j = q.shift();
       try { ksBuf(j[0], j[1]); } catch (e) { return; }
       setTimeout(next, 20);
@@ -642,7 +643,7 @@
     var jobs = [function () { OCEAN.splash[0] = renderSplash(11); }, function () { OCEAN.wash = renderWash(7); },
                 function () { OCEAN.splash[1] = renderSplash(23); }, function () { OCEAN.stream = renderStream(5); },
                 function () { OCEAN.splash[2] = renderSplash(37); }];
-    (function next() { if (!ctx || !jobs.length) return; try { jobs.shift()(); } catch (e) { return; } setTimeout(next, 30); })();
+    (function next() { if (!ctx || !jobs.length) return; if (held()) { setTimeout(next, 250); return; } try { jobs.shift()(); } catch (e) { return; } setTimeout(next, 30); })();
   }
 
   function sample(v, dest, t, buf, peak, rate, o) {
@@ -666,6 +667,7 @@
     var q = SB_LIST.slice();
     (function next() {
       if (!ctx || !q.length || !root.fetch) return;
+      if (held()) { setTimeout(next, 250); return; }
       var n = q.shift();
       var V = root.MANGO_SFX_V || {};   // content hash per file (build.js): same address as MANGO_LOAD.later, so the cached copy is used
       root.fetch('audio/sfx/' + n + '.mp3' + (V[n] ? '?v=' + V[n] : ''), { priority: 'low', credentials: 'same-origin' })
@@ -1024,13 +1026,28 @@
   }
 
 
+  // unlock(): only makes (or resumes) the audio context, inside the player's gesture, so the browser lets it run. The heavy
+  // part (node graph, noise and reverb buffers, the ocean renders) waits for init(), which the game calls when it is idle,
+  // so the first spin is not held up by it (2026-10-19, sound on by default).
+  var pendingCtx = null, yieldFn = null;
+  function unlock() {
+    if (ctx) { if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop); return true; }
+    if (!AC) return false;
+    if (!pendingCtx) pendingCtx = new AC();
+    if (pendingCtx.state === 'suspended' && pendingCtx.resume) pendingCtx.resume().catch(noop);
+    return true;
+  }
+  // background preparation (string warm-up, ocean renders, the sample kit) pauses while yieldFn() is true (a round in play)
+  function setYield(fn) { yieldFn = typeof fn === 'function' ? fn : null; }
+  function held() { try { return !!(yieldFn && yieldFn()); } catch (e) { return false; } }
+
   function init() {
     if (ctx) {
       if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
       return true;
     }
     if (!AC) return false;
-    ctx = new AC();
+    ctx = pendingCtx || new AC(); pendingCtx = null;
     if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
 
     N.master = ctx.createGain(); N.master.gain.value = muted ? 0.0001 : MASTER; N.master.connect(ctx.destination);
@@ -1644,6 +1661,8 @@
 
   root.MangoAudio = {
     init: safe(init, false),
+    unlock: safe(unlock, false),
+    setYield: safe(setYield),
     isReady: safe(isReady, false),
     startMusic: safe(startMusic),
     stopMusic: safe(stopMusic),

@@ -2532,15 +2532,49 @@ header.slotbar{justify-content:flex-end!important}
   .msign .ms-a{right:-70%;top:20%;width:54px;height:38px;font-size:18px}
 }
 
-/* ---------- side buttons: MUSIC / SFX as small driftwood planks, in the signs' wood. The bottom bar stays black and gold
-   (Oz); the BONUS BUY plank is already wood. ---------- */
-header.slotbar .soundbtns .pill{background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-color:transparent!important;
-  border-width:7px!important;border-image:url("img/wood-panel.webp?v=3699864c") 16% fill / 7px stretch!important;padding:3px 8px!important;
-  color:#f3d58a!important;text-shadow:0 1px 0 #2a1608;filter:drop-shadow(0 3px 3px rgba(40,20,5,.4));transition:transform .12s}
-header.slotbar .soundbtns .pill[aria-pressed="true"]{color:#fff4dc!important}
-header.slotbar .soundbtns .pill:hover{transform:translateY(-1px) rotate(-1deg)}
-header.slotbar .soundbtns .pill:active{transform:scale(.95)}
-@media (max-width:640px){ header.slotbar .soundbtns .pill{border-width:6px!important;border-image-width:6px!important;padding:2px 5px!important} }
+/* ---------- MUSIC / SFX left the top corner (Oz 2026-10-19): their switches live in the cog (skin.js openSettings presses the
+   two hidden game buttons, so every handler and label still works) ---------- */
+header.slotbar .soundbtns{display:none!important}
+
+/* settings: each sound switch says ON or OFF in words, and has a bigger finger target on phones */
+#mset .st-tog{display:flex;align-items:center;justify-content:flex-end;padding:0 7px;font:800 10px/1 "Montserrat",system-ui,sans-serif;color:#fff;letter-spacing:.04em}
+#mset .st-tog.on{justify-content:flex-start;color:#00253f}
+#mset .st-tog::before{content:"";position:absolute;inset:-8px -10px}
+#mset .st-tog .st-w{position:relative;pointer-events:none}
+@media (orientation:landscape) and (max-height:300px){ #mset .st-tog{font-size:7px!important;padding:0 3px!important} }
+
+/* ---------- BONUS BOOST switch (the old MODE button's place): OFF black with a gold edge, ON filled gold with the price per spin.
+   No !important on display: the Stake mini-player (Popout S) still leaves it out, as it did MODE (it starts off) ---------- */
+.mhud #modebtn.bboost{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.05!important}
+.mhud #modebtn.bboost .bb-t,.mhud #modebtn.bboost .bb-s{display:block;font:inherit;font-size:1em;line-height:1.05;white-space:nowrap;letter-spacing:inherit}
+.mhud #modebtn.bboost .bb-s{font-size:.92em;color:#fff}
+.mhud #modebtn.bboost.on{background:var(--gold)!important;border-color:var(--gold)!important;color:#000!important}
+.mhud #modebtn.bboost.on .bb-s{color:#000}
+.mhud #modebtn.bboost.on:not(:disabled):hover{background:#f0d488!important}
+/* portrait phones: the switch sits in a narrow cell, so BONUS / BOOST may take two lines (and bbFit shrinks a long price) */
+@media (max-width:640px) and (orientation:portrait){ .mhud #modebtn.bboost .bb-t{white-space:normal;line-height:1} .mhud #modebtn.bboost{gap:1px} }
+
+/* ---------- autoplay running: the button lit gold (hud.css .on) with the spins left in it instead of the icon ---------- */
+.mhud #autobtn.on::before{opacity:0}
+.mhud #autobtn.on[data-left]:not([data-left=""])::after{content:attr(data-left);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font:800 15px/1 "Montserrat",system-ui,sans-serif;color:#000;letter-spacing:-.02em}
+.mhud #autobtn.on{opacity:1!important;box-shadow:0 0 0 2px #000,0 0 10px 2px rgba(230,196,110,.75)!important}
+
+/* ---------- every bonus waits for the player after its intro: TAP TO START / PRESS SPACE over the reels ---------- */
+.bonusgo{position:absolute;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(4,20,40,.38);
+  opacity:0;transition:opacity .25s ease-out;-webkit-tap-highlight-color:transparent;outline:none}
+.bonusgo.on{opacity:1}
+.bonusgo .bg-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 26px 18px;max-width:92%;text-align:center;
+  background:#000;border:4px solid var(--gold,#E6C46E);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.bonusgo .bg-t{font:400 clamp(20px,3.4vw,38px)/1 "Lilita One",system-ui,sans-serif;color:var(--gold,#E6C46E);letter-spacing:.03em}
+.bonusgo .bg-n{font:800 clamp(11px,1.4vw,16px)/1.1 "Montserrat",system-ui,sans-serif;color:#fff;letter-spacing:.06em}
+.bonusgo .bg-go{margin-top:6px;padding:9px 18px;border-radius:999px;background:var(--gold,#E6C46E);color:#000;font:800 clamp(12px,1.6vw,18px)/1 "Montserrat",system-ui,sans-serif;letter-spacing:.06em;
+  animation:bgpulse 1.1s ease-in-out infinite}
+@keyframes bgpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.bonusgo .bg-k{font:800 clamp(10px,1.1vw,13px)/1 "Montserrat",system-ui,sans-serif;color:#e6d3a8;letter-spacing:.05em}
+@media (prefers-reduced-motion:reduce){ .bonusgo .bg-go{animation:none} }
+@media (orientation:landscape) and (max-height:300px){ .bonusgo .bg-card{padding:6px 12px 8px;gap:3px;border-width:2px;border-radius:10px}
+  .bonusgo .bg-t{font-size:15px}.bonusgo .bg-n,.bonusgo .bg-k{font-size:9px}.bonusgo .bg-go{margin-top:2px;padding:5px 10px;font-size:10px} }
 
 /* ---------- wooden bonus-buy cards (buy-cards.css, prototype in anim-v2/buy): the buy sheet is one grid of chunky driftwood cards ----------
    Each card: a title plank on top, its own art in a sunburst window, a short line, the price and a bright pill.
@@ -2552,7 +2586,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
        <span class="wc-tag">3 wilds</span><small class="wc-desc">...</small>
        <span class="wc-price" style="--pl:7"><b>$125.00</b><i>per spin</i></span><span class="wc-cta">BUY</span></button> */
 .sheet.mbuy{--wc-ink:#2a1608;--wc-cream:#fff4dc;--wc-edge:#e6d3a8;--wc-gap:clamp(10px,1.1vw,18px)}
-.sheet.mbuy.wcards{width:min(1480px,calc(100vw - 16px))}
+.sheet.mbuy.wcards{width:min(1120px,calc(100vw - 16px))}   /* six cards since 2026-10-19: three bonus buys, three Wave Spins */
 .sheet.mbuy.wcards .dh{display:none}
 /* one grid for the whole sheet: the two game containers (#modes, #buys) and their wrappers flatten into it */
 .sheet.mbuy .wc-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:calc(var(--wc-gap) + 14px) var(--wc-gap);padding-top:16px}
@@ -2564,7 +2598,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 
 /* ---------- the card ---------- */
 .sheet.mbuy .wc{--tint1:#7fe0ff;--tint2:#1aa9ef;--tint3:#0a5fa8;--cta1:#ffb03a;--cta2:#ff4f8b;--ctad:#9c1f4a;
-  position:relative;flex:0 0 calc((100% - 3*var(--wc-gap))/4);min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+  position:relative;flex:0 0 calc((100% - 2*var(--wc-gap))/3);min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
   margin:0;padding:34px 12px 14px;text-align:center;cursor:pointer;color:var(--wc-cream);font:400 14px/1.2 "Lilita One",system-ui,sans-serif;
   border-style:solid;border-color:transparent;border-width:18px;border-radius:0;
   border-image:url("img/wood-panel.webp?v=3699864c") 16% / 18px stretch;box-shadow:none;
@@ -2694,12 +2728,12 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   .sheet.mbuy .wc-cta{min-width:0;width:100%;min-height:44px;font-size:15px;letter-spacing:.05em;padding:0 4px;border-width:2px;box-shadow:0 4px 0 var(--ctad),inset 0 2px 0 rgba(255,255,255,.35)}
   .sheet.mbuy .wc-q{font-size:26px}
 }
-/* phones on their side and other short landscape windows (1024x576, 800x450, Stake's pop-outs): one row of eight */
+/* phones on their side and other short landscape windows (1024x576, 800x450, Stake's pop-outs): one row of six */
 @media (orientation:landscape) and (max-height:620px){
   .sheet.mbuy{--wc-gap:6px}
   .sheet.mbuy.wcards{width:calc(100vw - 12px)}
   .sheet.mbuy .wc-grid{gap:26px 6px;padding-top:12px}
-  .sheet.mbuy .wc{flex-basis:calc((100% - 7*var(--wc-gap))/8);border-width:9px;border-image-width:9px;padding:18px 2px 4px;gap:4px;
+  .sheet.mbuy .wc{flex-basis:calc((100% - 5*var(--wc-gap))/6);border-width:9px;border-image-width:9px;padding:18px 2px 4px;gap:4px;
     background:linear-gradient(180deg,#9a6a3c,#7a4d28 55%,#5f3a1c);background-clip:padding-box}
   .sheet.mbuy .wc-plank{left:-9px;right:-9px;top:-28px;height:38px}
   .sheet.mbuy .wc-name{font-size:12px;letter-spacing:.02em;padding:2px 8px 0;white-space:normal;line-height:.92;text-overflow:clip;max-height:2em}
@@ -2709,9 +2743,9 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   .sheet.mbuy .wc-cta{min-width:0;width:100%;min-height:44px;font-size:14px;letter-spacing:.04em;padding:0 3px;border-width:2px}
   .sheet.mbuy .wc-q{font-size:24px}
 }
-/* Stake's smallest pop-out (400x225): no room for art; two rows of four signs with name, price and pill */
+/* Stake's smallest pop-out (400x225): no room for art; two rows of three signs with name, price and pill */
 @media (orientation:landscape) and (max-height:300px){
-  .sheet.mbuy .wc{flex-basis:calc((100% - 3*var(--wc-gap))/4)}
+  .sheet.mbuy .wc{flex-basis:calc((100% - 2*var(--wc-gap))/3)}
   .sheet.mbuy .wc-win{display:none}
   .sheet.mbuy .wc-name{font-size:11px;white-space:nowrap;text-overflow:ellipsis}
   .sheet.mbuy .wc-plank{height:30px;top:-24px}
@@ -3173,6 +3207,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     for (var i = 0; i < WARM.length; i++) for (var vi = 0; vi < 2; vi++) q.push([WARM[i], vi]);
     (function next() {
       if (!ctx || !q.length) return;
+      if (held()) { setTimeout(next, 250); return; }
       var j = q.shift();
       try { ksBuf(j[0], j[1]); } catch (e) { return; }
       setTimeout(next, 20);
@@ -3377,7 +3412,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var jobs = [function () { OCEAN.splash[0] = renderSplash(11); }, function () { OCEAN.wash = renderWash(7); },
                 function () { OCEAN.splash[1] = renderSplash(23); }, function () { OCEAN.stream = renderStream(5); },
                 function () { OCEAN.splash[2] = renderSplash(37); }];
-    (function next() { if (!ctx || !jobs.length) return; try { jobs.shift()(); } catch (e) { return; } setTimeout(next, 30); })();
+    (function next() { if (!ctx || !jobs.length) return; if (held()) { setTimeout(next, 250); return; } try { jobs.shift()(); } catch (e) { return; } setTimeout(next, 30); })();
   }
 
   function sample(v, dest, t, buf, peak, rate, o) {
@@ -3401,6 +3436,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     var q = SB_LIST.slice();
     (function next() {
       if (!ctx || !q.length || !root.fetch) return;
+      if (held()) { setTimeout(next, 250); return; }
       var n = q.shift();
       var V = root.MANGO_SFX_V || {};   // content hash per file (build.js): same address as MANGO_LOAD.later, so the cached copy is used
       root.fetch('audio/sfx/' + n + '.mp3' + (V[n] ? '?v=' + V[n] : ''), { priority: 'low', credentials: 'same-origin' })
@@ -3759,13 +3795,28 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   }
 
 
+  // unlock(): only makes (or resumes) the audio context, inside the player's gesture, so the browser lets it run. The heavy
+  // part (node graph, noise and reverb buffers, the ocean renders) waits for init(), which the game calls when it is idle,
+  // so the first spin is not held up by it (2026-10-19, sound on by default).
+  var pendingCtx = null, yieldFn = null;
+  function unlock() {
+    if (ctx) { if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop); return true; }
+    if (!AC) return false;
+    if (!pendingCtx) pendingCtx = new AC();
+    if (pendingCtx.state === 'suspended' && pendingCtx.resume) pendingCtx.resume().catch(noop);
+    return true;
+  }
+  // background preparation (string warm-up, ocean renders, the sample kit) pauses while yieldFn() is true (a round in play)
+  function setYield(fn) { yieldFn = typeof fn === 'function' ? fn : null; }
+  function held() { try { return !!(yieldFn && yieldFn()); } catch (e) { return false; } }
+
   function init() {
     if (ctx) {
       if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
       return true;
     }
     if (!AC) return false;
-    ctx = new AC();
+    ctx = pendingCtx || new AC(); pendingCtx = null;
     if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
 
     N.master = ctx.createGain(); N.master.gain.value = muted ? 0.0001 : MASTER; N.master.connect(ctx.destination);
@@ -4379,6 +4430,8 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
 
   root.MangoAudio = {
     init: safe(init, false),
+    unlock: safe(unlock, false),
+    setYield: safe(setYield),
     isReady: safe(isReady, false),
     startMusic: safe(startMusic),
     stopMusic: safe(stopMusic),
@@ -4797,7 +4850,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
   function openPanel(p){ if (openP && openP !== p) closePanel(openP); fitPanel(p); p.hidden = false; openP = p; requestAnimationFrame(() => p.classList.add('on')); }
   function closePanel(p){ p.classList.remove('on'); p.hidden = true; if (openP === p) openP = null; }
   addEventListener('resize', () => { if (openP) fitPanel(openP); });
-  addEventListener('keydown', e => { if (!openP) return; if (e.key === 'Escape') closePanel(openP);
+  addEventListener('keydown', e => { if (!openP) return; if (e.key === 'Escape'){ closePanel(openP); return; }
     if (openP.id === 'minfo' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')){ e.preventDefault(); e.stopPropagation(); goSlide(slideAt + (e.key === 'ArrowRight' ? 1 : -1)); }
     if (e.key === ' ') e.stopPropagation(); }, true);
 
@@ -4863,15 +4916,16 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     view.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) goSlide(slideAt + (dx < 0 ? 1 : -1)); });
     goSlide(0); openPanel(p);
   }
-  // settings: the game's own controls drive everything, so choices persist exactly as before
+  // settings: the game's own controls drive everything, so choices persist exactly as before. Music and sound effects are
+  // switched here only (the top-corner MUSIC / SFX buttons are hidden); each switch reads ON or OFF
   function openSettings(){
     const p = panel('mset', 'Settings'), $i = id => document.getElementById(id);
-    const row = (key, label, btnId, volId) => `<div class="st-row"><span class="st-l ${key}">${label}</span><button type="button" class="st-tog" data-btn="${btnId}" aria-label="${label} on or off"></button>
+    const row = (key, label, btnId, volId) => `<div class="st-row"><span class="st-l ${key}">${label}</span><button type="button" class="st-tog" data-btn="${btnId}" aria-label="${label}" aria-pressed="false"><span class="st-w">OFF</span></button>
       <input type="range" min="0" max="100" class="st-vol" data-vol="${volId}" aria-label="${label} volume"></div>`;
     p.querySelector('.mp-body').innerHTML = `<div class="st-grid">${row('music', 'Music', 'musicbtn', 'musicvol')}${row('sfx', 'Sound effects', 'soundbtn', 'sfxvol')}
       <div class="st-row sp"><span class="st-l speed">Spin speed</span><div class="st-seg" role="group" aria-label="Spin speed"><button type="button" data-lv="0">Normal</button><button type="button" data-lv="1">Turbo</button></div></div>
       <p class="st-note">Every spin's result is decided by the server; speed only changes the animation.</p></div>`;
-    const sync = () => { p.querySelectorAll('.st-tog').forEach(t => { const b = $i(t.dataset.btn); t.classList.toggle('on', !!b && b.getAttribute('aria-pressed') === 'true'); });
+    const sync = () => { p.querySelectorAll('.st-tog').forEach(t => { const b = $i(t.dataset.btn), on = !!b && b.getAttribute('aria-pressed') === 'true'; t.classList.toggle('on', on); t.setAttribute('aria-pressed', on); t.querySelector('.st-w').textContent = on ? 'ON' : 'OFF'; });
       p.querySelectorAll('.st-vol').forEach(v => { const o = $i(v.dataset.vol); if (o) v.value = o.value; });
       const st = ($i('speedbtn') || {}).textContent || '', lv = /TURBO/.test(st) ? '1' : '0'; p.querySelectorAll('.st-seg button').forEach(b => b.classList.toggle('on', b.dataset.lv === lv)); };
     p.querySelectorAll('.st-tog').forEach(t => t.onclick = () => { const b = $i(t.dataset.btn); if (b) b.click(); setTimeout(sync, 50); });
@@ -5123,7 +5177,7 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
     <header class="slotbar">
       <span class="barspacer" aria-hidden="true"></span>
       <div class="brand">MANGO SURF</div>
-      <div class="soundbtns"><button class="pill" id="musicbtn" type="button" aria-pressed="false">MUSIC: OFF</button><button class="pill" id="soundbtn" type="button" aria-pressed="false">SFX: OFF</button></div>
+      <div class="soundbtns" hidden><button class="pill" id="musicbtn" type="button" aria-pressed="false">MUSIC: OFF</button><button class="pill" id="soundbtn" type="button" aria-pressed="false">SFX: OFF</button></div>
     </header>
     <main class="machine">
       <div class="juris" id="juris"></div>
@@ -5192,11 +5246,11 @@ header.slotbar .soundbtns .pill:active{transform:scale(.95)}
         <div class="acts"><button class="btn go" id="cf-ok" type="button">CONFIRM</button><button class="btn" id="cf-cancel" type="button">CANCEL</button></div>
       </div></div>
   </div>
-  <div class="sheet mbuy wcards" id="buysheet" hidden role="dialog" aria-label="Modes and bonus buys">
-    <div class="win"><div class="bar"><span>MODES &amp; BONUS BUY</span><button class="pill" type="button" data-close>CLOSE</button></div>
+  <div class="sheet mbuy wcards" id="buysheet" hidden role="dialog" aria-label="Wave spins and bonus buys">
+    <div class="win"><div class="bar"><span>WAVE SPINS &amp; BONUS BUY</span><button class="pill" type="button" data-close>CLOSE</button></div>
       <div class="body wc-grid">
-        <h3 class="dh" style="margin-top:0">SPIN MODE</h3>
-        <div class="modes" id="modes" role="group" aria-label="Spin mode"></div>
+        <h3 class="dh" style="margin-top:0">WAVE SPINS</h3>
+        <div class="modes" id="modes" role="group" aria-label="Wave spins"></div>
         <div id="buyswin"><h3 class="dh">BONUS BUY</h3><div class="buys" id="buys"></div></div>
       </div></div>
   </div>
@@ -5789,7 +5843,7 @@ const fmt$ = v => money(v, true);           // wins and costs (shared animation 
 const fmtBal = units => money(units/API, false);
 
 /* ---------- state ---------- */
-let balance = 0, levels = [], betIdx = 0, bet = 1, roundBet = 1, mode = 'BASE', busy = false, autoLeft = 0;
+let balance = 0, levels = [], betIdx = 0, bet = 1, roundBet = 1, mode = 'BASE', busy = false, autoLeft = 0, autoCut = false;
 window.MangoBet = {get: () => ({levels, betIdx, balance, API, cost: (() => { try { return costOf(mode); } catch(e){ return 1; } })(), busy: busy || autoLeft > 0})};
 let flags = {}, social = q.get('social') === 'true', replay = q.get('replay') === 'true';
 const sess = {spins: 0, wag: 0, won: 0, t0: Date.now()};
@@ -5931,12 +5985,14 @@ async function mergeAnim(merged, fast, sticky){
 
 /* ---------- sound ---------- */
 // music and sound effects each have their own switch (top bar) and volume (menu)
-let soundOn = false, musicOn = false;   // soundOn = effects on
+let soundOn = true, musicOn = true;   // soundOn = effects on; both on for a new player, a choice made in settings is kept
+try { if (localStorage.getItem('mango.sfx') === '0') soundOn = false; if (localStorage.getItem('mango.music') === '0') musicOn = false; } catch(e) {}
+let audioGo = false;   // true after the player's first tap, click or key: only then may the sound module start
 function sfx(fn, ...a){ try { const C = window.MangoCine; if (C && C[fn]) C[fn](...a); } catch(e){} if (soundOn && Snd && Snd[fn]) { try { return Snd[fn](...a); } catch(e){} } }
 function applyAudio(){
   try {
-    if (Snd && (soundOn || musicOn)){ Snd.init(); Snd.setMuted(false); }
-    if (Snd && Snd.isReady && (Snd.isReady() || soundOn || musicOn)){
+    if (Snd && audioGo && (soundOn || musicOn)){ Snd.init(); Snd.setMuted(false); }
+    if (Snd && Snd.isReady && (Snd.isReady() || (audioGo && (soundOn || musicOn)))){
       Snd.setSfxVolume(soundOn ? +$('sfxvol').value/100 : 0);
       Snd.setMusicVolume(+$('musicvol').value/100);
       if (musicOn) Snd.startMusic(); else Snd.stopMusic();
@@ -5945,10 +6001,23 @@ function applyAudio(){
   } catch(e){}
   [['soundbtn', 'SFX', soundOn], ['musicbtn', 'MUSIC', musicOn]].forEach(([id, label, on]) => { const b = $(id); b.textContent = `${label}: ${on ? 'ON' : 'OFF'}`; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
 }
-$('soundbtn').onclick = () => { if (!Snd){ $('msg').textContent = 'Sound module not loaded.'; return; } soundOn = !soundOn; applyAudio(); sfx('toggle', true); };
-$('musicbtn').onclick = () => { if (!Snd){ $('msg').textContent = 'Sound module not loaded.'; return; } musicOn = !musicOn; applyAudio(); sfx('toggle', musicOn); };
+$('soundbtn').onclick = () => { if (!Snd){ $('msg').textContent = 'Sound module not loaded.'; return; } soundOn = !soundOn; try { localStorage.setItem('mango.sfx', soundOn ? '1' : '0'); } catch(e) {} applyAudio(); sfx('toggle', true); };
+$('musicbtn').onclick = () => { if (!Snd){ $('msg').textContent = 'Sound module not loaded.'; return; } musicOn = !musicOn; try { localStorage.setItem('mango.music', musicOn ? '1' : '0'); } catch(e) {} applyAudio(); sfx('toggle', musicOn); };
 const UI_OWN = new Set(['spinbtn','betminus','betplus','speedbtn','menubtn','modebtn','buybtn','cf-ok','cf-minus','cf-plus','soundbtn','musicbtn','autobtn']);
 document.addEventListener('pointerdown', e => { const b = e.target && e.target.closest ? e.target.closest('button') : null; if (b && !b.disabled && !UI_OWN.has(b.id)) sfx('ui'); }, true);
+const AUDIO_GESTURES = ['pointerdown', 'pointerup', 'touchend', 'keydown', 'click'];
+// The gesture only unlocks the audio context (cheap); the sound engine's heavy start-up (~0.3 s of buffers and renders) runs
+// once no round is in play, so a first tap that is a spin keeps its full frame rate and timing: sound starts as that spin
+// ends. Its background preparation also pauses while a round runs (setYield).
+let audioWait = 0;
+function audioWhenIdle(){ clearTimeout(audioWait); audioWait = setTimeout(() => { if (busy) return audioWhenIdle();
+  const go = () => { if (busy) return audioWhenIdle(); applyAudio(); }; if (window.requestIdleCallback) requestIdleCallback(go, {timeout: 800}); else go(); }, 200); }
+function audioUnlock(){ if (audioGo) return; const ua = navigator.userActivation; if (ua && !ua.isActive) return;
+  audioGo = true; AUDIO_GESTURES.forEach(t => removeEventListener(t, audioUnlock, true));
+  if (!(soundOn || musicOn)) return; try { if (Snd && Snd.unlock) Snd.unlock(); } catch(e){} audioWhenIdle(); }
+try { if (Snd && Snd.setYield) Snd.setYield(() => busy); } catch(e){}
+AUDIO_GESTURES.forEach(t => addEventListener(t, audioUnlock, true));
+applyAudio();   // the switches' labels (no sound yet)
 $('musicvol').addEventListener('input', e => { if (Snd && Snd.isReady && Snd.isReady()) try { Snd.setMusicVolume(+e.target.value/100); } catch(err){} });
 $('sfxvol').addEventListener('input', e => { if (soundOn && Snd && Snd.isReady && Snd.isReady()) try { Snd.setSfxVolume(+e.target.value/100); } catch(err){} });
 
@@ -6256,11 +6325,25 @@ function renderSpinCard(res){
 // Trick Spins pay at least 10% of their price: show the top-up after the lines
 async function showTopUp(res){ if (res.kind !== 'special' || !(res.topUp > 0)) return;
   $('lastwin').textContent = fmt$(res.total*roundBet); banner(`MIN WIN · TOPPED UP TO ${fmt$(res.total*roundBet)} (10% OF THE PRICE)`); sfx('topUp'); await wait(T(1000)); }
+function bonusGo(name, N){
+  return new Promise(done => {
+    const el = document.createElement('div'), touch = matchMedia('(hover: none)').matches, t0 = performance.now();
+    el.id = 'bonusgo'; el.className = 'bonusgo'; el.setAttribute('role', 'button'); el.tabIndex = 0; el.setAttribute('aria-label', `${name} bonus, ${N} free spins. Tap or press space to start`);
+    el.innerHTML = `<div class="bg-card"><b class="bg-t">${name} BONUS</b><span class="bg-n">${N} FREE SPINS</span><span class="bg-go">${touch ? 'TAP TO START' : 'CLICK TO START'}</span>${touch ? '' : '<small class="bg-k">or press SPACE</small>'}</div>`;
+    $('stage').appendChild(el); requestAnimationFrame(() => el.classList.add('on'));
+    const go = e => {
+      if (e.type === 'keydown'){ if (e.repeat || !(e.code === 'Space' || e.key === 'Enter')) return;
+        if (!$('modal').hidden || document.querySelector('.mpanel:not([hidden])') || !$('drawer').hidden) return; }
+      if (performance.now() - t0 < 250) return;
+      e.preventDefault(); e.stopPropagation(); removeEventListener('keydown', go, true); el.remove(); sfx('ui'); done(); };
+    addEventListener('keydown', go, true); el.addEventListener('click', go);
+  });
+}
 async function playBonus(B, cost, startWin){
   const name = BONUS[B.tier].name.toUpperCase(), N = B.nSpins || B.spins.length || 10;
   clearStacks(); $('stage').classList.add('bonus'); mascot('grind'); banner(`${name} BONUS! ${N} FREE SPINS`); sfx('bonusTrigger', B.tier);
   $('totalbox').hidden = false; $('totalwin').textContent = fmt$((startWin || 0)*roundBet);
-  await wait(T(2500));
+  await wait(T(2500)); if (!replay) await bonusGo(name, N);
   let run = 0;
   for (let i=0;i<B.spins.length;i++){
     const sp = B.spins[i], prev = i ? B.spins[i-1] : null; try { MangoExtras.spins(B.spins.length - i - 1); } catch(e){}
@@ -6368,7 +6451,7 @@ async function animateRound(res, cost){
   else {
     antOn = await spinAnim(res.g, res.mults, null, false, false, {merged: res.merged, pad: res.pad});
     drawLines(res.wins, res.ramps); $('lastwin').textContent = fmt$(res.lineWin*roundBet); await showTopUp(res);
-    if (res.bonus){ autoLeft = 0; await wait(T(450)); await playBonus(res.bonus, cost, res.lineWin); }
+    if (res.bonus){ autoLeft = 0; meta(); await wait(T(450)); await playBonus(res.bonus, cost, res.lineWin); }
   }
   const win = res.total*roundBet; $('lastwin').textContent = fmt$(win);
   if (win <= 0){ $('msg').textContent = 'No win.'; mascot(antOn ? 'bail' : 'idle'); if (antOn) sfx('bail'); }
@@ -6424,7 +6507,7 @@ async function playRound(name){
   sess.spins++; sess.wag += cost; sess.won += win;
   $('spinsub').textContent = `${name === 'BASE' ? 'Spin' : name} · bet ${fmt$(cost)} · won ${fmt$(win)}`;
   busy = false; meta();
-  if (autoLeft > 0 && UI_MODES.some(m => m.id === name)){ autoLeft--; setTimeout(() => playRound(mode), [250, 120, 200][speed]); } else autoLeft = 0;
+  if (autoLeft > 0 && UI_MODES.some(m => m.id === name)){ autoLeft--; setTimeout(() => { if (!autoCut) playRound(mode); }, [250, 120, 200][speed]); } else autoLeft = 0;
   meta();
 }
 // a round left open (closed tab, lost connection): show it, then close it so the win is paid
@@ -6451,9 +6534,8 @@ function wcCard(kind, id, name, tag, desc, price, per, cta, on, ok){
 }
 function renderModes(){
   const buyOff = !!flags.disabledBuyFeature;
-  $('modes').innerHTML = UI_MODES.filter(m => !(buyOff && m.id.startsWith('SPECIAL'))).map(m => { const on = mode===m.id, sub = m.sub().split(' · ');
-    return wcCard('mode', m.id, m.label, m.id === 'BASE' ? 'Normal spins' : m.id === 'ANTE' ? 'Every spin' : 'Wave spin', sub.slice(1).join(' · ') || 'Regular spins at your bet.',
-      wcMoney(levels[betIdx]*costOf(m.id)), 'per spin', on ? 'ACTIVE' : 'PLAY', on, !busy); }).join('');
+  $('modes').innerHTML = UI_MODES.filter(m => m.id.startsWith('SPECIAL') && !buyOff).map(m => { const sub = m.sub().split(' · ');
+    return wcCard('mode', m.id, m.label, 'Wave spin', sub.slice(1).join(' · '), wcMoney(levels[betIdx]*costOf(m.id)), 'one spin', 'PLAY', false, !busy && !autoLeft); }).join('');
   $('modes').querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (busy) return; const id = b.dataset.mode; if (id === 'BASE'){ mode = id; sfx('modeSelect', 0); openLayer(null); meta(); } else confirmChoice({kind: 'mode', name: id}); });
   $('buyswin').hidden = buyOff;
   $('buys').innerHTML = BUY_MODES.map((name, t) => { const price = levels[betIdx]*costOf(name), ok = balance >= price && !busy;
@@ -6475,10 +6557,10 @@ function cfRender(){
   const a = MODE('ANTE').bonusOneIn, n = MODE('BASE').bonusOneIn;
   const odds = s.name === 'ANTE' ? `CHANCE OF A BONUS EACH SPIN: 1 IN ${a.toLocaleString('en-US')} (${pctOf(a)})` : '';
   $('cf-odds').hidden = !odds; $('cf-odds').textContent = odds;
-  $('cf-bet').textContent = fmtBal(levels[betIdx]); $('cf-pk').textContent = s.kind === 'buy' ? 'PRICE' : 'COST PER SPIN'; $('cf-price').textContent = fmtBal(price);
+  $('cf-bet').textContent = fmtBal(levels[betIdx]); $('cf-pk').textContent = 'PRICE'; $('cf-price').textContent = fmtBal(price);
   $('cf-minus').disabled = betIdx <= 0; $('cf-plus').disabled = betIdx >= levels.length-1;
   $('cf-ok').textContent = s.kind === 'buy' ? `BUY FOR ${fmtBal(price)}` : `PLAY ${m ? m.label : ''}`;
-  $('cf-ok').disabled = s.kind === 'buy' && balance < price;
+  $('cf-ok').disabled = balance < price;
 }
 function confirmChoice(s){ if (busy) return; openLayer(null); cfState = s; $('confirm').hidden = false; cfRender(); $('cf-ok').focus(); }
 function closeConfirm(){ $('confirm').hidden = true; cfState = null; }
@@ -6486,7 +6568,7 @@ $('cf-minus').onclick = () => { stepBet(-1); cfRender(); };
 $('cf-plus').onclick = () => { stepBet(1); cfRender(); };
 $('cf-cancel').onclick = closeConfirm;
 $('confirm').onclick = e => { if (e.target === $('confirm')) closeConfirm(); };
-$('cf-ok').onclick = () => { const s = cfState; closeConfirm(); if (!s) return; if (s.kind === 'buy'){ sfx('buy', BUY_MODES.indexOf(s.name)); playRound(s.name); } else { sfx('modeSelect', UI_MODES.findIndex(m => m.id === s.name)); mode = s.name; meta(); } };
+$('cf-ok').onclick = () => { const s = cfState; closeConfirm(); if (!s) return; if (s.kind === 'buy'){ sfx('buy', BUY_MODES.indexOf(s.name)); playRound(s.name); } else { sfx('modeSelect', UI_MODES.findIndex(m => m.id === s.name)); playRound(s.name); } };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('confirm').hidden) closeConfirm(); });
 async function confirmBuy(name){
   if (busy) return; openLayer(null); const t = BUY_MODES.indexOf(name), price = levels[betIdx]*costOf(name);
@@ -6513,12 +6595,13 @@ function renderBets(){
   $('bet').innerHTML = levels.map((l, i) => `<option value="${i}">${fmtBal(l)}</option>`).join(''); $('bet').value = String(betIdx);
 }
 $('bet').onchange = e => { betIdx = +e.target.value; bet = levels[betIdx]/API; meta(); };
-$('spinbtn').onclick = () => { if (slamTry()){ sfx('slam'); return; } if (autoLeft){ autoLeft = 0; sfx('toggle', false); meta(); return; } playRound(mode); };
+$('spinbtn').onclick = () => { if (slamTry()){ sfx('slam'); return; } if (autoLeft){ autoLeft = 0; autoCut = true; sfx('toggle', false); meta(); return; } playRound(mode); };
 $('autobtn').onclick = async () => {
+  if (autoLeft > 0){ autoLeft = 0; autoCut = true; sfx('toggle', false); meta(); return; }
   if (busy || flags.disabledAutoplay) return;
   const n = await modal('AUTOPLAY', `<p style="margin:0">Play automatically at <strong>${fmtBal(levels[betIdx]*costOf(mode))}</strong> per spin. Autoplay stops when a bonus starts, when you press STOP, or when the balance runs low.</p><p class="sub" style="margin:8px 0 0">How many spins?</p>`,
     [{label: '10', value: 10, primary: true}, {label: '25', value: 25}, {label: '50', value: 50}, {label: '100', value: 100}, {label: 'CANCEL', value: 0}]);
-  if (n > 0){ autoLeft = n - 1; sfx('toggle', true); playRound(mode); }
+  if (n > 0){ autoLeft = n - 1; autoCut = false; sfx('toggle', true); playRound(mode); }
 };
 function renderSpeed(){
   const max = flags.disabledTurbo ? 0 : 1; if (speed > max) speed = max;
@@ -6531,7 +6614,7 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
   if (skipCel){ if (!flags.disabledSlamstop) skipCel(); return; }
   if (!e.repeat && slamTry()) return;
-  if (autoLeft){ autoLeft = 0; meta(); return; }
+  if (autoLeft){ autoLeft = 0; autoCut = true; meta(); return; }
   playRound(mode);
 });
 const TABS = ['play','rules','history'];
@@ -6560,7 +6643,7 @@ document.querySelectorAll('[data-tab-back]').forEach(b => b.onclick = () => show
 function openLayer(id){ { const was = ['drawer','buysheet'].find(x => !$(x).hidden) || null; if (id !== was){ if (id === 'buysheet') sfx('buyOpen'); else sfx('panel', !!id); } } if (id === 'buysheet' && $('buysheet').hidden){ const s = $('buysheet'); s.classList.remove('wc-deal'); void s.offsetWidth; s.classList.add('wc-deal'); clearTimeout(s._wcd); s._wcd = setTimeout(() => s.classList.remove('wc-deal'), 1200); }
   ['drawer','buysheet'].forEach(x => { $(x).hidden = x !== id; }); $('backdrop').hidden = !id; $('menubtn').setAttribute('aria-expanded', id === 'drawer'); }
 $('menubtn').onclick = () => openLayer($('drawer').hidden ? 'drawer' : null);
-$('modebtn').onclick = () => { if (!busy) openLayer('buysheet'); };
+$('modebtn').onclick = () => { if (busy || autoLeft > 0 || !levels.length || !MODE('ANTE')) return; mode = mode === 'ANTE' ? 'BASE' : 'ANTE'; sfx('modeSelect', mode === 'ANTE' ? 1 : 0); meta(); };
 $('buybtn').onclick = () => { if (!busy) openLayer('buysheet'); };
 $('backdrop').onclick = () => openLayer(null);
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => openLayer(null));
@@ -6568,12 +6651,22 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') openLayer(nu
 function stepBet(d){ const sel = $('bet'), i = Math.max(0, Math.min(sel.options.length-1, sel.selectedIndex + d)); if (i === sel.selectedIndex || busy || autoLeft) return; sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); sfx('bet', i, sel.options.length); }
 $('betminus').onclick = () => stepBet(-1);
 $('betplus').onclick = () => stepBet(1);
+let bbQ = 0;
+function bbFit(){ bbQ = 0; const mb = $('modebtn'); if (!mb || !mb.offsetWidth) return; const cs = getComputedStyle(mb), avail = mb.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+  mb.querySelectorAll('span').forEach(s => { s.style.removeProperty('font-size'); if (avail > 0 && s.scrollWidth > avail){ const f = parseFloat(getComputedStyle(s).fontSize); s.style.fontSize = Math.max(6, Math.floor(f*avail/s.scrollWidth*10)/10) + 'px'; } }); }
+const bbFitSoon = () => { if (!bbQ) bbQ = requestAnimationFrame(bbFit); };
+addEventListener('resize', bbFitSoon);
 function slotChrome(){
   document.querySelector('.betctl').classList.toggle('boost', mode === 'ANTE');
   const m = UI_MODES.find(x => x.id === mode), i = $('bet').selectedIndex, n = $('bet').options.length;
-  $('modebtn').textContent = 'MODE: ' + (m ? m.label : 'NORMAL');
+  { const on = mode === 'ANTE', mb = $('modebtn'), per = levels.length ? fmtBal(levels[betIdx]*costOf('ANTE')) : '';
+    const html = `<span class="bb-t">BONUS BOOST</span><span class="bb-s">${on ? 'ON · ' + per : 'OFF'}</span>`;
+    if (mb.dataset.bb !== html){ mb.dataset.bb = html; mb.innerHTML = html; mb.classList.add('bboost'); mb.classList.toggle('on', on);
+      mb.setAttribute('aria-pressed', on); mb.setAttribute('aria-label', on ? `Bonus Boost on, ${per} a spin` : 'Bonus Boost off'); bbFitSoon(); } }
   $('betminus').disabled = busy || autoLeft > 0 || i <= 0; $('betplus').disabled = busy || autoLeft > 0 || i >= n-1;
   $('modebtn').disabled = busy || autoLeft > 0;
+  { const ab = $('autobtn'), run = autoLeft > 0; ab.classList.toggle('on', run); ab.setAttribute('aria-pressed', run); ab.dataset.left = run ? String(autoLeft) : '';
+    if (run) ab.disabled = false; ab.setAttribute('aria-label', run ? `Autoplay on, ${autoLeft} spins left. Tap to stop` : 'Autoplay'); }
   $('buybtn').hidden = !!flags.disabledBuyFeature; $('buybtn').disabled = busy || autoLeft > 0;
 }
 
@@ -6613,11 +6706,12 @@ function renderRules(){
   <div class="win"><div class="bar"><span>BUTTONS</span></div><div class="body"><ul style="margin:0;padding-left:18px">
     <li><strong>Bet</strong>: picks your bet size.</li>
     <li><strong>SPIN</strong>: plays one round in the selected mode. The spacebar does the same.</li>
-    <li><strong>AUTOPLAY</strong>: asks how many spins, then plays them automatically until a bonus starts, you press STOP, or the balance runs low.</li>
+    <li><strong>AUTOPLAY</strong>: asks how many spins, then plays them automatically until a bonus starts, you press STOP, or the balance runs low. Autoplay shows spins left; tap it to stop (the round in play finishes).</li>
     <li><strong>SPEED</strong>: Normal, Turbo or Super Turbo animations. The result is the same at every speed.</li>
-    <li><strong>MUSIC</strong> and <strong>SFX</strong>: turn the music and the sound effects on or off separately. Their volumes are in the menu.</li>
-    <li><strong>NORMAL / BONUS BOOST / OLLIE / GRIND / KICKFLIP</strong>: choose the mode for the SPIN button.</li>
-    <li><strong>BONUS BUY</strong>: buys a bonus straight away, after you confirm.</li>
+    <li><strong>Cog</strong> (settings): music on or off and its volume, sound effects on or off and their volume, and the spin speed. Sound is on when the game opens and starts with your first tap; turn both off to mute the game completely. Your choice is kept on this device.</li>
+    <li><strong>BONUS BOOST</strong>: switches Bonus Boost on or off. While it is on, every spin (SPIN, the spacebar and autoplay) plays Bonus Boost and the switch shows the price of each spin (${fx(MODE('ANTE').cost)}x your bet). It is off whenever the game opens, and cannot be changed while a round or autoplay runs.</li>
+    <li><strong>BONUS BUY</strong> (the plank by the reels): the Wave Spins (Ripple, Curl, Barrel: one spin each) and the bonus buys (Swell, Surf, Kahuna). Each plays only after you confirm its price.</li>
+    <li><strong>Bonus start</strong>: when a bonus starts (bought, triggered, or resumed after a reload), its free spins wait for you: tap the reels or press the spacebar.</li>
     <li><strong>Rules</strong>: this page.</li></ul></div></div>
   <div class="win"><div class="bar"><span>DISCLAIMER</span></div><div class="body"><p style="margin:0">Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser.</p></div></div>`;
 }
