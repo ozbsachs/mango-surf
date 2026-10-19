@@ -6530,7 +6530,7 @@ document.addEventListener('keydown', e => {
   if (/INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement.tagName)) return;
   e.preventDefault();
   if (skipCel){ if (!flags.disabledSlamstop) skipCel(); return; }
-  if (slamTry()) return;
+  if (!e.repeat && slamTry()) return;
   if (autoLeft){ autoLeft = 0; meta(); return; }
   playRound(mode);
 });
@@ -6805,6 +6805,10 @@ body:has(#celebrate:not([hidden])) #buybtn{opacity:0;pointer-events:none}
 @keyframes cc-slap{0%{transform:scale(1.9) rotate(-8deg);opacity:0}55%{opacity:1}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){#celebrate .cine-card .celbar > div{animation:none}#celebrate .cine-card #cel-t.pop{animation-duration:.01s!important}}
 
+/* the bonus intro (wave sweep + title card) and the MAX WIN card sit OVER the HUD signs: while body.cine-top is on (cine.js onTop),
+   TOTAL WIN, the SPINS LEFT badge (both in .winrow, z 45) and the BONUS BUY plank (z 46) drop under #cine-dim (z 42) */
+body.cine-top .machine .stage > .winrow,body.cine-top #buybtn{z-index:41!important}
+
 </style>
 <script>
 // Mango Surf cinematic effects (window.MangoCine). Merged 2026-10-19 from an outside build of the site (mango-surf.zip),
@@ -7010,8 +7014,13 @@ body:has(#celebrate:not([hidden])) #buybtn{opacity:0;pointer-events:none}
     var str = (Math.abs(x) + Math.abs(y) + Math.abs(r) + Math.abs(s - 1) < 0.002) ? '' :
       'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0) rotate(' + r.toFixed(2) + 'deg) scale(' + s.toFixed(4) + ')';
     if (CAMQ.matches) str = '';
-    if (cam && str !== camStr) { camStr = str; cam.style.transform = str; }
-    return C.trauma > 0 || Math.abs(C.punch) > 0.0005 || Math.abs(C.pv) > 0.001;
+    var busy = C.trauma > 0 || Math.abs(C.punch) > 0.0005 || Math.abs(C.pv) > 0.001;
+    if (!busy) str = '';   // at rest the machine has no transform (and no layer of its own) left over
+    // while it moves, the machine is its own GPU layer (will-change), so a shake frame only moves that layer; without it every
+    // frame of a shake repainted the whole machine (Olly 2026-10-19: held-space turbo, where a shake runs on most frames, fell to
+    // ~13 fps on the laptop's Intel GPU). It is on only while the transform is, so the BONUS BUY plank's box (frame.css) is as before
+    if (cam && str !== camStr) { camStr = str; cam.style.transform = str; cam.style.willChange = str ? 'transform' : ''; }
+    return busy;
   }
 
   var CAP = RM ? 110 : 340;
@@ -7202,7 +7211,14 @@ body:has(#celebrate:not([hidden])) #buybtn{opacity:0;pointer-events:none}
     sprite(IMG.splash, x, y, w, [{ transform: 'scale(.25,.15)', opacity: 0 }, { transform: 'scale(1.05,1.1)', opacity: 1, offset: 0.35 }, { transform: 'scale(1.15,1.25) translateY(-4%)', opacity: 0 }],
       o.dur || 650, { ay: 0.78 });
   }
+  // while a title card or the bonus wave sweep is on screen, the HUD signs that sit high in the same stacking context (TOTAL WIN
+  // and the SPINS LEFT badge in .winrow, the BONUS BUY plank) drop under the cine layers (body.cine-top, cine.css), so the
+  // intro covers and dims them like the rest of the game; they come back once the card has gone
+  var topN = 0;
+  function onTop(ms) { topN++; document.body.classList.add('cine-top');
+    setTimeout(function () { if (--topN <= 0) { topN = 0; document.body.classList.remove('cine-top'); } }, ms); }
   function card(main, sub, cls, hold) {
+    onTop((hold || 1700) + 520);
     var el = document.createElement('div'); el.className = 'cine-title ' + (cls || '');
     el.innerHTML = '<img class="ct-rays" src="' + IMG.rays + '" alt=""><img class="ct-splash" src="' + IMG.splash + '" alt=""><b></b>' + (sub ? '<small></small>' : '');
     el.querySelector('b').textContent = main; if (sub) el.querySelector('small').textContent = sub;
@@ -7460,7 +7476,7 @@ body:has(#celebrate:not([hidden])) #buybtn{opacity:0;pointer-events:none}
   };
   M.heroStop = function (node) { if (HERO && (!node || HERO.node === node)) heroStop(); };
   M.bonusTrigger = function (tier) {
-    tier = tier == null ? 1 : tier; GR.bonus = true;
+    tier = tier == null ? 1 : tier; GR.bonus = true; onTop(760);   // the sweep; the card (at 700 ms) keeps it on after that
     var sw = W * 1.9, sh = sw * 0.5625, y = H * 0.55;
     sprite(IMG.wave, 0, y, sw, [{ transform: 'translateX(' + (-sw * 0.62) + 'px) scale(.9)' }, { transform: 'translateX(' + (W + sw * 0.62) + 'px) scale(1.05)' }], 1500,
       { h: sh, ease: 'cubic-bezier(.45,.05,.35,1)' });
