@@ -274,6 +274,15 @@ window.MANGO_LOAD = {"need":["img/L1.webp?v=9cf1831f","img/L2.webp?v=ae0233f5","
     if (!o.own && el.complete) (el.naturalWidth || /\.svg(\?|$)/.test(el.src) ? dec() : bad());
   }
   function want(u){ if (!u || byUrl[u]) return; var im = new Image(), o = byUrl[u] = {w: SIZE[key(u)] || 8000, ok: 0, own: 1, u: u}; items.push(o); watch(o, im); im.src = u; }
+  // something else the game needs before it opens, counted in the bar like a picture of w bytes (2026-10-21: the theme music,
+  // mango-audio.js). begin(progress) returns a promise: resolved true = ready, false or rejected = failed (counted, named in
+  // state().open, the game opens without it). It never holds the game past TRACK_CAP: then it is counted as late and keeps loading.
+  var TRACK_CAP = 20000, tracked = {};
+  function track(name, w, begin){
+    if (gone || tracked[name]) return; var o = tracked[name] = {w: w || 8000, ok: 0, p: 0, u: name, t: now()}; items.push(o);
+    var fin = function(good){ if (o.ok) return; o.ok = 1; o.p = 1; o.ms = Math.round(now() - o.t); if (!good) o.failed = 1; };
+    try { Promise.resolve(begin(function(f){ if (f > o.p) o.p = Math.min(1, f); })).then(function(r){ fin(r !== false); }, function(){ fin(false); }); } catch(e){ fin(false); }
+    setTimeout(function(){ if (!o.ok){ o.ok = 1; o.failed = 1; o.late = 1; } }, Math.max(1000, TRACK_CAP - (now() - start))); }
   // the first-screen art, asked for at once: the page's own styles and scripts would only find most of it a second later
   for (var n = 0; n < (LOAD.need || []).length; n++) want(LOAD.need[n]);
   // ...and every picture the page itself puts up (the board, the scene, the frame crabs, the HUD), except the bonus-buy
@@ -323,7 +332,7 @@ window.MANGO_LOAD = {"need":["img/L1.webp?v=9cf1831f","img/L2.webp?v=ae0233f5","
     if (gone) return;
     scan(); fonts();
     st.dom = domReady() ? 1 : 0;
-    var w = 0, wok = 0; for (var j = 0; j < items.length; j++){ w += items[j].w; if (items[j].ok) wok += items[j].w; }
+    var w = 0, wok = 0; for (var j = 0; j < items.length; j++){ w += items[j].w; wok += items[j].ok ? items[j].w : (items[j].p || 0)*items[j].w; }
     st.img = st.dom && w ? wok / w : 0;
     st.font = fontsDone ? 1 : 0;
     st.sess = st.dom && session() ? 1 : 0;
@@ -365,7 +374,7 @@ window.MANGO_LOAD = {"need":["img/L1.webp?v=9cf1831f","img/L2.webp?v=ae0233f5","
   addEventListener('keydown', keys, true);
   L.addEventListener('click', function(){ if (slow && !done()) location.reload(); else if (revealed() && done()) hide(); });
   timer = setInterval(tick, 100); tick();
-  window.MangoLoader = {hide: hide, state: function(){ var f = []; for (var j = 0; j < items.length; j++) if (items[j].failed || !items[j].ok) f.push((items[j].failed ? 'failed ' : 'waiting ') + key(items[j].u)); return {t0: t0, shown: shown, gone: gone, slow: slow, st: st, imgs: items.length, els: byEl.length, open: f, later: later.n + '/' + later.of, laterOn: laterOn}; }};
+  window.MangoLoader = {hide: hide, track: track, state: function(){ var f = []; for (var j = 0; j < items.length; j++) if (items[j].failed || !items[j].ok) f.push((items[j].failed ? 'failed ' : 'waiting ') + key(items[j].u)); return {t0: t0, shown: shown, gone: gone, slow: slow, st: st, imgs: items.length, els: byEl.length, open: f, later: later.n + '/' + later.of, laterOn: laterOn, music: tracked.music ? {ok: tracked.music.ok, failed: !!tracked.music.failed, late: !!tracked.music.late, ms: tracked.music.ms} : null}; }};
 })();
 </script>
 <style>
@@ -2765,7 +2774,7 @@ header.slotbar .soundbtns{display:none!important}
 }
 
 </style>
-<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","fx-foam":"e5271a45","fx-hero-cheer":"e7616fe9","fx-hero":"0a2e9a63","fx-rays":"06f49708","fx-splash":"667cb158","fx-wave":"2b74979c","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","hooligans-logo":"10e92930","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"}; window.MANGO_SFX_V = {"bamboo":"e5a40b24","bongo":"d6528b4c","conga":"fb4eeb95","gull":"23f455da","gulls":"be8e6238","marimba":"9db7a569","rain":"cdc1cb30","shake":"05a3e428","shaker":"9159d193","splash1":"8df05b90","splash2":"413c06a2","surf":"a508897e","swish":"c67e5cbb","ukulele":"016d218b","wave":"175b02af"};</script>
+<script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","fx-foam":"e5271a45","fx-hero-cheer":"e7616fe9","fx-hero":"0a2e9a63","fx-rays":"06f49708","fx-splash":"667cb158","fx-wave":"2b74979c","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","hooligans-logo":"10e92930","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"}; window.MANGO_SFX_V = {"bamboo":"e5a40b24","bongo":"d6528b4c","conga":"fb4eeb95","gull":"23f455da","gulls":"be8e6238","marimba":"9db7a569","rain":"cdc1cb30","shake":"05a3e428","shaker":"9159d193","splash1":"8df05b90","splash2":"413c06a2","surf":"a508897e","swish":"c67e5cbb","ukulele":"016d218b","wave":"175b02af"}; window.MANGO_MUSIC_V = {"size":{"m4a":1436512,"webm":902200},"m4a":"7f085aac","webm":"273c0743"};</script>
 <script>
 /*
  * Mango Surf audio - Web Audio module (play money learning project).
@@ -2782,7 +2791,13 @@ header.slotbar .soundbtns{display:none!important}
  *   Mute rule: every sample is an SFX voice (sfxBus -> sfxVol): SFX off sets sfxVol to 0 and the game stops calling cues;
  *   the ambience also checks the SFX volume. MUSIC off stops the loop. Origin/licence of the samples: unknown (no tags).
  *
- * Music: one recorded loop, surf theme v2 (audio/surf-theme-v2.*, gapless), fetched after the loading screen at low priority.
+ * Music: one recorded loop, surf theme v2 (audio/surf-theme-v2.*, gapless). Since 2026-10-21 (Oz: "make the loading wait till
+ *   music is ready to play on start") it is fetched AND decoded while the loading screen is up (preloadMusic, an
+ *   OfflineAudioContext, so no audio context is made before the player's gesture): the loader counts it in its bar
+ *   (MangoLoader.track) and only reaches 100% once the loop is decoded. If it fails or takes longer than the loader's cap the
+ *   game opens without it and it keeps loading. The file carries the build's content hash (window.MANGO_MUSIC_V -> ?v=).
+ *   At the player's first tap or key the game calls musicNow(): the context, the node graph and the loop start at once (no
+ *   download, no decode); the heavy part of init() (reverbs, noise renders, the sample kit) still waits until no round runs.
  *
  * Graph:
  *   music loop -> fade -> musicMode -> musicBus -> duck -> musicLP -> musicVol --\
@@ -3676,9 +3691,16 @@ header.slotbar .soundbtns{display:none!important}
     var f = mus.fmts[i];
     if (!f) return Promise.reject(new Error('music: no format loaded'));
     if (!root.fetch) return Promise.reject(new Error('music: no fetch'));
-    return root.fetch(MUSIC.url + '.' + f, { priority: 'low', credentials: 'same-origin' }).then(function (r) {
+    var MV = root.MANGO_MUSIC_V || {}, url = MUSIC.url + '.' + f + (MV[f] ? '?v=' + MV[f] : '');
+    return root.fetch(url, { priority: mus.early ? 'high' : 'low', credentials: 'same-origin' }).then(function (r) {
       if (!r.ok) throw new Error('music: HTTP ' + r.status);
-      return r.arrayBuffer();
+      var total = +(r.headers.get('content-length') || 0), rd = mus.onBytes && total && r.body && r.body.getReader ? r.body.getReader() : null;
+      if (!rd) return r.arrayBuffer();
+      // counted as it arrives, for the loading bar
+      var parts = [], got = 0;
+      return (function pump() { return rd.read().then(function (x) {
+        if (x.done) { var all = new Uint8Array(got), o = 0; for (var k = 0; k < parts.length; k++) { all.set(parts[k], o); o += parts[k].length; } return all.buffer; }
+        parts.push(x.value); got += x.value.length; try { mus.onBytes(Math.min(1, got / total)); } catch (e) {  } return pump(); }); })();
     }).then(function (ab) { mus.fetched = true; return { i: i, fmt: f, ab: ab }; },
             function () { return musicBytes(i + 1); });
   }
@@ -3689,9 +3711,9 @@ header.slotbar .soundbtns{display:none!important}
     }
     return mus.bytes;
   }
-  function decodeBuf(ab) {
+  function decodeBuf(ab, c) {
     return new Promise(function (res, rej) {
-      var p = ctx.decodeAudioData(ab, res, rej);
+      var p = (c || ctx).decodeAudioData(ab, res, rej);
       if (p && p.then) p.then(res, rej);
     });
   }
@@ -3704,12 +3726,12 @@ header.slotbar .soundbtns{display:none!important}
     mus.loopStart = (MUSIC.pad + mus.off) / MUSIC.rate;
     mus.loopEnd = mus.loopStart + MUSIC.len / MUSIC.rate;
   }
-  function decodeMusic() {
+  function decodeMusic(dc) {
     if (mus.buf) return Promise.resolve(mus.buf);
     if (mus.decoding) return mus.decoding;
     function attempt(p) {
       return p.then(function (b) {
-        return decodeBuf(b.ab).then(function (buf) { setLoop(buf, b.fmt); mus.bytes = null; return buf; }, function (e) {
+        return decodeBuf(b.ab, dc).then(function (buf) { setLoop(buf, b.fmt); mus.bytes = null; return buf; }, function (e) {
           if (b.i + 1 < mus.fmts.length) { mus.bytes = musicBytes(b.i + 1); return attempt(mus.bytes); }
           throw e;
         });
@@ -3723,8 +3745,20 @@ header.slotbar .soundbtns{display:none!important}
     return mus.decoding;
   }
 
+  // during the loading screen: fetch and decode the loop into an AudioBuffer (which any audio context can play) with an
+  // OfflineAudioContext at the loop's own rate. Resolves true when it is ready, false if it failed (never rejects).
+  var OAC = root.OfflineAudioContext || root.webkitOfflineAudioContext;
+  function preloadMusic(onProgress) {
+    if (mus.buf) return Promise.resolve(true);
+    if (!OAC || !root.fetch) return Promise.resolve(false);
+    var dc; try { dc = new OAC(2, 1, MUSIC.rate); } catch (e) { return Promise.resolve(false); }
+    mus.early = true; mus.onBytes = function (f) { if (onProgress) onProgress(0.9 * f); };
+    return decodeMusic(dc).then(function () { mus.onBytes = null; if (onProgress) onProgress(1); return true; },
+                                function () { mus.onBytes = null; return false; });
+  }
   function prefetchSoon() {
     setTimeout(function () {
+      if (mus.buf || mus.decoding) return;
       var get = function () { fetchMusic().catch(noop); };
       if (root.requestIdleCallback) root.requestIdleCallback(get, { timeout: 2000 }); else get();
     }, 2500);
@@ -3732,6 +3766,12 @@ header.slotbar .soundbtns{display:none!important}
   (function () {
     if (!root.addEventListener || !AC) return;
     var once = false, go = function () { if (!once) { once = true; prefetchSoon(); } };
+    // the loading screen waits for the music (MangoLoader.track: weight = the file's size, ~1 MB)
+    var L0 = root.MangoLoader, st0 = null; try { st0 = L0 && L0.state && L0.state(); } catch (e) {  }
+    var off0 = false; try { off0 = root.localStorage.getItem('mango.music') === '0'; } catch (e) {  }   // the player turned music off: not waited for
+    if (AC && L0 && L0.track && st0 && !st0.gone && !off0) { try {
+      if (!mus.fmts) mus.fmts = musicFormats(); var SZ = (root.MANGO_MUSIC_V || {}).size || {};
+      L0.track('music', SZ[mus.fmts[0]] || 1000000, function (prog) { return preloadMusic(prog); }); } catch (e) {  } }
     root.addEventListener('mango:shown', go);
 
     var noLoader = function () {
@@ -3810,11 +3850,23 @@ header.slotbar .soundbtns{display:none!important}
   function setYield(fn) { yieldFn = typeof fn === 'function' ? fn : null; }
   function held() { try { return !!(yieldFn && yieldFn()); } catch (e) { return false; } }
 
+  // init(): the node graph (graph(), cheap) and then the heavy part (heavy(): reverb impulse responses, noise renders, the
+  // string warm-up, the ocean, the kit, the ambience). musicNow() makes only the graph, so the music starts inside the gesture.
+  var heavyDone = false;
   function init() {
-    if (ctx) {
-      if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
-      return true;
-    }
+    if (!ctx && !graph()) return false;
+    if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
+    if (!heavyDone) { heavyDone = true; heavy(); }
+    return true;
+  }
+  function musicNow() {
+    if (!ctx && !graph()) return false;
+    if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
+    if (muted) setMuted(false);
+    startMusic();
+    return true;
+  }
+  function graph() {
     if (!AC) return false;
     ctx = pendingCtx || new AC(); pendingCtx = null;
     if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
@@ -3834,14 +3886,18 @@ header.slotbar .soundbtns{display:none!important}
     N.sfxBus = ctx.createGain(); N.sfxBus.gain.value = 1; N.sfxBus.connect(N.sfxVol);
     N.sfxVerb = ctx.createGain(); N.sfxVerb.gain.value = 1;
     var vhp = ctx.createBiquadFilter(); vhp.type = "highpass"; vhp.frequency.value = 220; vhp.Q.value = 0.7;
-    var conv = ctx.createConvolver(); conv.buffer = makeIR(1.7);
+    var conv = N.conv = ctx.createConvolver();
     var vout = ctx.createGain(); vout.gain.value = 0.55;
     N.sfxVerb.connect(vhp); vhp.connect(conv); conv.connect(vout); vout.connect(N.sfxBus);
     N.caveVerb = ctx.createGain(); N.caveVerb.gain.value = 1;
     var chp = ctx.createBiquadFilter(); chp.type = "highpass"; chp.frequency.value = 140; chp.Q.value = 0.7;
-    var cave = ctx.createConvolver(); cave.buffer = makeIR(3.4, true);
+    var cave = N.cave = ctx.createConvolver();
     var cout = ctx.createGain(); cout.gain.value = 0.5;
     N.caveVerb.connect(chp); chp.connect(cave); cave.connect(cout); cout.connect(N.sfxBus);
+    return true;
+  }
+  function heavy() {
+    N.conv.buffer = makeIR(1.7); N.cave.buffer = makeIR(3.4, true);
 
     var len = Math.floor(ctx.sampleRate * 2);
     noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -4419,11 +4475,11 @@ header.slotbar .soundbtns{display:none!important}
 
   function debug() {
     return {
-      state: ctx ? ctx.state : 'none', mode: curMode, musicOn: musicOn, muted: muted,
+      state: ctx ? ctx.state : 'none', mode: curMode, musicOn: musicOn, muted: muted, heavy: heavyDone,
       sfxVoices: voices.sfx.length, musicVoices: mus.src ? 1 : 0,
       music: { fmt: mus.fmt, fetched: mus.fetched, decoded: !!mus.buf, playing: !!mus.src, loopStart: mus.loopStart,
                loopEnd: mus.loopEnd, primingSkipped: mus.off, bufferLength: mus.buf ? mus.buf.length : 0,
-               rate: mus.buf ? mus.buf.sampleRate : 0, level: N.musicMode ? N.musicMode.gain.value : 1, error: mus.err },
+               rate: mus.buf ? mus.buf.sampleRate : 0, early: !!mus.early, decoding: !!mus.decoding, level: N.musicMode ? N.musicMode.gain.value : 1, error: mus.err },
       created: stats.created, stolen: stats.stolen, ducking: duckCount, ukeStrings: Object.keys(ksCache).length, kit: Object.keys(SB).length
     };
   }
@@ -4431,6 +4487,7 @@ header.slotbar .soundbtns{display:none!important}
   root.MangoAudio = {
     init: safe(init, false),
     unlock: safe(unlock, false),
+    musicNow: safe(musicNow, false),
     setYield: safe(setYield),
     isReady: safe(isReady, false),
     startMusic: safe(startMusic),
@@ -5988,10 +6045,11 @@ async function mergeAnim(merged, fast, sticky){
 let soundOn = true, musicOn = true;   // soundOn = effects on; both on for a new player, a choice made in settings is kept
 try { if (localStorage.getItem('mango.sfx') === '0') soundOn = false; if (localStorage.getItem('mango.music') === '0') musicOn = false; } catch(e) {}
 let audioGo = false;   // true after the player's first tap, click or key: only then may the sound module start
-function sfx(fn, ...a){ try { const C = window.MangoCine; if (C && C[fn]) C[fn](...a); } catch(e){} if (soundOn && Snd && Snd[fn]) { try { return Snd[fn](...a); } catch(e){} } }
+let audioFull = false;   // true once applyAudio has started the whole engine (effects play only then; the music may start sooner)
+function sfx(fn, ...a){ try { const C = window.MangoCine; if (C && C[fn]) C[fn](...a); } catch(e){} if (soundOn && audioFull && Snd && Snd[fn]) { try { return Snd[fn](...a); } catch(e){} } }
 function applyAudio(){
   try {
-    if (Snd && audioGo && (soundOn || musicOn)){ Snd.init(); Snd.setMuted(false); }
+    if (Snd && audioGo && (soundOn || musicOn)){ Snd.init(); Snd.setMuted(false); audioFull = true; }
     if (Snd && Snd.isReady && (Snd.isReady() || (audioGo && (soundOn || musicOn)))){
       Snd.setSfxVolume(soundOn ? +$('sfxvol').value/100 : 0);
       Snd.setMusicVolume(+$('musicvol').value/100);
@@ -6014,7 +6072,11 @@ function audioWhenIdle(){ clearTimeout(audioWait); audioWait = setTimeout(() => 
   const go = () => { if (busy) return audioWhenIdle(); applyAudio(); }; if (window.requestIdleCallback) requestIdleCallback(go, {timeout: 800}); else go(); }, 200); }
 function audioUnlock(){ if (audioGo) return; const ua = navigator.userActivation; if (ua && !ua.isActive) return;
   audioGo = true; AUDIO_GESTURES.forEach(t => removeEventListener(t, audioUnlock, true));
-  if (!(soundOn || musicOn)) return; try { if (Snd && Snd.unlock) Snd.unlock(); } catch(e){} audioWhenIdle(); }
+  if (!(soundOn || musicOn)) return; try { if (Snd && Snd.unlock) Snd.unlock(); } catch(e){}
+  // (2026-10-21) the music was decoded during the loading screen: it starts in this gesture (context + node graph only, no
+  // download or decode); the rest of the engine (reverbs, noise renders, the kit) still waits until no round is in play
+  try { if (musicOn && Snd && Snd.musicNow){ Snd.musicNow(); Snd.setMusicVolume(+$('musicvol').value/100); } } catch(e){}
+  audioWhenIdle(); }
 try { if (Snd && Snd.setYield) Snd.setYield(() => busy); } catch(e){}
 AUDIO_GESTURES.forEach(t => addEventListener(t, audioUnlock, true));
 applyAudio();   // the switches' labels (no sound yet)

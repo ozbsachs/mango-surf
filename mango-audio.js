@@ -13,7 +13,13 @@
  *   Mute rule: every sample is an SFX voice (sfxBus -> sfxVol): SFX off sets sfxVol to 0 and the game stops calling cues;
  *   the ambience also checks the SFX volume. MUSIC off stops the loop. Origin/licence of the samples: unknown (no tags).
  *
- * Music: one recorded loop, surf theme v2 (audio/surf-theme-v2.*, gapless), fetched after the loading screen at low priority.
+ * Music: one recorded loop, surf theme v2 (audio/surf-theme-v2.*, gapless). Since 2026-10-21 (Oz: "make the loading wait till
+ *   music is ready to play on start") it is fetched AND decoded while the loading screen is up (preloadMusic, an
+ *   OfflineAudioContext, so no audio context is made before the player's gesture): the loader counts it in its bar
+ *   (MangoLoader.track) and only reaches 100% once the loop is decoded. If it fails or takes longer than the loader's cap the
+ *   game opens without it and it keeps loading. The file carries the build's content hash (window.MANGO_MUSIC_V -> ?v=).
+ *   At the player's first tap or key the game calls musicNow(): the context, the node graph and the loop start at once (no
+ *   download, no decode); the heavy part of init() (reverbs, noise renders, the sample kit) still waits until no round runs.
  *
  * Graph:
  *   music loop -> fade -> musicMode -> musicBus -> duck -> musicLP -> musicVol --\
@@ -907,9 +913,16 @@
     var f = mus.fmts[i];
     if (!f) return Promise.reject(new Error('music: no format loaded'));
     if (!root.fetch) return Promise.reject(new Error('music: no fetch'));
-    return root.fetch(MUSIC.url + '.' + f, { priority: 'low', credentials: 'same-origin' }).then(function (r) {
+    var MV = root.MANGO_MUSIC_V || {}, url = MUSIC.url + '.' + f + (MV[f] ? '?v=' + MV[f] : '');
+    return root.fetch(url, { priority: mus.early ? 'high' : 'low', credentials: 'same-origin' }).then(function (r) {
       if (!r.ok) throw new Error('music: HTTP ' + r.status);
-      return r.arrayBuffer();
+      var total = +(r.headers.get('content-length') || 0), rd = mus.onBytes && total && r.body && r.body.getReader ? r.body.getReader() : null;
+      if (!rd) return r.arrayBuffer();
+      // counted as it arrives, for the loading bar
+      var parts = [], got = 0;
+      return (function pump() { return rd.read().then(function (x) {
+        if (x.done) { var all = new Uint8Array(got), o = 0; for (var k = 0; k < parts.length; k++) { all.set(parts[k], o); o += parts[k].length; } return all.buffer; }
+        parts.push(x.value); got += x.value.length; try { mus.onBytes(Math.min(1, got / total)); } catch (e) {  } return pump(); }); })();
     }).then(function (ab) { mus.fetched = true; return { i: i, fmt: f, ab: ab }; },
             function () { return musicBytes(i + 1); });
   }
@@ -920,9 +933,9 @@
     }
     return mus.bytes;
   }
-  function decodeBuf(ab) {
+  function decodeBuf(ab, c) {
     return new Promise(function (res, rej) {
-      var p = ctx.decodeAudioData(ab, res, rej);
+      var p = (c || ctx).decodeAudioData(ab, res, rej);
       if (p && p.then) p.then(res, rej);
     });
   }
@@ -935,12 +948,12 @@
     mus.loopStart = (MUSIC.pad + mus.off) / MUSIC.rate;
     mus.loopEnd = mus.loopStart + MUSIC.len / MUSIC.rate;
   }
-  function decodeMusic() {
+  function decodeMusic(dc) {
     if (mus.buf) return Promise.resolve(mus.buf);
     if (mus.decoding) return mus.decoding;
     function attempt(p) {
       return p.then(function (b) {
-        return decodeBuf(b.ab).then(function (buf) { setLoop(buf, b.fmt); mus.bytes = null; return buf; }, function (e) {
+        return decodeBuf(b.ab, dc).then(function (buf) { setLoop(buf, b.fmt); mus.bytes = null; return buf; }, function (e) {
           if (b.i + 1 < mus.fmts.length) { mus.bytes = musicBytes(b.i + 1); return attempt(mus.bytes); }
           throw e;
         });
@@ -954,8 +967,20 @@
     return mus.decoding;
   }
 
+  // during the loading screen: fetch and decode the loop into an AudioBuffer (which any audio context can play) with an
+  // OfflineAudioContext at the loop's own rate. Resolves true when it is ready, false if it failed (never rejects).
+  var OAC = root.OfflineAudioContext || root.webkitOfflineAudioContext;
+  function preloadMusic(onProgress) {
+    if (mus.buf) return Promise.resolve(true);
+    if (!OAC || !root.fetch) return Promise.resolve(false);
+    var dc; try { dc = new OAC(2, 1, MUSIC.rate); } catch (e) { return Promise.resolve(false); }
+    mus.early = true; mus.onBytes = function (f) { if (onProgress) onProgress(0.9 * f); };
+    return decodeMusic(dc).then(function () { mus.onBytes = null; if (onProgress) onProgress(1); return true; },
+                                function () { mus.onBytes = null; return false; });
+  }
   function prefetchSoon() {
     setTimeout(function () {
+      if (mus.buf || mus.decoding) return;
       var get = function () { fetchMusic().catch(noop); };
       if (root.requestIdleCallback) root.requestIdleCallback(get, { timeout: 2000 }); else get();
     }, 2500);
@@ -963,6 +988,12 @@
   (function () {
     if (!root.addEventListener || !AC) return;
     var once = false, go = function () { if (!once) { once = true; prefetchSoon(); } };
+    // the loading screen waits for the music (MangoLoader.track: weight = the file's size, ~1 MB)
+    var L0 = root.MangoLoader, st0 = null; try { st0 = L0 && L0.state && L0.state(); } catch (e) {  }
+    var off0 = false; try { off0 = root.localStorage.getItem('mango.music') === '0'; } catch (e) {  }   // the player turned music off: not waited for
+    if (AC && L0 && L0.track && st0 && !st0.gone && !off0) { try {
+      if (!mus.fmts) mus.fmts = musicFormats(); var SZ = (root.MANGO_MUSIC_V || {}).size || {};
+      L0.track('music', SZ[mus.fmts[0]] || 1000000, function (prog) { return preloadMusic(prog); }); } catch (e) {  } }
     root.addEventListener('mango:shown', go);
 
     var noLoader = function () {
@@ -1041,11 +1072,23 @@
   function setYield(fn) { yieldFn = typeof fn === 'function' ? fn : null; }
   function held() { try { return !!(yieldFn && yieldFn()); } catch (e) { return false; } }
 
+  // init(): the node graph (graph(), cheap) and then the heavy part (heavy(): reverb impulse responses, noise renders, the
+  // string warm-up, the ocean, the kit, the ambience). musicNow() makes only the graph, so the music starts inside the gesture.
+  var heavyDone = false;
   function init() {
-    if (ctx) {
-      if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
-      return true;
-    }
+    if (!ctx && !graph()) return false;
+    if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
+    if (!heavyDone) { heavyDone = true; heavy(); }
+    return true;
+  }
+  function musicNow() {
+    if (!ctx && !graph()) return false;
+    if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
+    if (muted) setMuted(false);
+    startMusic();
+    return true;
+  }
+  function graph() {
     if (!AC) return false;
     ctx = pendingCtx || new AC(); pendingCtx = null;
     if (ctx.state === 'suspended' && ctx.resume) ctx.resume().catch(noop);
@@ -1065,14 +1108,18 @@
     N.sfxBus = ctx.createGain(); N.sfxBus.gain.value = 1; N.sfxBus.connect(N.sfxVol);
     N.sfxVerb = ctx.createGain(); N.sfxVerb.gain.value = 1;
     var vhp = ctx.createBiquadFilter(); vhp.type = "highpass"; vhp.frequency.value = 220; vhp.Q.value = 0.7;
-    var conv = ctx.createConvolver(); conv.buffer = makeIR(1.7);
+    var conv = N.conv = ctx.createConvolver();
     var vout = ctx.createGain(); vout.gain.value = 0.55;
     N.sfxVerb.connect(vhp); vhp.connect(conv); conv.connect(vout); vout.connect(N.sfxBus);
     N.caveVerb = ctx.createGain(); N.caveVerb.gain.value = 1;
     var chp = ctx.createBiquadFilter(); chp.type = "highpass"; chp.frequency.value = 140; chp.Q.value = 0.7;
-    var cave = ctx.createConvolver(); cave.buffer = makeIR(3.4, true);
+    var cave = N.cave = ctx.createConvolver();
     var cout = ctx.createGain(); cout.gain.value = 0.5;
     N.caveVerb.connect(chp); chp.connect(cave); cave.connect(cout); cout.connect(N.sfxBus);
+    return true;
+  }
+  function heavy() {
+    N.conv.buffer = makeIR(1.7); N.cave.buffer = makeIR(3.4, true);
 
     var len = Math.floor(ctx.sampleRate * 2);
     noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -1650,11 +1697,11 @@
 
   function debug() {
     return {
-      state: ctx ? ctx.state : 'none', mode: curMode, musicOn: musicOn, muted: muted,
+      state: ctx ? ctx.state : 'none', mode: curMode, musicOn: musicOn, muted: muted, heavy: heavyDone,
       sfxVoices: voices.sfx.length, musicVoices: mus.src ? 1 : 0,
       music: { fmt: mus.fmt, fetched: mus.fetched, decoded: !!mus.buf, playing: !!mus.src, loopStart: mus.loopStart,
                loopEnd: mus.loopEnd, primingSkipped: mus.off, bufferLength: mus.buf ? mus.buf.length : 0,
-               rate: mus.buf ? mus.buf.sampleRate : 0, level: N.musicMode ? N.musicMode.gain.value : 1, error: mus.err },
+               rate: mus.buf ? mus.buf.sampleRate : 0, early: !!mus.early, decoding: !!mus.decoding, level: N.musicMode ? N.musicMode.gain.value : 1, error: mus.err },
       created: stats.created, stolen: stats.stolen, ducking: duckCount, ukeStrings: Object.keys(ksCache).length, kit: Object.keys(SB).length
     };
   }
@@ -1662,6 +1709,7 @@
   root.MangoAudio = {
     init: safe(init, false),
     unlock: safe(unlock, false),
+    musicNow: safe(musicNow, false),
     setYield: safe(setYield),
     isReady: safe(isReady, false),
     startMusic: safe(startMusic),
