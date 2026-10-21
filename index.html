@@ -2773,6 +2773,76 @@ header.slotbar .soundbtns{display:none!important}
   @keyframes wcfade{from{opacity:0}}
 }
 
+/* BONUS BOOST card, special-spin chip, BONUS BUY size (boost.js, 2026-10-21). From Oz's approved mockups (scratchpad boost-mock:
+   shot2.js laptop card, shot-phone.js mini card). Sizes follow --bw, the card's width, set by boost.js for each layout. */
+.machine .bb-fu{position:absolute;left:0;top:0;width:calc(var(--fu) * 1000);height:0;visibility:hidden;pointer-events:none}
+/* the bar's old.bb-switch: kept in the page (the card presses it), never shown */
+html body .mhud #modebtn,html body #modebtn{display:none!important}
+
+#bbcard{position:absolute;z-index:46;box-sizing:border-box;width:var(--bw,176px);font-family:"Lilita One",system-ui,sans-serif;color:#fff;text-align:center;cursor:pointer;
+  padding:calc(var(--bw,176px)*.075) calc(var(--bw,176px)*.07) calc(var(--bw,176px)*.08);border-radius:calc(var(--bw,176px)*.09);
+  background:linear-gradient(180deg,rgba(12,58,72,.92),rgba(6,34,44,.95)),url("img/wood-panel.webp?v=3699864c") center/cover;
+  border:calc(var(--bw,176px)*.03) solid #f2b33a;box-shadow:0 0 0 calc(var(--bw,176px)*.018) #5a3212,0 calc(var(--bw,176px)*.045) 0 #3b1f0b,0 10px 24px rgba(0,0,0,.55),inset 0 0 22px rgba(0,0,0,.45);
+  -webkit-tap-highlight-color:transparent;outline:none;user-select:none;-webkit-user-select:none;transition:box-shadow .25s,filter .25s,opacity .25s}
+#bbcard:not(.placed){visibility:hidden}
+#bbcard:focus-visible{outline:3px solid #fff4d6;outline-offset:3px}
+#bbcard .bb-tag{position:absolute;left:50%;top:0;transform:translate(-50%,-62%);white-space:nowrap;padding:.18em .9em;font-size:calc(var(--bw,176px)*.105);letter-spacing:.04em;
+  color:#3b1f0b;background:linear-gradient(#ffd66b,#f2a52c);border:2px solid #5a3212;border-radius:.5em;box-shadow:0 3px 0 #5a3212}
+#bbcard .bb-price{font-size:calc(var(--bw,176px)*.135);line-height:1.05;margin-top:.25em;text-shadow:0 2px 0 #062430;white-space:nowrap}
+#bbcard .bb-price b{color:#ffd23f;font-weight:400}
+#bbcard .bb-per{font-size:calc(var(--bw,176px)*.07);opacity:.85;letter-spacing:.06em}
+#bbcard .bb-badges{display:flex;justify-content:center;align-items:center;gap:2%;margin:.45em 0 .2em;font-size:calc(var(--bw,176px)*.1)}
+#bbcard .bb-badges[hidden]{display:none}
+#bbcard .bb-badges img{width:23%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.5))}
+#bbcard .bb-badges span{font-size:calc(var(--bw,176px)*.15);color:#ffd23f;margin-left:3%;text-shadow:0 2px 0 #5a3212}
+#bbcard .bb-chance{font-size:calc(var(--bw,176px)*.095);line-height:1.12;letter-spacing:.02em;text-shadow:0 2px 0 #062430}
+#bbcard .bb-chance .bb-cm{display:none}
+#bbcard .bb-sw{position:relative;margin:.6em auto 0;width:86%;height:calc(var(--bw,176px)*.2);border-radius:999px;background:#05161d;border:calc(var(--bw,176px)*.022) solid #f2b33a;box-shadow:inset 0 3px 6px rgba(0,0,0,.6);font-size:calc(var(--bw,176px)*.1)}
+#bbcard .bb-knob{position:absolute;top:6%;bottom:6%;width:50%;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:calc(var(--bw,176px)*.12);
+  background:linear-gradient(#5fe08a,#1f9d55);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 2px 4px rgba(0,0,0,.5);transition:left .2s}
+#bbcard .bb-lbl{position:absolute;top:50%;transform:translateY(-50%);font-size:calc(var(--bw,176px)*.11)}
+#bbcard.off .bb-knob{left:3%;background:linear-gradient(#8aa3ad,#55707b)} #bbcard.off .bb-lbl{right:12%}
+#bbcard.on .bb-knob{left:47%} #bbcard.on .bb-lbl{left:12%;color:#ffd23f}
+#bbcard.on{box-shadow:0 0 0 calc(var(--bw,176px)*.018) #5a3212,0 calc(var(--bw,176px)*.045) 0 #3b1f0b,0 0 28px rgba(255,210,63,.75),inset 0 0 22px rgba(0,0,0,.45)}
+#bbcard:not(.locked):hover{filter:brightness(1.07)}
+#bbcard.locked{filter:grayscale(.55) brightness(.78);cursor:default}
+#bbcard.dim{filter:grayscale(.8) brightness(.7)}
+#bbcard.dim:not(.locked):hover{filter:grayscale(.35) brightness(.9)}
+/* the compact card (phones; narrow landscape windows):.bb-tag,.bb-price, bonus.bb-chance,.bb-switch */
+#bbcard.mini{padding:16px 8px 8px}
+#bbcard.mini .bb-badges,#bbcard.mini .bb-per,#bbcard.mini .bb-chance .bb-cf{display:none}
+#bbcard.mini .bb-chance .bb-cm{display:inline}
+#bbcard.mini .bb-price{font-size:calc(var(--bw,150px)*.127);margin:0}
+#bbcard.mini .bb-chance{font-size:calc(var(--bw,150px)*.083);margin-top:2px;white-space:nowrap}
+#bbcard.mini .bb-sw{margin-top:6px;height:calc(var(--bw,150px)*.173)}
+#bbcard.mini .bb-tag{font-size:calc(var(--bw,150px)*.087)}
+
+/* the special-spin chip, above the bar */
+#modechip{position:absolute;z-index:46;display:flex;align-items:center;gap:8px;white-space:nowrap;padding:6px 8px 6px 14px;border-radius:999px;cursor:pointer;
+  font:400 15px/1 "Lilita One",system-ui,sans-serif;letter-spacing:.03em;color:#3b1f0b;background:linear-gradient(#ffd66b,#f2a52c);border:2px solid #5a3212;
+  box-shadow:0 3px 0 #5a3212,0 0 18px rgba(255,210,63,.55);-webkit-tap-highlight-color:transparent;outline:none;user-select:none;-webkit-user-select:none}
+#modechip:not(.placed){visibility:hidden}
+#modechip[hidden]{display:none!important}
+#modechip .mc-p{font-size:.86em;opacity:.85}
+#modechip .mc-x{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#3b1f0b;color:#ffd66b;font-style:normal;font-size:12px}
+#modechip:focus-visible{outline:3px solid #fff4d6;outline-offset:3px}
+#modechip.locked{filter:grayscale(.4) brightness(.85);cursor:default}
+#modechip.locked .mc-x{opacity:.4}
+@media (max-width:640px) and (orientation:portrait){ #modechip{font-size:13px;padding:5px 6px 5px 11px;gap:6px} #modechip .mc-x{width:19px;height:19px} }
+/* the spin button carries the special mode's name */
+html body .mhud #spinbtn[data-ml]::after{content:attr(data-ml)!important;display:block!important;position:absolute!important;left:50%!important;top:auto!important;bottom:13%!important;transform:translateX(-50%)!important;
+  padding:2px 6px!important;border-radius:6px!important;border:0!important;box-shadow:0 1px 0 #5a3212!important;font:400 11px/1 "Lilita One",system-ui,sans-serif!important;letter-spacing:.04em;color:#3b1f0b!important;background:#ffd23f!important;text-shadow:none!important;-webkit-text-stroke:0!important;white-space:nowrap;pointer-events:none;z-index:2}
+
+/* BONUS BUY: 25% bigger (boost.js picks the scale: the largest up to 1.25 that keeps 12px from the frame, the sign and the card) */
+.machine .stagewrap > #buybtn{scale:var(--bs,1);transform-origin:var(--bso,right center)}
+.machine .stagewrap > #buybtn:active:not(:disabled){scale:calc(var(--bs,1) * .96)}
+
+/* layering: like BONUS BUY, under the bonus intro / MAX WIN card (body.cine-top) and gone while the big-win card is up */
+body.cine-top #bbcard,body.cine-top #modechip{z-index:41!important}
+#bbcard{transition:opacity .3s,filter .25s,box-shadow .25s}#modechip{transition:opacity .3s}
+body:has(#celebrate:not([hidden])) #bbcard,body:has(#celebrate:not([hidden])) #modechip{opacity:0;pointer-events:none}
+body.replay #bbcard,body.replay #modechip{display:none!important}
+
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","fx-foam":"e5271a45","fx-hero-cheer":"e7616fe9","fx-hero":"0a2e9a63","fx-rays":"06f49708","fx-splash":"667cb158","fx-wave":"2b74979c","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","hooligans-logo":"10e92930","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"}; window.MANGO_SFX_V = {"bamboo":"e5a40b24","bongo":"d6528b4c","conga":"fb4eeb95","gull":"23f455da","gulls":"be8e6238","marimba":"9db7a569","rain":"cdc1cb30","shake":"05a3e428","shaker":"9159d193","splash1":"8df05b90","splash2":"413c06a2","surf":"a508897e","swish":"c67e5cbb","ukulele":"016d218b","wave":"175b02af"}; window.MANGO_MUSIC_V = {"size":{"m4a":1436512,"webm":902200},"m4a":"7f085aac","webm":"273c0743"};</script>
 <script>
@@ -6597,8 +6667,8 @@ function wcCard(kind, id, name, tag, desc, price, per, cta, on, ok){
 function renderModes(){
   const buyOff = !!flags.disabledBuyFeature;
   $('modes').innerHTML = UI_MODES.filter(m => m.id.startsWith('SPECIAL') && !buyOff).map(m => { const sub = m.sub().split(' · ');
-    return wcCard('mode', m.id, m.label, 'Wave spin', sub.slice(1).join(' · '), wcMoney(levels[betIdx]*costOf(m.id)), 'one spin', 'PLAY', false, !busy && !autoLeft); }).join('');
-  $('modes').querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (busy) return; const id = b.dataset.mode; if (id === 'BASE'){ mode = id; sfx('modeSelect', 0); openLayer(null); meta(); } else confirmChoice({kind: 'mode', name: id}); });
+    return wcCard('mode', m.id, m.label, 'Wave spin', sub.slice(1).join(' · '), wcMoney(levels[betIdx]*costOf(m.id)), 'per spin', mode === m.id ? 'ON · TAP TO TURN OFF' : 'TURN ON', mode === m.id, !busy && !autoLeft); }).join('');
+  $('modes').querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { if (busy) return; const id = b.dataset.mode; if (id === mode && id.startsWith('SPECIAL')){ mode = 'BASE'; sfx('modeSelect', 0); openLayer(null); meta(); return; } if (id === 'BASE'){ mode = id; sfx('modeSelect', 0); openLayer(null); meta(); } else confirmChoice({kind: 'mode', name: id}); });
   $('buyswin').hidden = buyOff;
   $('buys').innerHTML = BUY_MODES.map((name, t) => { const price = levels[betIdx]*costOf(name), ok = balance >= price && !busy;
     return wcCard('buy', name, BONUS[t].name.toUpperCase(), BONUS[t].trig, `${BONUS[t].desc} ${costOf(name)}x bet.`, wcMoney(price), '', 'BUY', false, ok); }).join('');
@@ -6619,9 +6689,9 @@ function cfRender(){
   const a = MODE('ANTE').bonusOneIn, n = MODE('BASE').bonusOneIn;
   const odds = s.name === 'ANTE' ? `CHANCE OF A BONUS EACH SPIN: 1 IN ${a.toLocaleString('en-US')} (${pctOf(a)})` : '';
   $('cf-odds').hidden = !odds; $('cf-odds').textContent = odds;
-  $('cf-bet').textContent = fmtBal(levels[betIdx]); $('cf-pk').textContent = 'PRICE'; $('cf-price').textContent = fmtBal(price);
+  $('cf-bet').textContent = fmtBal(levels[betIdx]); $('cf-pk').textContent = s.kind === 'buy' ? 'PRICE' : 'PER SPIN'; $('cf-price').textContent = fmtBal(price);
   $('cf-minus').disabled = betIdx <= 0; $('cf-plus').disabled = betIdx >= levels.length-1;
-  $('cf-ok').textContent = s.kind === 'buy' ? `BUY FOR ${fmtBal(price)}` : `PLAY ${m ? m.label : ''}`;
+  $('cf-ok').textContent = s.kind === 'buy' ? `BUY FOR ${fmtBal(price)}` : `TURN ON ${m ? m.label : ''} SPINS`;
   $('cf-ok').disabled = balance < price;
 }
 function confirmChoice(s){ if (busy) return; openLayer(null); cfState = s; $('confirm').hidden = false; cfRender(); $('cf-ok').focus(); }
@@ -6630,7 +6700,7 @@ $('cf-minus').onclick = () => { stepBet(-1); cfRender(); };
 $('cf-plus').onclick = () => { stepBet(1); cfRender(); };
 $('cf-cancel').onclick = closeConfirm;
 $('confirm').onclick = e => { if (e.target === $('confirm')) closeConfirm(); };
-$('cf-ok').onclick = () => { const s = cfState; closeConfirm(); if (!s) return; if (s.kind === 'buy'){ sfx('buy', BUY_MODES.indexOf(s.name)); playRound(s.name); } else { sfx('modeSelect', UI_MODES.findIndex(m => m.id === s.name)); playRound(s.name); } };
+$('cf-ok').onclick = () => { const s = cfState; closeConfirm(); if (!s) return; if (s.kind === 'buy'){ sfx('buy', BUY_MODES.indexOf(s.name)); playRound(s.name); } else { sfx('modeSelect', UI_MODES.findIndex(m => m.id === s.name)); mode = s.name; meta(); } };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('confirm').hidden) closeConfirm(); });
 async function confirmBuy(name){
   if (busy) return; openLayer(null); const t = BUY_MODES.indexOf(name), price = levels[betIdx]*costOf(name);
@@ -6718,6 +6788,10 @@ function bbFit(){ bbQ = 0; const mb = $('modebtn'); if (!mb || !mb.offsetWidth) 
   mb.querySelectorAll('span').forEach(s => { s.style.removeProperty('font-size'); if (avail > 0 && s.scrollWidth > avail){ const f = parseFloat(getComputedStyle(s).fontSize); s.style.fontSize = Math.max(6, Math.floor(f*avail/s.scrollWidth*10)/10) + 'px'; } }); }
 const bbFitSoon = () => { if (!bbQ) bbQ = requestAnimationFrame(bbFit); };
 addEventListener('resize', bbFitSoon);
+window.MangoMode = {get: () => ({mode, levels: levels.length, busy, autoLeft, hasAnte: !!MODE('ANTE')}),
+  price: id => levels.length ? fmtBal(levels[betIdx]*costOf(id)) : '',
+  ratio: () => { const a = MODE('ANTE'), b = MODE('BASE'); return a && b && a.bonusOneIn > 0 && b.bonusOneIn > 0 ? b.bonusOneIn/a.bonusOneIn : 0; },
+  set: m => { if (busy || autoLeft > 0 || !levels.length) return; mode = m; try { sfx('modeSelect', 0); } catch(e){} meta(); }};
 function slotChrome(){
   document.querySelector('.betctl').classList.toggle('boost', mode === 'ANTE');
   const m = UI_MODES.find(x => x.id === mode), i = $('bet').selectedIndex, n = $('bet').options.length;
@@ -6730,13 +6804,14 @@ function slotChrome(){
   { const ab = $('autobtn'), run = autoLeft > 0; ab.classList.toggle('on', run); ab.setAttribute('aria-pressed', run); ab.dataset.left = run ? String(autoLeft) : '';
     if (run) ab.disabled = false; ab.setAttribute('aria-label', run ? `Autoplay on, ${autoLeft} spins left. Tap to stop` : 'Autoplay'); }
   $('buybtn').hidden = !!flags.disabledBuyFeature; $('buybtn').disabled = busy || autoLeft > 0;
+  try { if (window.MangoBoost) MangoBoost.sync(); } catch(e){}
 }
 
 /* ---------- rules ---------- */
 function renderRules(){
   const ico = (s, mult) => `<span class="ico">${symHTML(s, s === W ? {mult: mult || 5} : {})}</span>`;
-  const modeRows = GAME.modes.map(m => { const what = {BASE: 'Normal spin.', ANTE: `Bonus Boost: each spin has a 1 in ${MODE('ANTE').bonusOneIn.toLocaleString('en-US')} chance to start a bonus, instead of 1 in ${MODE('BASE').bonusOneIn.toLocaleString('en-US')}. Every spin is independent.`, SPECIAL1: 'Trick Spin: 1 guaranteed wild on reels 2-4 that fills its reel. No bonuses.',
-      SPECIAL2: 'Trick Spin: 2 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.', SPECIAL3: 'Trick Spin: 3 guaranteed wilds that can land on any reel and fill it. About 1 in 50,000: all 5 reels go wild, up to 20,000x. No bonuses.',
+  const modeRows = GAME.modes.map(m => { const what = {BASE: 'Normal spin.', ANTE: `Bonus Boost: each spin has a 1 in ${MODE('ANTE').bonusOneIn.toLocaleString('en-US')} chance to start a bonus, instead of 1 in ${MODE('BASE').bonusOneIn.toLocaleString('en-US')}. Every spin is independent.`, SPECIAL1: 'Pick it in the menu and confirm; the spin button keeps playing it until you turn it off. Trick Spin: 1 guaranteed wild on reels 2-4 that fills its reel. No bonuses.',
+      SPECIAL2: 'Pick it in the menu and confirm; the spin button keeps playing it until you turn it off. Trick Spin: 2 guaranteed wilds on reels 2-4 that fill their reels. No bonuses.', SPECIAL3: 'Pick it in the menu and confirm; the spin button keeps playing it until you turn it off. Trick Spin: 3 guaranteed wilds that can land on any reel and fill it. About 1 in 50,000: all 5 reels go wild, up to 20,000x. No bonuses.',
       BONUS1: 'Buys the Crew bonus.', BONUS2: 'Buys the Sesh bonus.', BONUS3: 'Buys the Legend bonus.'}[m.name];
     return `<tr><td>${m.label}</td><td>${m.cost}x bet</td><td>${what}</td><td>${pct(m.rtp)}</td><td>${fx(m.maxWin)}x bet</td></tr>`; }).join('');
   const pays = [0,1,2,3,4,5,6,7,8].map(s => `<tr><td>${ico(s)}${NAMES[s]}</td>${[0,1,2].map(k => `<td>${fx(GAME.pays[s][k])}x</td>`).join('')}</tr>`).join('');
@@ -6771,8 +6846,8 @@ function renderRules(){
     <li><strong>AUTOPLAY</strong>: asks how many spins, then plays them automatically until a bonus starts, you press STOP, or the balance runs low. Autoplay shows spins left; tap it to stop (the round in play finishes).</li>
     <li><strong>SPEED</strong>: Normal, Turbo or Super Turbo animations. The result is the same at every speed.</li>
     <li><strong>Cog</strong> (settings): music on or off and its volume, sound effects on or off and their volume, and the spin speed. Sound is on when the game opens and starts with your first tap; turn both off to mute the game completely. Your choice is kept on this device.</li>
-    <li><strong>BONUS BOOST</strong>: switches Bonus Boost on or off. While it is on, every spin (SPIN, the spacebar and autoplay) plays Bonus Boost and the switch shows the price of each spin (${fx(MODE('ANTE').cost)}x your bet). It is off whenever the game opens, and cannot be changed while a round or autoplay runs.</li>
-    <li><strong>BONUS BUY</strong> (the plank by the reels): the Wave Spins (Ripple, Curl, Barrel: one spin each) and the bonus buys (Swell, Surf, Kahuna). Each plays only after you confirm its price.</li>
+    <li><strong>BONUS BOOST</strong> (the card to the right of the reels; top right on phones): its switch turns Bonus Boost on or off, and the card shows the price of each spin and how much more often a bonus starts. While it is on, every spin (SPIN, the spacebar and autoplay) plays Bonus Boost and the switch shows the price of each spin (${fx(MODE('ANTE').cost)}x your bet). It is off whenever the game opens, and cannot be changed while a round or autoplay runs.</li>
+    <li><strong>BONUS BUY</strong> (the plank by the reels): the Wave Spins (Ripple, Curl, Barrel) and the bonus buys (Swell, Surf, Kahuna), each after you confirm its price. A Wave Spin stays on: pick it and confirm, and the spin button, the spacebar and autoplay keep playing it until you turn it off with the X on its gold sign above the bar, its card in the menu, or the Bonus Boost card. Turning a Wave Spin on turns Bonus Boost off. A bonus buy plays one bonus.</li>
     <li><strong>Bonus start</strong>: when a bonus starts (bought, triggered, or resumed after a reload), its free spins wait for you: tap the reels or press the spacebar.</li>
     <li><strong>Rules</strong>: this page.</li></ul></div></div>
   <div class="win"><div class="bar"><span>DISCLAIMER</span></div><div class="body"><p style="margin:0">Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser.</p></div></div>`;
@@ -7715,6 +7790,178 @@ body.cine-intro .bonusgo .bg-k{white-space:nowrap;font:400 clamp(12px,1.5vw,16px
   window.MangoCine = M;
   M._ = { C: C, P: P, burst: burst, glints: glints, foil: foil, flare: flare, ring: ring, card: card, flash: flash, shake: shake, punch: punch, push: push, hero: function () { return HERO; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+</script>
+<script>
+// Mango Surf: the BONUS BOOST card, the special-spin chip and the BONUS BUY sign's size (window.MangoBoost). 2026-10-21, Oz.
+// build.js puts this at the end of <body>, after the game script, which gives it window.MangoMode (get / price / ratio / set)
+// and calls MangoBoost.sync() at the end of every slotChrome().
+//  - The card replaces the bar's BONUS BOOST switch (#modebtn stays in the page, hidden, as the switch the card presses, so
+//    its rules hold: off on every load and never saved, locked while a round or autoplay runs, from a special spin it goes to
+//    Normal + Boost). Laptop/desktop: a card right of the reel frame; phones (portrait): a compact card top right, in the
+//    sky beside the BONUS BUY sign; where neither fits (small pop-outs) it is hidden. Never over the frame, the MANGO SURF
+//    sign, BONUS BUY, TOTAL WIN or the bar (checked with getBoundingClientRect at every layout).
+//  - Its bonus-chance figure comes from the math (Normal 1-in-N / Boost 1-in-N, rounded to the nearest 0.5), never typed in.
+//  - It is a role="button" element, not a <button>: the game lets a focused <button> take the spacebar, and Space must stay
+//    the spin key (Enter toggles it from the keyboard).
+//  - Special spins (Ripple / Curl / Barrel) are a mode again: while one is on, a gold chip above the bar says so with its price
+//    per spin and an X that goes back to Normal, and the spin button carries the mode's name.
+//  - BONUS BUY is 25% bigger, grown away from the slot; where that would come within 12px of the frame, the sign or the card
+//    it takes the largest size that keeps the gap.
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var IV = window.MANGO_IMG_V || {}, badge = 'img/S1.webp' + (IV.S1 ? '?v=' + IV.S1 : '');
+  var NAME = {SPECIAL1: 'RIPPLE', SPECIAL2: 'CURL', SPECIAL3: 'BARREL'};
+  var G = function () { try { return window.MangoMode ? MangoMode.get() : null; } catch (e) { return null; } };
+  var card, chip, wrap, lastKey = '', q = 0, again = 0, retry = 0;
+
+  function ratio() {
+    try { var x = MangoMode.ratio(); if (!(x > 0)) return 0; var r = Math.round(x * 2) / 2; return r > 1 ? r : 0; } catch (e) { return 0; }
+  }
+  var fmtR = function (r) { return String(r); };
+  function priceOf(id) { try { return MangoMode.price(id); } catch (e) { return ''; } }
+
+  function build() {
+    wrap = document.querySelector('.machine .stagewrap'); if (!wrap || card) return !!card;
+    card = document.createElement('div'); card.id = 'bbcard'; card.className = 'bbcard off'; card.setAttribute('role', 'button'); card.tabIndex = 0;
+    card.innerHTML = '<div class="bb-tag">BONUS BOOST</div><div class="bb-price"><b></b></div><div class="bb-per">PER SPIN</div>' +
+      '<div class="bb-badges"><img src="' + badge + '" alt=""><img src="' + badge + '" alt=""><img src="' + badge + '" alt=""><span class="bb-x"></span></div>' +
+      '<div class="bb-chance"><span class="bb-cf"></span><span class="bb-cm"></span></div>' +
+      '<div class="bb-sw" aria-hidden="true"><div class="bb-knob"></div><div class="bb-lbl"></div></div>';
+    var go = function () { var b = $('modebtn'); if (b && !b.disabled) b.click(); };
+    card.addEventListener('click', go);
+    card.addEventListener('keydown', function (e) { if (e.key === 'Enter'){ e.preventDefault(); go(); } });
+    wrap.appendChild(card);
+    chip = document.createElement('div'); chip.id = 'modechip'; chip.className = 'modechip'; chip.setAttribute('role', 'button'); chip.tabIndex = 0; chip.hidden = true;
+    chip.innerHTML = '<b class="mc-n"></b><span class="mc-p"></span><i class="mc-x" aria-hidden="true">✕</i>';
+    var off = function () { var g = G(); if (!g || g.busy || g.autoLeft > 0 || !/^SPECIAL/.test(g.mode)) return; MangoMode.set('BASE'); };
+    chip.addEventListener('click', off);
+    chip.addEventListener('keydown', function (e) { if (e.key === 'Enter'){ e.preventDefault(); off(); } });
+    wrap.appendChild(chip);
+    addEventListener('resize', soon); addEventListener('orientationchange', soon);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon);
+    if (window.ResizeObserver){ var st = document.querySelector('.machine .stage'); if (st) new ResizeObserver(soon).observe(st); }
+    return true;
+  }
+
+  // ---- content (every slotChrome) ----
+  function sync() {
+    if (!build()) return; var g = G(); if (!g) return;
+    var on = g.mode === 'ANTE', sp = /^SPECIAL/.test(g.mode), lock = g.busy || g.autoLeft > 0 || !g.levels;
+    var r = ratio(), per = priceOf('ANTE'), hasAnte = g.hasAnte;
+    var key = [on, sp, lock, r, per, hasAnte, g.mode].join('|');
+    if (key !== lastKey) {
+      lastKey = key;
+      card.hidden = !hasAnte; card.classList.toggle('on', on); card.classList.toggle('off', !on); card.classList.toggle('locked', lock); card.classList.toggle('dim', sp);
+      card.querySelector('.bb-price b').textContent = per;
+      card.querySelector('.bb-x').textContent = r ? 'x' + fmtR(r) : ''; card.querySelector('.bb-badges').hidden = !r;
+      card.querySelector('.bb-cf').innerHTML = r ? fmtR(r) + 'x THE CHANCE<br>TO WIN A BONUS' : 'MORE CHANCE<br>TO WIN A BONUS';
+      card.querySelector('.bb-cm').textContent = r ? fmtR(r) + 'x BONUS CHANCE' : 'MORE BONUS CHANCE';
+      card.querySelector('.bb-knob').textContent = on ? '✓' : '→'; card.querySelector('.bb-lbl').textContent = on ? 'ON' : 'OFF';
+      card.setAttribute('aria-pressed', on); card.setAttribute('aria-disabled', lock);
+      card.setAttribute('aria-label', 'Bonus Boost ' + (on ? 'on' : 'off') + ', ' + per + '.bb-per spin' + (r ? ', ' + fmtR(r) + ' times the chance to win a bonus' : '') +
+        (lock ? '. Locked while a round or autoplay runs' : sp ? '. Turning it on ends the special spins' : ''));
+      // the special-spin chip and the spin button's mode label
+      var sb = $('spinbtn'), nm = sp ? NAME[g.mode] : '';
+      chip.hidden = !sp; chip.classList.toggle('locked', lock);
+      if (sp){ chip.querySelector('.mc-n').textContent = nm + ' SPINS ON'; chip.querySelector('.mc-p').textContent = priceOf(g.mode) + ' PER SPIN';
+        chip.setAttribute('aria-label', nm.charAt(0) + nm.slice(1).toLowerCase() + ' spins on, ' + priceOf(g.mode) + '.bb-per spin. Tap to go back to normal spins'); }
+      if (sb){ if (nm) sb.dataset.ml = nm; else delete sb.dataset.ml; }
+      // placed now and again a moment later (panels closing and the bar settling can still move things in the first frames)
+      soon(); clearTimeout(again); again = setTimeout(soon, 380);
+    }
+  }
+
+  // ---- layout ----
+  function soon() { if (!q) q = requestAnimationFrame(place); }
+  var R = function (e) { if (!e || e.hidden) return null; var r = e.getBoundingClientRect(); return r.width || r.height ? {l: r.left, t: r.top, r: r.right, b: r.bottom} : null; };
+  var hit = function (a, b, gap) { return !!(a && b) && a.l < b.r + gap && a.r > b.l - gap && a.t < b.b + gap && a.b > b.t - gap; };
+  var fuPx = 0;
+  function frameBox() {
+    var st = document.querySelector('.machine .stage'), m = document.querySelector('.machine'); if (!st || !m) return null;
+    var p = m.querySelector('.bb-fu'); if (!p){ p = document.createElement('i'); p.className = 'bb-fu'; p.setAttribute('aria-hidden', 'true'); m.appendChild(p); }
+    fuPx = p.getBoundingClientRect().width / 1000; var lap = 5, s = R(st); if (!s) return null;
+    return {l: s.l - (200 * fuPx - lap), r: s.r + (200 * fuPx - lap), t: s.t - (210 * fuPx - lap), b: s.b + (190 * fuPx - lap), st: s};
+  }
+  function put(el, x, y) { var w = R(wrap) || {l: 0, t: 0}; el.style.left = Math.round(x - w.l) + 'px'; el.style.top = Math.round(y - w.t) + 'px'; }
+  function place() {
+    q = 0; if (!card || !wrap) return;
+    var vw = innerWidth, vh = innerHeight, F = frameBox(); if (!F) return;
+    var sign = R(document.querySelector('.mf-deco > .mf-sign')), bar = R(document.querySelector('.ctrlbar')), win = R(document.querySelector('.machine .stage > .winrow')),
+        head = R(document.querySelector('header.slotbar .brand')) , buy = $('buybtn');
+    var tiny = vh < 300 && vw > vh, portrait = vh > vw;
+    if (buy) buy.style.setProperty('--bs', '1'); var buy1 = buy && !buy.hidden ? R(buy) : null;
+    card.classList.remove('mini'); card.style.visibility = 'hidden'; card.style.display = '';
+    var obst = [F, sign, bar, win, head, buy1].filter(Boolean), ok = function (b, gap) { if (b.l < 6 || b.t < 4 || b.r > vw - 6 || b.b > vh - 4) return false; for (var i = 0; i < obst.length; i++) if (hit(b, obst[i], gap)) return false; return true; };
+    var placed = null;
+    if (!tiny && !card.hidden) {
+      var tries = [];
+      if (!portrait) {
+        var bw = Math.max(110, Math.min(240, 176 * Math.min(vw / 1366, vh / 768)))   /* 176px at 1366x768 */, gap = Math.round(40 * bw / 176), avail = vw - 10 - (F.r + gap);
+        if (avail < bw) bw = avail;
+        if (bw >= 110) tries.push({mini: false, bw: bw, x: F.r + gap, y: F.st.t + (F.st.b - F.st.t) * .28 - bw * .3, gap: 12});
+        var mbw = Math.min(150, vw - 10 - (F.r + 14)); if (mbw >= 120) tries.push({mini: true, bw: mbw, x: F.r + 14, y: F.st.t + 8, gap: 12});
+      }
+      // the compact card: top right (phones: the sky beside BONUS BUY), else in the column left of the frame, under TOTAL WIN
+      // (narrow landscape windows such as 800x450, where the bar is a column on the right). Its tag rides ~18px above it.
+      var pw = Math.min(150, Math.round(vw * .385)), lowL = Math.max(win ? win.b : 0, buy1 ? buy1.b : 0);
+      [pw, Math.round(pw * .9), Math.round(pw * .8)].forEach(function (w2) {
+        tries.push({mini: true, bw: w2, x: vw - 12 - w2, y: 22, gap: 8});
+        if (!portrait && F.l - 24 >= w2) tries.push({mini: true, bw: w2, x: Math.max(12, (F.l - w2) / 2), y: lowL + 14 + 18, gap: 8}); });
+      for (var i = 0; i < tries.length && !placed; i++) {
+        var tr = tries[i]; card.classList.toggle('mini', tr.mini); card.style.setProperty('--bw', Math.floor(tr.bw) + 'px'); put(card, tr.x, tr.y);
+        var b = R(card); if (!b) continue;
+        // keep the glow and tag inside: the tag sits ~60% of its height above the card
+        var tagH = (card.querySelector('.bb-tag').getBoundingClientRect().height || 0) * .62, bx = {l: b.l, r: b.r, t: b.t - tagH, b: b.b};
+        if (!tr.mini && bx.b > (bar ? bar.t : vh) - 8) { put(card, tr.x, tr.y - (bx.b - ((bar ? bar.t : vh) - 8))); b = R(card); bx = {l: b.l, r: b.r, t: b.t - tagH, b: b.b}; }
+        if (ok(bx, tr.gap)) placed = {box: bx, mini: tr.mini};
+      }
+    }
+    card.style.visibility = ''; card.style.display = placed ? '' : 'none'; card.classList.toggle('placed', !!placed);
+    // BONUS BUY: 25% bigger, grown away from the slot, never within 12px of the frame, the sign or the card
+    if (buy && !buy.hidden) {
+      var origin = portrait ? 'left top' : (buy1 && buy1.r <= F.l + 1 ? 'right center' : 'left center');
+      buy.style.setProperty('--bso', origin);
+      // 12px from each, or the gap it already has at its normal size if that is less (it grows away from the frame, so that
+      // gap does not shrink): growing never brings it closer than it was
+      var ob = [F, sign, placed && placed.box, win].filter(Boolean), gp = function (a, z) { return Math.max(z.l - a.r, a.l - z.r, z.t - a.b, a.t - z.b); };
+      var need = ob.map(function (o) { return buy1 ? Math.min(12, Math.floor(gp(buy1, o))) : 12; });
+      var fits = function (s) { buy.style.setProperty('--bs', String(s)); var b = R(buy); if (!b) return true;
+        if (b.l < 2 || b.t < 2 || b.r > vw - 2 || b.b > vh - 2) return false; for (var j = 0; j < ob.length; j++) if (gp(b, ob[j]) < need[j] - .5) return false; return true; };
+      var lo = 1, hi = 1.25, best = 1;
+      if (fits(hi)) best = hi; else if (fits(1)) { for (var k = 0; k < 8; k++) { var mid = (lo + hi) / 2; if (fits(mid)) { best = lo = mid; } else hi = mid; } }
+      buy.style.setProperty('--bs', best.toFixed(3)); buy.dataset.bs = best.toFixed(3);
+    }
+    // the special-spin chip: above the bar, centred on the spin button; hidden where it cannot sit clear (the spin button
+    // still says the mode)
+    if (!chip.hidden) {
+      chip.style.display = ''; chip.style.visibility = 'hidden'; put(chip, 0, 0);
+      var sb = R($('spinbtn')), cb = R(chip), cw = cb ? cb.r - cb.l : 0, ch = cb ? cb.b - cb.t : 0, okc = false;
+      if (sb && bar && !tiny) {
+        var top = Math.min(bar.t, sb.t), cands = [[(sb.l + sb.r) / 2 - cw / 2, top - 10 - ch], [(bar.l + bar.r) / 2 - cw / 2, top - 10 - ch], [bar.r - cw, top - 10 - ch]];
+        var ob2 = [F, win, sign, placed && placed.box, R(buy), sb].filter(Boolean);
+        for (var c = 0; c < cands.length && !okc; c++) {
+          var x = Math.max(8, Math.min(vw - 8 - cw, cands[c][0])), y = cands[c][1], bx2 = {l: x, t: y, r: x + cw, b: y + ch}, good = y >= 4;
+          for (var m2 = 0; m2 < ob2.length && good; m2++) if (hit(bx2, ob2[m2], 6)) good = false;
+          if (good) { put(chip, x, y); okc = true; }
+        }
+      }
+      chip.style.visibility = ''; chip.style.display = okc ? '' : 'none'; chip.classList.toggle('placed', okc);
+      if (!okc && !tiny && retry < 4) { retry++; setTimeout(soon, 250); } else if (okc) retry = 0;
+    }
+  }
+  // QA: what sits where (viewport boxes) and the gaps between them
+  function layout() {
+    var F = frameBox(), b = R(card), c = R(chip), u = R($('buybtn')), s = R(document.querySelector('.mf-deco > .mf-sign')), w = R(document.querySelector('.machine .stage > .winrow')), bar = R(document.querySelector('.ctrlbar'));
+    var gap = function (a, z) { if (!a || !z) return null; var dx = Math.max(z.l - a.r, a.l - z.r), dy = Math.max(z.t - a.b, a.t - z.b); return Math.round(Math.max(dx, dy)); };
+    var tagH = card && card.querySelector('.bb-tag').getBoundingClientRect().height * .62 || 0; if (b) b = {l: b.l, r: b.r, t: b.t - tagH, b: b.b};
+    return {card: b, mini: card && card.classList.contains('mini'), chip: c, buy: u, buyScale: u ? +($('buybtn').dataset.bs || 1) : null, frame: F && {l: F.l, t: F.t, r: F.r, b: F.b}, sign: s, winrow: w, bar: bar,
+      gaps: {cardFrame: gap(b, F), cardSign: gap(b, s), cardBuy: gap(b, u), cardBar: gap(b, bar), cardWin: gap(b, w), buyFrame: gap(u, F), buySign: gap(u, s), buyWin: gap(u, w), chipFrame: gap(c, F), chipBar: gap(c, bar), chipWin: gap(c, w), chipCard: gap(c, b)}};
+  }
+  window.MangoBoost = {sync: function () { try { sync(); } catch (e) {} }, place: soon, layout: layout};
+  try { sync(); } catch (e) {}
 })();
 
 </script>
