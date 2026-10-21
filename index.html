@@ -6903,6 +6903,23 @@ body:has(#celebrate:not([hidden])) #buybtn{opacity:0;pointer-events:none}
    TOTAL WIN, the SPINS LEFT badge (both in .winrow, z 45) and the BONUS BUY plank (z 46) drop under #cine-dim (z 42) */
 body.cine-top .machine .stage > .winrow,body.cine-top #buybtn{z-index:41!important}
 
+/* (2026-10-21, from the collaborator's second build) during the bonus intro (body.cine-intro, cine.js bonusTrigger) the game's
+   TAP TO START (#bonusgo, extras.css) drops its own dark card, name and spin count (the title card already says them) and is
+   one bobbing orange button under the title card's words: --bgy (cine.js) moves it there, .bg-placed shows it once placed.
+   The whole overlay stays the tap target, as before. */
+body.cine-intro .bonusgo{background:transparent}
+body.cine-intro .bonusgo .bg-card{background:none;border:0;box-shadow:none;padding:0;gap:9px;transform:translateY(var(--bgy,0px))}
+body.cine-intro .bonusgo:not(.bg-placed) .bg-card{visibility:hidden}
+body.cine-intro .bonusgo .bg-t,body.cine-intro .bonusgo .bg-n{display:none}
+body.cine-intro .bonusgo .bg-go{margin:0;padding:.42em 1.05em .38em;border-radius:999px;background:#ff6f3c;border:3px solid #2b1206;box-shadow:0 5px 0 #2b1206,0 10px 22px rgba(0,0,0,.35);
+  font:400 clamp(20px,3.4vw,36px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.04em;color:#fff4d6;-webkit-text-stroke:4px #2b1206;paint-order:stroke fill;text-shadow:0 2px 0 #2b1206;
+  animation:bg-bob 1.6s ease-in-out infinite;transition:transform .12s ease,box-shadow .12s ease}
+body.cine-intro .bonusgo:hover .bg-go{background:#ff8450}
+body.cine-intro .bonusgo:active .bg-go{transform:translateY(4px);box-shadow:0 1px 0 #2b1206,0 4px 10px rgba(0,0,0,.3);animation:none}
+body.cine-intro .bonusgo .bg-k{font:400 clamp(12px,1.5vw,16px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#fff4d6;-webkit-text-stroke:3px #2b1206;paint-order:stroke fill}
+@keyframes bg-bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-4px) rotate(1.5deg)}}
+@media (prefers-reduced-motion:reduce){body.cine-intro .bonusgo .bg-go{animation:none}}
+
 </style>
 <script>
 // Mango Surf cinematic effects (window.MangoCine). Merged 2026-10-19 from an outside build of the site (mango-surf.zip),
@@ -7311,13 +7328,18 @@ body.cine-top .machine .stage > .winrow,body.cine-top #buybtn{z-index:41!importa
   var topN = 0;
   function onTop(ms) { topN++; document.body.classList.add('cine-top');
     setTimeout(function () { if (--topN <= 0) { topN = 0; document.body.classList.remove('cine-top'); } }, ms); }
-  function card(main, sub, cls, hold) {
+  // until (optional): asked when the hold is over and every 120 ms after; while it answers true the card stays up (and keeps
+  // the HUD signs under it). done (optional) runs as the card leaves.
+  function card(main, sub, cls, hold, until, done) {
     onTop((hold || 1700) + 520);
     var el = document.createElement('div'); el.className = 'cine-title ' + (cls || '');
     el.innerHTML = '<img class="ct-rays" src="' + IMG.rays + '" alt=""><img class="ct-splash" src="' + IMG.splash + '" alt=""><b></b>' + (sub ? '<small></small>' : '');
     el.querySelector('b').textContent = main; if (sub) el.querySelector('small').textContent = sub;
     slot.appendChild(el); void el.offsetWidth; el.classList.add('ct-in'); grade('card', true);
-    setTimeout(function () { el.classList.add('ct-out'); grade('card', false); setTimeout(function () { el.remove(); }, 480); }, hold || 1700);
+    var out = function () {
+      if (until && until()) { onTop(400); setTimeout(out, 120); return; }
+      el.classList.add('ct-out'); grade('card', false); if (done) done(); setTimeout(function () { el.remove(); }, 480); };
+    setTimeout(out, hold || 1700);
     return el;
   }
 
@@ -7571,6 +7593,8 @@ body.cine-top .machine .stage > .winrow,body.cine-top #buybtn{z-index:41!importa
   M.heroStop = function (node) { if (HERO && (!node || HERO.node === node)) heroStop(); };
   M.bonusTrigger = function (tier) {
     tier = tier == null ? 1 : tier; GR.bonus = true; onTop(760);   // the sweep; the card (at 700 ms) keeps it on after that
+    // body.cine-intro (cine.css): the game's TAP TO START (#bonusgo) is only a button under this title card, not a card of its own
+    document.body.classList.add('cine-intro');
     var sw = W * 1.9, sh = sw * 0.5625, y = H * 0.55;
     sprite(IMG.wave, 0, y, sw, [{ transform: 'translateX(' + (-sw * 0.62) + 'px) scale(.9)' }, { transform: 'translateX(' + (W + sw * 0.62) + 'px) scale(1.05)' }], 1500,
       { h: sh, ease: 'cubic-bezier(.45,.05,.35,1)' });
@@ -7582,7 +7606,21 @@ body.cine-top .machine .stage > .winrow,body.cine-top #buybtn{z-index:41!importa
     setTimeout(function () { flash(0.75, 650); shake(0.6); punch(0.06); }, 620);
     setTimeout(function () {
       var b = ($('banner') && $('banner').textContent) || '', m = b.split('!'), main = (m[0] || 'BONUS').trim(), sub = (m[1] || '').trim();
-      card(main, sub, 't' + tier, 1900);
+      // (2026-10-21, from the collaborator's second build) the title card stays up until the player starts the bonus: while the
+      // game's TAP TO START (#bonusgo) is there, and for a short grace while it has not come yet (it comes ~1.8 s after the card
+      // at normal speed, before it in fast and turbo; replays never show it). Its button sits 18 px under the card's words,
+      // placed once the card's entrance has settled (0.9 s) and hidden until then; checked again while it waits (resizes).
+      var t0 = performance.now(), seen = false, pt = 0;
+      var place = function () {
+        var g = $('bonusgo'); if (!g || !ce.isConnected) return; seen = true;
+        if (performance.now() - t0 < 900) return;
+        var w = ce.querySelector('small') || ce.querySelector('b'), c = g.querySelector('.bg-card'); if (!w || !c) return;
+        var cur = parseFloat(g.style.getPropertyValue('--bgy')) || 0, y = Math.round(w.getBoundingClientRect().bottom + 18 - (c.getBoundingClientRect().top - cur));
+        if (y !== cur) g.style.setProperty('--bgy', y + 'px'); g.classList.add('bg-placed');
+      };
+      var ce = card(main, sub, 't' + tier, 1900, function () { place(); return !!$('bonusgo') || (!seen && performance.now() - t0 < 2200); },
+        function () { clearInterval(pt); document.body.classList.remove('cine-intro'); });
+      pt = setInterval(place, 100);
       var gb = gridRect();
       burst(gb.cx, gb.cy - gb.h * 0.06, 2.2);
       foil(gb.cx, gb.y + gb.h, 34, { w: gb.w * 0.9, speed: 900 });
