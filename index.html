@@ -6905,18 +6905,20 @@ body.cine-top .machine .stage > .winrow,body.cine-top #buybtn{z-index:41!importa
 
 /* (2026-10-21, from the collaborator's second build) during the bonus intro (body.cine-intro, cine.js bonusTrigger) the game's
    TAP TO START (#bonusgo, extras.css) drops its own dark card, name and spin count (the title card already says them) and is
-   one bobbing orange button under the title card's words: --bgy (cine.js) moves it there, .bg-placed shows it once placed.
+   one bobbing orange button under the title card's words: --bgx / --bgy (cine.js) move it there, .bg-placed shows it once placed.
    The whole overlay stays the tap target, as before. */
 body.cine-intro .bonusgo{background:transparent}
-body.cine-intro .bonusgo .bg-card{background:none;border:0;box-shadow:none;padding:0;gap:9px;transform:translateY(var(--bgy,0px))}
+body.cine-intro .bonusgo .bg-card{background:none;border:0;box-shadow:none;padding:0;gap:9px;transform:translate(var(--bgx,0px),var(--bgy,0px))}
 body.cine-intro .bonusgo:not(.bg-placed) .bg-card{visibility:hidden}
 body.cine-intro .bonusgo .bg-t,body.cine-intro .bonusgo .bg-n{display:none}
 body.cine-intro .bonusgo .bg-go{margin:0;padding:.42em 1.05em .38em;border-radius:999px;background:#ff6f3c;border:3px solid #2b1206;box-shadow:0 5px 0 #2b1206,0 10px 22px rgba(0,0,0,.35);
   font:400 clamp(20px,3.4vw,36px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.04em;color:#fff4d6;-webkit-text-stroke:4px #2b1206;paint-order:stroke fill;text-shadow:0 2px 0 #2b1206;
-  animation:bg-bob 1.6s ease-in-out infinite;transition:transform .12s ease,box-shadow .12s ease}
+  animation:bg-bob 1.6s ease-in-out infinite;transition:transform .12s ease,box-shadow .12s ease;white-space:nowrap}
+@media (max-height:420px){body.cine-intro .bonusgo .bg-go{font-size:clamp(14px,4.4vh,22px);border-width:2px;box-shadow:0 3px 0 #2b1206,0 6px 14px rgba(0,0,0,.35);-webkit-text-stroke:3px #2b1206}
+  body.cine-intro .bonusgo .bg-card{gap:4px}body.cine-intro .bonusgo .bg-k{font-size:10px}}
 body.cine-intro .bonusgo:hover .bg-go{background:#ff8450}
 body.cine-intro .bonusgo:active .bg-go{transform:translateY(4px);box-shadow:0 1px 0 #2b1206,0 4px 10px rgba(0,0,0,.3);animation:none}
-body.cine-intro .bonusgo .bg-k{font:400 clamp(12px,1.5vw,16px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#fff4d6;-webkit-text-stroke:3px #2b1206;paint-order:stroke fill}
+body.cine-intro .bonusgo .bg-k{white-space:nowrap;font:400 clamp(12px,1.5vw,16px)/1 "Lilita One",system-ui,sans-serif;letter-spacing:.08em;color:#fff4d6;-webkit-text-stroke:3px #2b1206;paint-order:stroke fill}
 @keyframes bg-bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-4px) rotate(1.5deg)}}
 @media (prefers-reduced-motion:reduce){body.cine-intro .bonusgo .bg-go{animation:none}}
 
@@ -7615,8 +7617,11 @@ body.cine-intro .bonusgo .bg-k{font:400 clamp(12px,1.5vw,16px)/1 "Lilita One",sy
         var g = $('bonusgo'); if (!g || !ce.isConnected) return; seen = true;
         if (performance.now() - t0 < 900) return;
         var w = ce.querySelector('small') || ce.querySelector('b'), c = g.querySelector('.bg-card'); if (!w || !c) return;
-        var cur = parseFloat(g.style.getPropertyValue('--bgy')) || 0, y = Math.round(w.getBoundingClientRect().bottom + 18 - (c.getBoundingClientRect().top - cur));
-        if (y !== cur) g.style.setProperty('--bgy', y + 'px'); g.classList.add('bg-placed');
+        var cur = parseFloat(g.style.getPropertyValue('--bgy')) || 0, curX = parseFloat(g.style.getPropertyValue('--bgx')) || 0, cr = c.getBoundingClientRect(), wr = w.getBoundingClientRect();
+        var y = Math.round(wr.bottom + 18 - (cr.top - cur)), x = Math.round(wr.left + wr.width / 2 - (cr.left - curX + cr.width / 2));   // centred under the words
+        // never past the window's bottom edge (small pop-outs such as 400x225): then it overlaps the foot of the card instead
+        y = Math.min(y, Math.floor(cur + innerHeight - 6 - cr.bottom));
+        if (y !== cur) g.style.setProperty('--bgy', y + 'px'); if (x !== curX) g.style.setProperty('--bgx', x + 'px'); g.classList.add('bg-placed');
       };
       var ce = card(main, sub, 't' + tier, 1900, function () { place(); return !!$('bonusgo') || (!seen && performance.now() - t0 < 2200); },
         function () { clearInterval(pt); document.body.classList.remove('cine-intro'); });
