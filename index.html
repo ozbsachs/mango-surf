@@ -2842,6 +2842,12 @@ body.cine-top #bbcard,body.cine-top #modechip{z-index:41!important}
 #bbcard{transition:opacity .3s,filter .25s,box-shadow .25s}#modechip{transition:opacity .3s}
 body:has(#celebrate:not([hidden])) #bbcard,body:has(#celebrate:not([hidden])) #modechip{opacity:0;pointer-events:none}
 body.replay #bbcard,body.replay #modechip{display:none!important}
+/* no bonus buy while Bonus Boost is on: the bonus cards grey out and say why; a tap nudges the Boost card */
+#buys .wc.wc-boostlock{filter:grayscale(.85) brightness(.72);cursor:not-allowed}
+#buys .wc.wc-boostlock .wc-cta{font-size:.8em;line-height:1.1;white-space:normal;padding-left:.7em;padding-right:.7em}
+#bbcard.nudge{animation:bb-nudge .6s ease-in-out;box-shadow:0 0 0 calc(var(--bw,176px)*.018) #5a3212,0 0 34px rgba(255,210,63,.95),inset 0 0 22px rgba(0,0,0,.45)}
+@keyframes bb-nudge{0%,100%{translate:0 0}20%{translate:-6px 0}40%{translate:6px 0}60%{translate:-4px 0}80%{translate:4px 0}}
+@media (prefers-reduced-motion:reduce){#bbcard.nudge{animation:none}}
 
 </style>
 <script>window.MANGO_IMG_V = {"bg-day":"d919a75b","bg-sunset":"4de74376","buy-plank":"602240fd","card-barrel":"d5a0d22c","card-boost":"341dea8e","card-curl":"f7e27bfa","card-kahuna":"81cefce9","card-normal":"df94d5f6","card-ripple":"a4ad3639","card-surf":"714db72a","card-swell":"fa045f19","caustic":"f39ac984","frame-driftwood":"76ee142b","fx-foam":"e5271a45","fx-hero-cheer":"e7616fe9","fx-hero":"0a2e9a63","fx-rays":"06f49708","fx-splash":"667cb158","fx-wave":"2b74979c","H1":"7152d20c","H2":"a59b553b","H3-body":"7b40766f","H3-leaf":"aed82293","H3":"28d998d1","H4":"8e5ef9ef","hooligans-logo":"10e92930","L1":"9cf1831f","L2":"ae0233f5","L3":"d169bb4b","L4":"ede6cc2e","L5":"6e1dde99","rope":"f927cf27","S1":"0321b861","sc-bush-day":"88dde9d2","sc-bush-sunset":"4527095d","sc-chair-day":"4ddd96b6","sc-chair-sunset":"31c834a6","sc-crab":"8c270de0","sc-dolphin":"3b0b90c2","sc-palmL-crown":"e323fde1","sc-palmL-trunk":"0f5723f1","sc-palmL":"dcb46604","sc-palmR-crown":"5688b0d4","sc-palmR-trunk":"78951342","sc-palmR":"037041cd","sc-plate-day":"6a3c3539","sc-plate-sunset":"9048935b","sc-splash":"fd32b9b1","sc-water-day":"16468e92","sc-water-sunset":"de08cee6","sc-whale":"6d2091dd","seaweed":"1807e492","surf-tricks":"428d180b","title-plank":"3c9f296b","W":"8a1dd2c0","water":"2efbf99a","wild-rider":"c2212150","wild-wave":"f24ca5f5","wood-panel":"3699864c"}; window.MANGO_SFX_V = {"bamboo":"e5a40b24","bongo":"d6528b4c","conga":"fb4eeb95","gull":"23f455da","gulls":"be8e6238","marimba":"9db7a569","rain":"cdc1cb30","shake":"05a3e428","shaker":"9159d193","splash1":"8df05b90","splash2":"413c06a2","surf":"a508897e","swish":"c67e5cbb","ukulele":"016d218b","wave":"175b02af"}; window.MANGO_MUSIC_V = {"size":{"m4a":1436512,"webm":902200},"m4a":"7f085aac","webm":"273c0743"};</script>
@@ -6623,6 +6629,7 @@ window.MangoPreview = {ready: () => !busy && mode === 'SPECIAL3', play: mangoMax
 async function playRound(name){
   const amount = levels[betIdx], cost = amount/API*costOf(name);
   if (busy || !levels.length) return;
+  if (name.startsWith('BONUS') && mode === 'ANTE') return;   // no bonus buy while Bonus Boost is on
   if (balance < amount*costOf(name)){ autoLeft = 0; $('msg').textContent = ERRORS.ERR_IPB; meta(); return; }
   busy = true; roundBet = amount/API; $('msg').textContent = ''; clearStacks(); resetWinBoxes(); meta();
   banner(name === 'BASE' ? '3 WILDS OR 3 SESH TAPES START A BONUS · 4 TAPES = LEGEND' : name === 'ANTE' ? 'BONUS BOOST' : name.startsWith('SPECIAL') ? `${TRICK[+name.slice(-1)-1]} · TRICK SPIN` : `${BONUS[+name.slice(-1)-1].name.toUpperCase()} BONUS`);
@@ -6672,7 +6679,10 @@ function renderModes(){
   $('buyswin').hidden = buyOff;
   $('buys').innerHTML = BUY_MODES.map((name, t) => { const price = levels[betIdx]*costOf(name), ok = balance >= price && !busy;
     return wcCard('buy', name, BONUS[t].name.toUpperCase(), BONUS[t].trig, `${BONUS[t].desc} ${costOf(name)}x bet.`, wcMoney(price), '', 'BUY', false, ok); }).join('');
-  $('buys').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => confirmChoice({kind: 'buy', name: b.dataset.buy}));
+  const boostLock = mode === 'ANTE', lockTxt = window.MangoStake && MangoStake.social && MangoStake.social() ? 'TURN OFF BONUS BOOST FIRST' : 'TURN OFF BONUS BOOST TO BUY';
+  $('buys').querySelectorAll('[data-buy]').forEach(b => { b.classList.toggle('wc-boostlock', boostLock);
+    if (boostLock){ b.setAttribute('aria-disabled', 'true'); const c = b.querySelector('.wc-cta'); if (c) c.textContent = lockTxt; b.setAttribute('aria-label', b.querySelector('.wc-name').textContent + ': ' + lockTxt.toLowerCase()); }
+    b.onclick = () => { if (mode === 'ANTE'){ try { if (window.MangoBoost && MangoBoost.nudge) MangoBoost.nudge(); } catch(e){} return; } confirmChoice({kind: 'buy', name: b.dataset.buy}); }; });
 }
 /* confirmations: price, a bet changer, and the bonus odds for Bonus Boost */
 let cfState = null;
@@ -6694,16 +6704,16 @@ function cfRender(){
   $('cf-ok').textContent = s.kind === 'buy' ? `BUY FOR ${fmtBal(price)}` : `TURN ON ${m ? m.label : ''} SPINS`;
   $('cf-ok').disabled = balance < price;
 }
-function confirmChoice(s){ if (busy) return; openLayer(null); cfState = s; $('confirm').hidden = false; cfRender(); $('cf-ok').focus(); }
+function confirmChoice(s){ if (busy) return; if (s && s.kind === 'buy' && mode === 'ANTE') return; openLayer(null); cfState = s; $('confirm').hidden = false; cfRender(); $('cf-ok').focus(); }
 function closeConfirm(){ $('confirm').hidden = true; cfState = null; }
 $('cf-minus').onclick = () => { stepBet(-1); cfRender(); };
 $('cf-plus').onclick = () => { stepBet(1); cfRender(); };
 $('cf-cancel').onclick = closeConfirm;
 $('confirm').onclick = e => { if (e.target === $('confirm')) closeConfirm(); };
-$('cf-ok').onclick = () => { const s = cfState; closeConfirm(); if (!s) return; if (s.kind === 'buy'){ sfx('buy', BUY_MODES.indexOf(s.name)); playRound(s.name); } else { sfx('modeSelect', UI_MODES.findIndex(m => m.id === s.name)); mode = s.name; meta(); } };
+$('cf-ok').onclick = () => { const s = cfState; closeConfirm(); if (!s) return; if (s.kind === 'buy' && mode === 'ANTE') return; if (s.kind === 'buy'){ sfx('buy', BUY_MODES.indexOf(s.name)); playRound(s.name); } else { sfx('modeSelect', UI_MODES.findIndex(m => m.id === s.name)); mode = s.name; meta(); } };
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('confirm').hidden) closeConfirm(); });
 async function confirmBuy(name){
-  if (busy) return; openLayer(null); const t = BUY_MODES.indexOf(name), price = levels[betIdx]*costOf(name);
+  if (busy || mode === 'ANTE') return; openLayer(null); const t = BUY_MODES.indexOf(name), price = levels[betIdx]*costOf(name);
   const go = await modal('BONUS BUY', `<p style="margin:0">Buy <strong>${BONUS[t].name}</strong> for <strong>${fmtBal(price)}</strong> (${costOf(name)}x your bet)?</p><p class="sub" style="margin:8px 0 0">${BONUS[t].desc}</p>`, [{label: 'BUY', primary: true, value: true}, {label: 'CANCEL', value: false}]);
   if (go){ sfx('buy', t); playRound(name); }
 }
@@ -6847,7 +6857,7 @@ function renderRules(){
     <li><strong>SPEED</strong>: Normal, Turbo or Super Turbo animations. The result is the same at every speed.</li>
     <li><strong>Cog</strong> (settings): music on or off and its volume, sound effects on or off and their volume, and the spin speed. Sound is on when the game opens and starts with your first tap; turn both off to mute the game completely. Your choice is kept on this device.</li>
     <li><strong>BONUS BOOST</strong> (the card to the right of the reels; top right on phones): its switch turns Bonus Boost on or off, and the card shows the price of each spin and how much more often a bonus starts. While it is on, every spin (SPIN, the spacebar and autoplay) plays Bonus Boost and the switch shows the price of each spin (${fx(MODE('ANTE').cost)}x your bet). It is off whenever the game opens, and cannot be changed while a round or autoplay runs.</li>
-    <li><strong>BONUS BUY</strong> (the plank by the reels): the Wave Spins (Ripple, Curl, Barrel) and the bonus buys (Swell, Surf, Kahuna), each after you confirm its price. A Wave Spin stays on: pick it and confirm, and the spin button, the spacebar and autoplay keep playing it until you turn it off with the X on its gold sign above the bar, its card in the menu, or the Bonus Boost card. Turning a Wave Spin on turns Bonus Boost off. A bonus buy plays one bonus.</li>
+    <li><strong>BONUS BUY</strong> (the plank by the reels): the Wave Spins (Ripple, Curl, Barrel) and the bonus buys (Swell, Surf, Kahuna), each after you confirm its price. A Wave Spin stays on: pick it and confirm, and the spin button, the spacebar and autoplay keep playing it until you turn it off with the X on its gold sign above the bar, its card in the menu, or the Bonus Boost card. Turning a Wave Spin on turns Bonus Boost off. A bonus buy plays one bonus. Bonus buys are not available while Bonus Boost is on.</li>
     <li><strong>Bonus start</strong>: when a bonus starts (bought, triggered, or resumed after a reload), its free spins wait for you: tap the reels or press the spacebar.</li>
     <li><strong>Rules</strong>: this page.</li></ul></div></div>
   <div class="win"><div class="bar"><span>DISCLAIMER</span></div><div class="body"><p style="margin:0">Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser.</p></div></div>`;
@@ -7960,7 +7970,9 @@ body.cine-intro .bonusgo .bg-k{white-space:nowrap;font:400 clamp(12px,1.5vw,16px
     return {card: b, mini: card && card.classList.contains('mini'), chip: c, buy: u, buyScale: u ? +($('buybtn').dataset.bs || 1) : null, frame: F && {l: F.l, t: F.t, r: F.r, b: F.b}, sign: s, winrow: w, bar: bar,
       gaps: {cardFrame: gap(b, F), cardSign: gap(b, s), cardBuy: gap(b, u), cardBar: gap(b, bar), cardWin: gap(b, w), buyFrame: gap(u, F), buySign: gap(u, s), buyWin: gap(u, w), chipFrame: gap(c, F), chipBar: gap(c, bar), chipWin: gap(c, w), chipCard: gap(c, b)}};
   }
-  window.MangoBoost = {sync: function () { try { sync(); } catch (e) {} }, place: soon, layout: layout};
+  // a tap on a bonus card while Boost is on: the card shakes and glows so the player sees what to turn off
+  function nudge() { if (!card) return; card.classList.remove('nudge'); void card.offsetWidth; card.classList.add('nudge'); clearTimeout(card._nt); card._nt = setTimeout(function () { card.classList.remove('nudge'); }, 700); }
+  window.MangoBoost = {sync: function () { try { sync(); } catch (e) {} }, place: soon, layout: layout, nudge: nudge};
   try { sync(); } catch (e) {}
 })();
 
